@@ -1,0 +1,87 @@
+name: Build Nightly sslocal
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: full
+
+    steps:
+
+      - name: Set Timezone
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: Get latest commit SHA for SS-RUST and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_SS_RUST = (curl -sSL https://api.github.com/repos/shadowsocks/shadowsocks-rust/commits/master | jq -r '.sha')
+          echo "SHA_SS_RUST=$SHA_SS_RUST" >> $env:GITHUB_ENV
+          echo "https://github.com/shadowsocks/shadowsocks-rust/commits/$SHA_SS_RUST" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Checkout code
+        uses: actions/checkout@main
+        with:
+          repository: shadowsocks/shadowsocks-rust
+          ref: master
+          submodules: recursive
+
+      - name: Install cross
+        run: cargo install cross
+          
+      - name: Install Rust 1.74.1
+        run: |
+          rustup self update
+          rustup set profile minimal
+          rustup toolchain install 1.74.1
+          rustup default 1.74.1
+          rustup override set 1.74.1
+          rustup target add --toolchain 1.74.1 mipsel-unknown-linux-musl
+
+      - name: Install latest UPX
+        run: |
+          UPX_VERSION=$(curl --silent "https://api.github.com/repos/upx/upx/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+          curl -L -o upx.tar.xz "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+          tar -xf upx.tar.xz
+          sudo mv upx-${UPX_VERSION}-amd64_linux/upx /usr/local/bin
+
+      - name: Build mipsel-unknown-linux-musl
+        run: |
+          cross build --target mipsel-unknown-linux-musl --bin sslocal --features "local-redir local-tun" --release
+          upx --best target/mipsel-unknown-linux-musl/release/sslocal
+          cd target/mipsel-unknown-linux-musl/release/
+          tar -cJvf sslocal-mipsel-unknown-linux-musl.tar.xz --mode=755 --no-same-owner sslocal
+
+      - name: update rust
+        run: |
+          rustup self update
+          rustup set profile minimal
+          rustup update
+          rustup toolchain install stable
+          rustup default stable
+          rustup override set stable
+          rustup target add --toolchain stable aarch64-unknown-linux-musl
+
+      - name: Build aarch64-unknown-linux-musl
+        run: |
+          cross build --target aarch64-unknown-linux-musl --bin sslocal --features "local-redir local-tun" --release
+          upx --best target/aarch64-unknown-linux-musl/release/sslocal
+          cd target/aarch64-unknown-linux-musl/release/
+          tar -cJvf sslocal-aarch64-unknown-linux-musl.tar.xz --mode=755 --no-same-owner sslocal
+
+      - name: Generate release tag
+        run: |
+          echo "release_tag=$(date +"%Y.%m.%d-%H.%M")_sslocal" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.release_tag }}
+          files: |
+            target/mipsel-unknown-linux-musl/release/sslocal-mipsel-unknown-linux-musl.tar.xz
+            target/aarch64-unknown-linux-musl/release/sslocal-aarch64-unknown-linux-musl.tar.xz
+          body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
