@@ -1,5 +1,5 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index d07f167..b2af119 100644
+index 644ac0a..9d8a0b3 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
 @@ -9,10 +9,9 @@ PKG_CONFIG_DEPENDS:= \
@@ -134,7 +134,7 @@ index 8ceaba7..f381a54 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
-index 0f8cd03..00ef47d 100644
+index 2f56e90..9157953 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
 @@ -70,45 +70,6 @@ o.default = "https://fastly.jsdelivr.net/gh/QiuSimons/Netflix_IP/NF_only.txt"
@@ -180,11 +180,11 @@ index 0f8cd03..00ef47d 100644
 -o.rmempty = false
 -o.default = "0"
 -
- o = s:option(Flag, "adblock", translate("Enable adblock"))
+ o = s:option(Flag, "apple_optimization", translate("Apple domains optimization"), translate("For Apple domains equipped with Chinese mainland CDN, always responsive to Chinese CDN IP addresses"))
  o.rmempty = false
- 
+ o.default = "1"
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-index 3b91739..b24183e 100644
+index 26de9ba..b24183e 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 @@ -10,7 +10,7 @@ local function is_finded(e)
@@ -232,7 +232,7 @@ index 3b91739..b24183e 100644
 -o = s:option(Flag, "mosdns_ipv6", translate("Disable IPv6 in MOSDNS query mode"))
 -o:depends("pdnsd_enable", "3")
 -o.rmempty = false
--o.default = "0"
+-o.default = "1"
 -
  if is_finded("chinadns-ng") then
  	o = s:option(Value, "chinadns_forward", translate("Domestic DNS Server"))
@@ -430,10 +430,10 @@ index 7603d8c..7f841fa 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-index 8184bee..60ac526 100644
+index da30ffc..f97309b 100644
 --- a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 +++ b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-@@ -552,27 +552,6 @@ msgstr "使用 DNS2TCP 查询"
+@@ -557,27 +557,6 @@ msgstr "使用 DNS2TCP 查询"
  msgid "Use DNS2SOCKS query and cache"
  msgstr "使用 DNS2SOCKS 查询并缓存"
  
@@ -462,10 +462,10 @@ index 8184bee..60ac526 100644
  msgstr "DNS 服务器 IP:Port"
  
 diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index b1570aa..ec19a6f 100755
+index 00e0448..9af87f1 100755
 --- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 +++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-@@ -178,23 +178,17 @@ ln_start_bin() {
+@@ -185,23 +185,17 @@ ln_start_bin() {
  	${file_func:-echolog "  - ${ln_name}"} "$@" >/dev/null 2>&1 &
  }
  
@@ -494,7 +494,7 @@ index b1570aa..ec19a6f 100755
  		case "$ssrplus_dns" in
  		1)
  			ln_start_bin $(first_type dns2tcp) dns2tcp -L 127.0.0.1#$dns_port -R ${dnsserver/:/#}
-@@ -205,26 +199,6 @@ start_dns() {
+@@ -212,26 +206,6 @@ start_dns() {
  			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver 127.0.0.1:$dns_port -q
  			pdnsd_enable_flag=2
  			;;
@@ -521,7 +521,7 @@ index b1570aa..ec19a6f 100755
  		esac
  
  		if [ "$run_mode" = "router" ]; then
-@@ -479,33 +453,6 @@ start_udp() {
+@@ -492,33 +466,6 @@ start_udp() {
  	esac
  }
  
@@ -555,7 +555,7 @@ index b1570aa..ec19a6f 100755
  start_shunt() {
  	local type=$(uci_get_by_name $SHUNT_SERVER type)
  	case "$type" in
-@@ -519,14 +466,14 @@ start_shunt() {
+@@ -532,14 +479,14 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type ${type}local ${type}-local) ${type}-local -c $shunt_dns_config_file
  		fi
@@ -566,13 +566,13 @@ index b1570aa..ec19a6f 100755
  	v2ray)
  		local tmp_port=${tmp_local_port:-$tmp_shunt_local_port}
  		gen_config_file $SHUNT_SERVER $type 3 $tmp_shunt_port $tmp_port
- 		ln_start_bin $(first_type xray v2ray) v2ray run -config $shunt_config_file
+ 		ln_start_bin $(first_type xray v2ray) v2ray run -c $shunt_config_file
 -		shunt_dns_command
 +		ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_port 8.8.8.8:53 127.0.0.1:$tmp_shunt_dns_port -q
  		echolog "shunt:$($(first_type xray v2ray) version | head -1) Started!"
  		;;
  	trojan)
-@@ -538,7 +485,7 @@ start_shunt() {
+@@ -551,7 +498,7 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type trojan) $type --config $shunt_dns_config_file
  		fi
@@ -581,7 +581,7 @@ index b1570aa..ec19a6f 100755
  		echolog "shunt:$($(first_type trojan) --version 2>&1 | head -1) Started!"
  		;;
  	naiveproxy)
-@@ -550,7 +497,7 @@ start_shunt() {
+@@ -563,7 +510,7 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type naive) naive --config $shunt_dns_config_file
  		fi
@@ -590,7 +590,7 @@ index b1570aa..ec19a6f 100755
  		echolog "shunt:$($(first_type "naive") --version 2>&1 | head -1) Started!"
  		redir_udp=0
  		;;
-@@ -563,7 +510,7 @@ start_shunt() {
+@@ -576,7 +523,7 @@ start_shunt() {
  			gen_config_file $SHUNT_SERVER $type 3 $tmp_shunt_port $tmp_port
  		fi
  		ln_start_bin $(first_type hysteria) hysteria client --config $shunt_config_file
@@ -599,7 +599,7 @@ index b1570aa..ec19a6f 100755
  		echolog "shunt:$($(first_type hysteria) version | grep Version | awk '{print "Hysteria2: " $2}') Started!"
  		;;
  	tuic)
-@@ -575,7 +522,7 @@ start_shunt() {
+@@ -588,7 +535,7 @@ start_shunt() {
  		[ -n "$tmp_local_port" ] && tmp_port=$tmp_local_port || tmp_port=$tmp_shunt_local_port
  		gen_config_file $SHUNT_SERVER $type 3 $tmp_port		# make a tuic socks :304
  		ln_start_bin $(first_type tuic-client) tuic-client --config $shunt_dns_config_file
@@ -608,7 +608,7 @@ index b1570aa..ec19a6f 100755
  		echolog "Netflix Separated Shunt Server:tuic-client $($(first_type tuic-client) --version) Started!"
  		# FIXME: ipt2socks cannot handle udp reply from tuic
  		#redir_udp=0
-@@ -585,7 +532,7 @@ start_shunt() {
+@@ -598,7 +545,7 @@ start_shunt() {
  		gen_config_file $SHUNT_SERVER $type 3 "10${tmp_shunt_port}" $tmp_port chain/$tmp_shunt_port #make a redir:303 and a socks:304
  		#echo "debug \$tmp_port=$tmp_port, \$tmp_shunt_port=${tmp_shunt_port},  \$tmp_shunt_local_port=$tmp_shunt_local_port"
  		ln_start_bin $(first_type shadow-tls) shadow-tls config --config $chain_config_file
@@ -617,7 +617,7 @@ index b1570aa..ec19a6f 100755
  		local chain_type=$(uci_get_by_name $SHUNT_SERVER chain_type)
  		case ${chain_type} in
  		vmess)
-@@ -611,7 +558,7 @@ start_shunt() {
+@@ -624,7 +571,7 @@ start_shunt() {
  	# 		local tmp_port=$tmp_shunt_local_port
  	# 		ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_port shunt-dns-ssr-plus
  	# 	fi
@@ -626,7 +626,7 @@ index b1570aa..ec19a6f 100755
  	# 	echolog "shunt:$type REDIRECT/TPROXY Started!"
  	# 	;;
  	*)
-@@ -623,7 +570,7 @@ start_shunt() {
+@@ -636,7 +583,7 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_port shunt-dns-ssr-plus
  		fi
@@ -635,7 +635,7 @@ index b1570aa..ec19a6f 100755
  		echolog "shunt:$type REDIRECT/TPROXY Started!"
  		;;
  	esac
-@@ -922,11 +869,6 @@ start_server() {
+@@ -935,11 +882,6 @@ start_server() {
  	server_service() {
  		[ "$(uci_get_by_name $1 enable 0)" == "0" ] && return 1
  		let server_count=server_count+1
@@ -647,7 +647,7 @@ index b1570aa..ec19a6f 100755
  		local type=$(uci_get_by_name $1 type)
  		case "$type" in
  		ss | ssr)
-@@ -940,32 +882,23 @@ start_server() {
+@@ -953,32 +895,23 @@ start_server() {
  			echolog "Server:Socks5 Server$server_count Started!"
  			;;
  		esac
@@ -692,7 +692,7 @@ index b1570aa..ec19a6f 100755
  	return 0
  }
  
-@@ -1098,12 +1031,6 @@ stop() {
+@@ -1111,12 +1044,6 @@ stop() {
  	unlock
  	set_lock
  	/usr/bin/ssr-rules -f
@@ -705,7 +705,7 @@ index b1570aa..ec19a6f 100755
  	if [ -z "$switch_server" ]; then
  		$PS -w | grep -v "grep" | grep ssr-switch | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
  		rm -f /var/lock/ssr-switch.lock
-@@ -1114,7 +1041,7 @@ stop() {
+@@ -1127,7 +1054,7 @@ stop() {
  	( \
  		# Graceful kill first, so programs have the chance to stop its subprocesses
  		$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill >/dev/null 2>&1 ; \
@@ -714,8 +714,8 @@ index b1570aa..ec19a6f 100755
  		# Force kill hanged programs
  		$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 ; \
  	)
-@@ -1132,6 +1059,9 @@ stop() {
- 		rm -rf /tmp/dnsmasq.d/dnsmasq-ssrplus.conf $TMP_DNSMASQ_PATH $TMP_PATH/*-ssr-*.json $TMP_PATH/ssr-server*.json
+@@ -1145,6 +1072,9 @@ stop() {
+ 		rm -rf $DNSMASQ_CONF_DIR/dnsmasq-ssrplus.conf $TMP_DNSMASQ_PATH $TMP_PATH/*-ssr-*.json $TMP_PATH/ssr-server*.json
  		/etc/init.d/dnsmasq restart >/dev/null 2>&1
  	fi
 +	uci -q delete firewall.shadowsocksr_server
@@ -724,7 +724,7 @@ index b1570aa..ec19a6f 100755
  	del_cron
  	unset_lock
  }
-@@ -1158,7 +1088,6 @@ reset() {
+@@ -1171,7 +1101,6 @@ reset() {
  		set shadowsocksr.@global[0].switch_timeout='5'
  		set shadowsocksr.@global[0].switch_try_count='3'
  #		set shadowsocksr.@global[0].default_packet_encoding='xudp'
