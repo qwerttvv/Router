@@ -842,15 +842,3 @@ index f637d50..fb9ed57 100755
  	fi
  	#chinadns-ng
  	if [ "$(uci -q get "dhcp.@dnsmasq[0]._unused_ssrp_changed")" = "1" ]; then
-diff --git a/luci-app-ssr-plus/root/usr/bin/ssr-rules b/luci-app-ssr-plus/root/usr/bin/ssr-rules
-index e0e0e8f..547d910 100755
---- a/luci-app-ssr-plus/root/usr/bin/ssr-rules
-+++ b/luci-app-ssr-plus/root/usr/bin/ssr-rules
-@@ -103,7 +103,6 @@ ipset_r() {
- 		$IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
- 		$IPT -A SS_SPEC_WAN_AC -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW
- 		$IPT -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW
--		$IPT -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
- 		;;
- 	oversea)
- 		ipset -N oversea hash:net 2>/dev/null
