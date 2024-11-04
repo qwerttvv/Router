@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 3a668e2..7e7fa34 100644
+index db37783..970b61e 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -171,7 +171,6 @@ define Package/$(PKG_NAME)/conffiles
@@ -9,7 +9,7 @@ index 3a668e2..7e7fa34 100644
 -/www/luci-static/resources/qrcode.min.js
  endef
  
- include $(TOPDIR)/feeds/luci/luci.mk
+ define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/controller/passwall.lua b/luci-app-passwall/luasrc/controller/passwall.lua
 index 03006a6..f384bbc 100644
 --- a/luci-app-passwall/luasrc/controller/passwall.lua
