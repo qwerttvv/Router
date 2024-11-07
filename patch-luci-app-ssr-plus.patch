@@ -462,7 +462,7 @@ index da30ffc..f97309b 100644
  msgstr "DNS 服务器 IP:Port"
  
 diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index 231dccc..f6e299e 100755
+index 4029a07..93388ce 100755
 --- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 +++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 @@ -185,23 +185,17 @@ ln_start_bin() {
