@@ -1,5 +1,5 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 735b377..8c5387b 100644
+index 04875d4..009827d 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
 @@ -9,10 +9,9 @@ PKG_CONFIG_DEPENDS:= \
@@ -338,7 +338,7 @@ index d0b77f1..259cb7f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 7603d8c..7f841fa 100644
+index c81590e..18dcdf2 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -69,9 +69,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -416,7 +416,7 @@ index 7603d8c..7f841fa 100644
  			return false;
  		case "vless":
  			try {
-@@ -377,10 +377,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -387,10 +387,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
