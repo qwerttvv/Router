@@ -131,13 +131,20 @@
             text-overflow: ellipsis;
             text-align: left;
         }
+
+        @media only screen and (max-width: 600px) {
+            .myip {
+                min-width: 700px !important;
+                flex-direction: column !important;
+            }
+        }
     </style>
 </head>
 <body>
 <fieldset class="cbi-section">
 	<table width="100%">
     <tr><td>
-    <div style="display: flex; min-width: 820px;">
+    <div class="myip" style="display: flex; min-width: 820px;">
         <div style="width: 48%">
             <p style="margin: 20px 0 20px 8%; padding: 0px !important; text-align: left; font-size: 25px; font-weight: bold;"><%:IP Address%>
                 <span style="float: right;"><img src="/luci-static/resources/openclash/img/eye-light.svg" height="20px" title="<%:Hide IP%>" alt="<%:Hide IP%>" id="eye-icon" onclick="return privacy_my_ip(this)" /></span>
