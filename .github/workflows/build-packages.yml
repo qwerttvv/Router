@@ -43,7 +43,7 @@ jobs:
           - riscv64_riscv64
           - x86_64
         tag:
-          - openwrt-23.05
+          - openwrt-24.10
 
     steps:
       - uses: actions/checkout@v4
@@ -79,4 +79,4 @@ jobs:
       - name: Create metadata
         run: |
           sshpass -p ${{ secrets.server_password }} ssh -o StrictHostKeyChecking=no root@${{ secrets.ftp_address }} >/dev/null 2>&1
-          sshpass -p ${{ secrets.server_password }} ssh root@${{ secrets.ftp_address }} "/opt/sbin/opkg-sign ${{ matrix.arch }}"
+          sshpass -p ${{ secrets.server_password }} ssh root@${{ secrets.ftp_address }} "/opt/sbin/opkg-sign ${{ matrix.tag }} ${{ matrix.arch }}"
