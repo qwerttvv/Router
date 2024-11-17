@@ -1,5 +1,5 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 04875d4..009827d 100644
+index b469328..3a0b055 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
 @@ -9,10 +9,9 @@ PKG_CONFIG_DEPENDS:= \
@@ -462,10 +462,10 @@ index 18f19a7..307725e 100644
  msgstr "DNS 服务器 IP:Port"
  
 diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index 4029a07..93388ce 100755
+index 740bdce..66d0cc9 100755
 --- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 +++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-@@ -185,23 +185,17 @@ ln_start_bin() {
+@@ -188,23 +188,17 @@ ln_start_bin() {
  	${file_func:-echolog "  - ${ln_name}"} "$@" >/dev/null 2>&1 &
  }
  
@@ -494,7 +494,7 @@ index 4029a07..93388ce 100755
  		case "$ssrplus_dns" in
  		1)
  			ln_start_bin $(first_type dns2tcp) dns2tcp -L 127.0.0.1#$dns_port -R ${dnsserver/:/#}
-@@ -212,26 +206,6 @@ start_dns() {
+@@ -215,26 +209,6 @@ start_dns() {
  			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver 127.0.0.1:$dns_port -q
  			pdnsd_enable_flag=2
  			;;
@@ -521,7 +521,7 @@ index 4029a07..93388ce 100755
  		esac
  
  		if [ "$run_mode" = "router" ]; then
-@@ -492,33 +466,6 @@ start_udp() {
+@@ -495,33 +469,6 @@ start_udp() {
  	esac
  }
  
@@ -555,7 +555,7 @@ index 4029a07..93388ce 100755
  start_shunt() {
  	local type=$(uci_get_by_name $SHUNT_SERVER type)
  	case "$type" in
-@@ -532,14 +479,14 @@ start_shunt() {
+@@ -535,14 +482,14 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type ${type}local ${type}-local) ${type}-local -c $shunt_dns_config_file
  		fi
@@ -572,7 +572,7 @@ index 4029a07..93388ce 100755
  		echolog "shunt:$($(first_type xray v2ray) version | head -1) Started!"
  		;;
  	trojan)
-@@ -551,7 +498,7 @@ start_shunt() {
+@@ -554,7 +501,7 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type trojan) $type --config $shunt_dns_config_file
  		fi
@@ -581,7 +581,7 @@ index 4029a07..93388ce 100755
  		echolog "shunt:$($(first_type trojan) --version 2>&1 | head -1) Started!"
  		;;
  	naiveproxy)
-@@ -563,7 +510,7 @@ start_shunt() {
+@@ -566,7 +513,7 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type naive) naive --config $shunt_dns_config_file
  		fi
@@ -590,7 +590,7 @@ index 4029a07..93388ce 100755
  		echolog "shunt:$($(first_type "naive") --version 2>&1 | head -1) Started!"
  		redir_udp=0
  		;;
-@@ -576,7 +523,7 @@ start_shunt() {
+@@ -579,7 +526,7 @@ start_shunt() {
  			gen_config_file $SHUNT_SERVER $type 3 $tmp_shunt_port $tmp_port
  		fi
  		ln_start_bin $(first_type hysteria) hysteria client --config $shunt_config_file
@@ -599,7 +599,7 @@ index 4029a07..93388ce 100755
  		echolog "shunt:$($(first_type hysteria) version | grep Version | awk '{print "Hysteria2: " $2}') Started!"
  		;;
  	tuic)
-@@ -588,7 +535,7 @@ start_shunt() {
+@@ -591,7 +538,7 @@ start_shunt() {
  		[ -n "$tmp_local_port" ] && tmp_port=$tmp_local_port || tmp_port=$tmp_shunt_local_port
  		gen_config_file $SHUNT_SERVER $type 3 $tmp_port		# make a tuic socks :304
  		ln_start_bin $(first_type tuic-client) tuic-client --config $shunt_dns_config_file
@@ -608,7 +608,7 @@ index 4029a07..93388ce 100755
  		echolog "Netflix Separated Shunt Server:tuic-client $($(first_type tuic-client) --version) Started!"
  		# FIXME: ipt2socks cannot handle udp reply from tuic
  		#redir_udp=0
-@@ -598,7 +545,7 @@ start_shunt() {
+@@ -601,7 +548,7 @@ start_shunt() {
  		gen_config_file $SHUNT_SERVER $type 3 "10${tmp_shunt_port}" $tmp_port chain/$tmp_shunt_port #make a redir:303 and a socks:304
  		#echo "debug \$tmp_port=$tmp_port, \$tmp_shunt_port=${tmp_shunt_port},  \$tmp_shunt_local_port=$tmp_shunt_local_port"
  		ln_start_bin $(first_type shadow-tls) shadow-tls config --config $chain_config_file
@@ -617,7 +617,7 @@ index 4029a07..93388ce 100755
  		local chain_type=$(uci_get_by_name $SHUNT_SERVER chain_type)
  		case ${chain_type} in
  		vmess)
-@@ -624,7 +571,7 @@ start_shunt() {
+@@ -627,7 +574,7 @@ start_shunt() {
  	# 		local tmp_port=$tmp_shunt_local_port
  	# 		ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_port shunt-dns-ssr-plus
  	# 	fi
@@ -626,7 +626,7 @@ index 4029a07..93388ce 100755
  	# 	echolog "shunt:$type REDIRECT/TPROXY Started!"
  	# 	;;
  	*)
-@@ -636,7 +583,7 @@ start_shunt() {
+@@ -639,7 +586,7 @@ start_shunt() {
  			local tmp_port=$tmp_shunt_local_port
  			ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_port shunt-dns-ssr-plus
  		fi
@@ -635,7 +635,7 @@ index 4029a07..93388ce 100755
  		echolog "shunt:$type REDIRECT/TPROXY Started!"
  		;;
  	esac
-@@ -935,11 +882,6 @@ start_server() {
+@@ -938,11 +885,6 @@ start_server() {
  	server_service() {
  		[ "$(uci_get_by_name $1 enable 0)" == "0" ] && return 1
  		let server_count=server_count+1
@@ -647,7 +647,7 @@ index 4029a07..93388ce 100755
  		local type=$(uci_get_by_name $1 type)
  		case "$type" in
  		ss | ssr)
-@@ -953,32 +895,23 @@ start_server() {
+@@ -956,32 +898,23 @@ start_server() {
  			echolog "Server:Socks5 Server$server_count Started!"
  			;;
  		esac
@@ -692,7 +692,7 @@ index 4029a07..93388ce 100755
  	return 0
  }
  
-@@ -1111,12 +1044,6 @@ stop() {
+@@ -1114,12 +1047,6 @@ stop() {
  	unlock
  	set_lock
  	/usr/bin/ssr-rules -f
@@ -705,7 +705,7 @@ index 4029a07..93388ce 100755
  	if [ -z "$switch_server" ]; then
  		$PS -w | grep -v "grep" | grep ssr-switch | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
  		rm -f /var/lock/ssr-switch.lock
-@@ -1127,7 +1054,7 @@ stop() {
+@@ -1130,7 +1057,7 @@ stop() {
  	( \
  		# Graceful kill first, so programs have the chance to stop its subprocesses
  		$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill >/dev/null 2>&1 ; \
@@ -714,7 +714,7 @@ index 4029a07..93388ce 100755
  		# Force kill hanged programs
  		$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 ; \
  	)
-@@ -1145,6 +1072,9 @@ stop() {
+@@ -1148,6 +1075,9 @@ stop() {
  		rm -rf $DNSMASQ_CONF_DIR/dnsmasq-ssrplus.conf $TMP_DNSMASQ_PATH $TMP_PATH/*-ssr-*.json $TMP_PATH/ssr-server*.json
  		/etc/init.d/dnsmasq restart >/dev/null 2>&1
  	fi
