@@ -646,7 +646,7 @@ update_subscription() {
 			fi
 		fi
 		if [ -n "$subscription_expire" ]; then
-			uci_set "mihomo" "$subscription_section" "expire" "$(date +%Y-%m-%d -d @$subscription_expire)"
+			uci_set "mihomo" "$subscription_section" "expire" "$(date "+%Y-%m-%d %H:%M:%S" -d @$subscription_expire)"
 		fi
 		if [ -n "$subscription_upload" ]; then
 			uci_set "mihomo" "$subscription_section" "upload" "$(format_filesize $subscription_upload)"
@@ -663,6 +663,7 @@ update_subscription() {
 		if [ -n "$subscription_avaliable" ]; then
 			uci_set "mihomo" "$subscription_section" "avaliable" "$(format_filesize $subscription_avaliable)"
 		fi
+		uci_set "mihomo" "$subscription_section" "update" "$(date "+%Y-%m-%d %H:%M:%S")"
 		uci_commit "mihomo"
 		rm -f "$subscription_header_tmpfile"
 		mv -f "$subscription_tmpfile" "$subscription_file"
