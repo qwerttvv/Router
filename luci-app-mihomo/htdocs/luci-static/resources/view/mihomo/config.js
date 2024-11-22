@@ -299,7 +299,12 @@ return view.extend({
         o.optional = true;
         o.readonly = true;
 
-        o = s.option(form.Value, 'expire', _('Expire'));
+        o = s.option(form.Value, 'expire', _('Expire At'));
+        o.modalonly = false;
+        o.optional = true;
+        o.readonly = true;
+
+        o = s.option(form.Value, 'update', _('Update At'));
         o.modalonly = false;
         o.optional = true;
         o.readonly = true;
