@@ -338,7 +338,7 @@ index d0b77f1..259cb7f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index c81590e..18dcdf2 100644
+index 0e19670..a7485ac 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -69,9 +69,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -407,7 +407,7 @@ index c81590e..18dcdf2 100644
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -295,7 +295,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -296,7 +296,7 @@ function import_ssr_url(btn, urlname, sid) {
  			}
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].checked = true;
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].dispatchEvent(event);
@@ -416,7 +416,7 @@ index c81590e..18dcdf2 100644
  			return false;
  		case "vless":
  			try {
-@@ -387,10 +387,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -388,10 +388,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
