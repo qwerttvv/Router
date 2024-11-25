@@ -185,7 +185,7 @@ index 24662de..77b6a0b 100644
  	</div>
  </div>
 diff --git a/luci-app-passwall/root/usr/share/passwall/0_default_config b/luci-app-passwall/root/usr/share/passwall/0_default_config
-index 3a48f1e..167bc0e 100644
+index 918aaa4..4b20280 100644
 --- a/luci-app-passwall/root/usr/share/passwall/0_default_config
 +++ b/luci-app-passwall/root/usr/share/passwall/0_default_config
 @@ -33,7 +33,7 @@ config global_haproxy
@@ -248,10 +248,10 @@ index b73edaa..d48bc4a 100644
  180.184.1.1
  180.184.2.2
 diff --git a/luci-app-passwall/root/usr/share/passwall/rules/proxy_host b/luci-app-passwall/root/usr/share/passwall/rules/proxy_host
-index a70321f..95167f2 100644
+index 72c498c..4aa1a8c 100644
 --- a/luci-app-passwall/root/usr/share/passwall/rules/proxy_host
 +++ b/luci-app-passwall/root/usr/share/passwall/rules/proxy_host
-@@ -8,5 +8,4 @@ googleapis.cn
+@@ -9,5 +9,4 @@ googleapis.cn
  googleapis.com
  google.com.tw
  google.com.hk
