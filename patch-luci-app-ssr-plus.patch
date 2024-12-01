@@ -430,7 +430,7 @@ index 0e19670..a7485ac 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-index 6bc5944..e1f75e5 100644
+index 69dae19..7621a51 100644
 --- a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 +++ b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 @@ -569,27 +569,6 @@ msgstr "使用 DNS2TCP 查询"
@@ -462,7 +462,7 @@ index 6bc5944..e1f75e5 100644
  msgstr "DNS 服务器 IP:Port"
  
 diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index 8edf65b..9d8e5e6 100755
+index 13266dc..88f26b2 100755
 --- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 +++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 @@ -188,23 +188,17 @@ ln_start_bin() {
