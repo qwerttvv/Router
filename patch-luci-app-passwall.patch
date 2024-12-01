@@ -1,7 +1,16 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 7c6236f..cdd3eb6 100644
+index 7c6236f..5486209 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
+@@ -144,7 +144,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geodata
+ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geoview
+ 	bool "Include V2ray_Geoview"
+ 	select PACKAGE_geoview
+-	default y if aarch64||arm||i386||x86_64
++	default n
+ 
+ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Plugin
+ 	bool "Include V2ray-Plugin (Shadowsocks Plugin)"
 @@ -177,7 +177,6 @@ define Package/$(PKG_NAME)/conffiles
  /usr/share/passwall/rules/lanlist_ipv4
  /usr/share/passwall/rules/lanlist_ipv6

@@ -144,7 +144,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geodata
 config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geoview
 	bool "Include V2ray_Geoview"
 	select PACKAGE_geoview
-	default y if aarch64||arm||i386||x86_64
+	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Plugin
 	bool "Include V2ray-Plugin (Shadowsocks Plugin)"
