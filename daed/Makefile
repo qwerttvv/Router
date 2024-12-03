@@ -22,6 +22,12 @@ PKG_BUILD_DEPENDS:=golang/host bpf-headers
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
 
+ifeq ($(ARCH),arm)
+PATCH_DIR:=patches_arm
+else ifeq ($(ARCH),riscv64)
+PATCH_DIR:=patches_riscv
+endif
+
 GO_PKG:=github.com/daeuniverse/dae-wing
 GO_PKG_LDFLAGS:= \
 	-X '$(GO_PKG)/db.AppDescription=$(PKG_NAME) is a integration solution of dae, API and UI.'
