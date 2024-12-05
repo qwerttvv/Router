@@ -29,7 +29,7 @@ if api.is_finded("geoview") then
 	o.description = "<ul>"
 		.. "<li>" .. translate("Experimental feature.") .. "</li>"
 		.. "<li>" .. translate("Analyzes and preloads GeoIP/Geosite data to enhance the shunt performance of Sing-box/Xray.") .. "</li>"
-		.. "<li>" .. translate("Note: Increases resource usage; Geosite analysis is only supported in ChinaDNS-NG and SmartDNS modes.") .. "</li>"
+		.. "<li>" .. translate("Note: Increases resource usage.") .. "</li>"
 		.. "</ul>"
 end
 

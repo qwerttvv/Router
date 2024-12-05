@@ -826,8 +826,8 @@ msgstr "开启 Geo 数据解析"
 msgid "Analyzes and preloads GeoIP/Geosite data to enhance the shunt performance of Sing-box/Xray."
 msgstr "分析和预加载 GeoIP/Geosite 数据，以增强 Sing-box/Xray 的分流效果。"
 
-msgid "Note: Increases resource usage; Geosite analysis is only supported in ChinaDNS-NG and SmartDNS modes."
-msgstr "注：会增加一些系统资源的开销，仅在 ChinaDNS-NG 和 SmartDNS 模式下支持分析 Geosite 。"
+msgid "Note: Increases resource usage."
+msgstr "注：会增加一些系统资源的开销。"
 
 msgid "Shunt Rule"
 msgstr "分流规则"
