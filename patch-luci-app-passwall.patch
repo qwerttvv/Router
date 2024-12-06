@@ -20,11 +20,11 @@ index 7c6236f..5486209 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/controller/passwall.lua b/luci-app-passwall/luasrc/controller/passwall.lua
-index 8cc5965..add2a56 100644
+index 58c7d1a..a6a2eef 100644
 --- a/luci-app-passwall/luasrc/controller/passwall.lua
 +++ b/luci-app-passwall/luasrc/controller/passwall.lua
-@@ -273,7 +273,7 @@ function connect_status()
- 			url = "-x socks5h://127.0.0.1:" .. socks_port .. " " .. url
+@@ -274,7 +274,7 @@ function connect_status()
+ 			url = "-x socks5h://" .. socks_server .. " " .. url
  		end
  	end
 -	local result = luci.sys.exec('curl --connect-timeout 3 -o /dev/null -I -sk -w "%{http_code}:%{time_appconnect}" ' .. url)
