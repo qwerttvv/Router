@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 7c6236f..5486209 100644
+index fa1cd41..eac8656 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -144,7 +144,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geodata
