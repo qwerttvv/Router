@@ -20,7 +20,7 @@ index fa1cd41..eac8656 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/controller/passwall.lua b/luci-app-passwall/luasrc/controller/passwall.lua
-index 58c7d1a..a6a2eef 100644
+index ce89a37..a3b132b 100644
 --- a/luci-app-passwall/luasrc/controller/passwall.lua
 +++ b/luci-app-passwall/luasrc/controller/passwall.lua
 @@ -274,7 +274,7 @@ function connect_status()
