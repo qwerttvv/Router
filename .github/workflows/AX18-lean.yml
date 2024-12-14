@@ -168,6 +168,7 @@ jobs:
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}-lean
         path: ${{ env.FIRMWARE }}
+      continue-on-error: true
 
     - name: Generate release tag
       id: tag
@@ -187,3 +188,4 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+        continue-on-error: true
