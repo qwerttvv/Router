@@ -66,7 +66,7 @@ jobs:
           echo "" >> MyNewMakefile666
           echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_Xray" >> MyNewMakefile666
           echo "	bool \"Xray-core\"" >> MyNewMakefile666
-          echo "	default y" >> MyNewMakefile666
+          echo "	default n" >> MyNewMakefile666
           echo "" >> MyNewMakefile666
           echo "endef" >> MyNewMakefile666
           echo "" >> MyNewMakefile666
