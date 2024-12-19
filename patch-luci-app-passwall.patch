@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index fa1cd41..eac8656 100644
+index 2b72468..15c6437 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -144,7 +144,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geodata
@@ -20,7 +20,7 @@ index fa1cd41..eac8656 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/controller/passwall.lua b/luci-app-passwall/luasrc/controller/passwall.lua
-index 02ce26c..83cbafc 100644
+index 33c5319..6ddcdfd 100644
 --- a/luci-app-passwall/luasrc/controller/passwall.lua
 +++ b/luci-app-passwall/luasrc/controller/passwall.lua
 @@ -279,7 +279,7 @@ function connect_status()
@@ -33,7 +33,7 @@ index 02ce26c..83cbafc 100644
  	if code ~= 0 then
  		local use_time = luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $2}'")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index d766646..e5d6a46 100644
+index 488cd50..541167f 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -467,6 +467,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
@@ -49,44 +49,8 @@ index d766646..e5d6a46 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-diff --git a/luci-app-passwall/luasrc/view/passwall/app_update/app_version.htm b/luci-app-passwall/luasrc/view/passwall/app_update/app_version.htm
-index 739c593..3769e7d 100644
---- a/luci-app-passwall/luasrc/view/passwall/app_update/app_version.htm
-+++ b/luci-app-passwall/luasrc/view/passwall/app_update/app_version.htm
-@@ -180,12 +180,12 @@ local version = {}
- <div class="cbi-value">
- 	<label class="cbi-value-title">Passwall <%:Version%></label>
- 	<div class="cbi-value-field">
--		<div class="cbi-value-description">
-+		<!--div class="cbi-value-description"-->
- 			<span>【 <%=api.get_version()%> 】</span>
- 			<input class="btn cbi-button cbi-button-apply" type="button" id="passwall-check_btn"
- 				onclick="onBtnClick(this,'passwall');" value="<%:Check update%>" />
- 			<span id="passwall-check_btn-detail"></span>
--		</div>
-+		<!--/div-->
- 	</div>
- </div>
- 
-@@ -196,14 +196,14 @@ local version = {}
- 		<%:Version%>
- 	</label>
- 	<div class="cbi-value-field">
--		<div class="cbi-value-description">
-+		<!--div class="cbi-value-description"-->
- 			<span>【 <%=version[k] ~="" and version[k] or translate("Null") %> 】</span>
- 			<input class="btn cbi-button cbi-button-apply" type="button" id="_<%=k%>-check_btn"
- 				onclick="onBtnClick(this,'<%=k%>');" value="<%:Check update%>" />
- 			<input class="btn cbi-button cbi-button-apply" type="button" id="_<%=k%>-force_btn"
- 				onclick="doUpdate(this,'<%=k%>');" value="<%:Force update%>" style="display:none"/>
- 			<span id="_<%=k%>-check_btn-detail"></span>
--		</div>
-+		<!--/div-->
- 	</div>
- </div>
- <%end%>
 diff --git a/luci-app-passwall/luasrc/view/passwall/global/status.htm b/luci-app-passwall/luasrc/view/passwall/global/status.htm
-index 00f79ff..452d369 100644
+index e8d76ec..a872950 100644
 --- a/luci-app-passwall/luasrc/view/passwall/global/status.htm
 +++ b/luci-app-passwall/luasrc/view/passwall/global/status.htm
 @@ -1,5 +1,11 @@
@@ -101,13 +65,13 @@ index 00f79ff..452d369 100644
  -%>
  
  <style>
-@@ -52,7 +58,29 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
- 		color:#8898aa!important;
+@@ -53,8 +59,30 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
  		line-height: 1.8em;
  		min-height: 48px;
+ 		border-radius: 12.375px;
 +		background-image: linear-gradient(270deg, #dde2ff 0%, #fffeff 100%);
-+		border-radius: 12.375px;
  	}
+ 
 +	@media (prefers-color-scheme: dark) {
 +		.block h4 {
 +			background-image: none;
@@ -128,10 +92,11 @@ index 00f79ff..452d369 100644
 +			box-shadow: unset;
 +		}
 +	<% end -%>
- 
++
  	.check {
  		cursor: pointer;
-@@ -137,7 +165,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
+ 	}
+@@ -138,7 +166,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
  				</div>
  			</div>
  		</div>
@@ -140,7 +105,7 @@ index 00f79ff..452d369 100644
  			<div class="block pure-g">
  				<div class="pure-u-1-3">
  					<div class="img-con">
-@@ -149,7 +177,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
+@@ -150,7 +178,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
  				</div>
  			</div>
  		</div>
@@ -149,7 +114,7 @@ index 00f79ff..452d369 100644
  			<div class="block pure-g">
  				<div class="pure-u-1-3">
  					<div class="img-con">
-@@ -161,7 +189,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
+@@ -162,7 +190,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
  				</div>
  			</div>
  		</div>
@@ -158,7 +123,7 @@ index 00f79ff..452d369 100644
  			<div class="block pure-g">
  				<div class="pure-u-1-3">
  					<div class="img-con">
-@@ -173,7 +201,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
+@@ -174,7 +202,7 @@ https://github.com/pure-css/pure/blob/master/LICENSE.md
  				</div>
  			</div>
  		</div>
@@ -167,37 +132,11 @@ index 00f79ff..452d369 100644
  			<div class="block pure-g">
  				<div class="pure-u-1-3">
  					<div class="img-con">
-diff --git a/luci-app-passwall/luasrc/view/passwall/node_list/node_list.htm b/luci-app-passwall/luasrc/view/passwall/node_list/node_list.htm
-index dfc11d9..0778566 100644
---- a/luci-app-passwall/luasrc/view/passwall/node_list/node_list.htm
-+++ b/luci-app-passwall/luasrc/view/passwall/node_list/node_list.htm
-@@ -26,7 +26,7 @@ table td, .table .td {
- }
- 
- ._now_use {
--	background: #94e1ff !important;
-+	background: #5e72e445 !important;
- }
- 
- .ping a:hover{
-diff --git a/luci-app-passwall/luasrc/view/passwall/rule/rule_version.htm b/luci-app-passwall/luasrc/view/passwall/rule/rule_version.htm
-index 24662de..77b6a0b 100644
---- a/luci-app-passwall/luasrc/view/passwall/rule/rule_version.htm
-+++ b/luci-app-passwall/luasrc/view/passwall/rule/rule_version.htm
-@@ -70,7 +70,7 @@ local geosite_update = api.uci_get_type("global_rules", "geosite_update", "1") =
- 				<input class="cbi-input-checkbox" type="checkbox" name="geosite" value="1" <%=geosite_update%> />
- 				geosite
- 			</label>
--			<input class="btn cbi-button cbi-button-apply" type="button" id="update_rules_btn" onclick="update_rules(this)" value="<%:Manually update%>" />
-+			<br><br><input class="btn cbi-button cbi-button-apply" type="button" id="update_rules_btn" onclick="update_rules(this)" value="<%:Manually update%>" />
- 		</div>
- 	</div>
- </div>
 diff --git a/luci-app-passwall/root/usr/share/passwall/0_default_config b/luci-app-passwall/root/usr/share/passwall/0_default_config
-index 918aaa4..4b20280 100644
+index 8348217..19b16b7 100644
 --- a/luci-app-passwall/root/usr/share/passwall/0_default_config
 +++ b/luci-app-passwall/root/usr/share/passwall/0_default_config
-@@ -33,7 +33,7 @@ config global_haproxy
+@@ -34,7 +34,7 @@ config global_haproxy
  config global_delay
  	option auto_on '0'
  	option start_daemon '1'
