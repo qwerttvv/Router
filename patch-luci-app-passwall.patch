@@ -275,7 +275,7 @@ index 57f52f0..14aa4e4 100755
  
  REDIRECT_LIST="socks ss ss-rust ssr sing-box xray trojan-plus naiveproxy hysteria2"
 diff --git a/luci-app-passwall/root/usr/share/passwall/iptables.sh b/luci-app-passwall/root/usr/share/passwall/iptables.sh
-index a1e44f2..c5d23ba 100755
+index b510f2f..bbdb912 100755
 --- a/luci-app-passwall/root/usr/share/passwall/iptables.sh
 +++ b/luci-app-passwall/root/usr/share/passwall/iptables.sh
 @@ -329,7 +329,6 @@ load_acl() {
@@ -287,7 +287,7 @@ index a1e44f2..c5d23ba 100755
  
  				[ -n "$tcp_port" -o -n "$udp_port" ] && {
 diff --git a/luci-app-passwall/root/usr/share/passwall/nftables.sh b/luci-app-passwall/root/usr/share/passwall/nftables.sh
-index 3bd9dd0..4cf6f6e 100755
+index 1f8126d..94242ea 100755
 --- a/luci-app-passwall/root/usr/share/passwall/nftables.sh
 +++ b/luci-app-passwall/root/usr/share/passwall/nftables.sh
 @@ -379,7 +379,6 @@ load_acl() {
