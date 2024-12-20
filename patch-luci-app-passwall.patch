@@ -33,10 +33,10 @@ index 6851861..669a612 100644
  	if code ~= 0 then
  		local use_time = luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $2}'")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 958ff0a..89543b9 100644
+index 9b0cdb3..bf2c383 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-@@ -474,6 +474,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
+@@ -478,6 +478,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
  o:value("149.112.112.112", "149.112.112.112 (Quad9)")
  o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
  o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
@@ -49,7 +49,7 @@ index 958ff0a..89543b9 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-@@ -565,7 +571,7 @@ if api.is_finded("smartdns") then
+@@ -569,7 +575,7 @@ if api.is_finded("smartdns") then
  end
  
  o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
