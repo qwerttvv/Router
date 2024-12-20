@@ -571,7 +571,7 @@ if api.is_finded("smartdns") then
 end
 
 o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
-o.default = "1"
+o.default = "0"
 o.rmempty = false
 
 if (uci:get(appname, "@global_forwarding[0]", "use_nft") or "0") == "1" then
