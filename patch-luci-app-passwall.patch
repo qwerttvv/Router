@@ -20,10 +20,10 @@ index 2b72468..15c6437 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/controller/passwall.lua b/luci-app-passwall/luasrc/controller/passwall.lua
-index ae0617a..29e3604 100644
+index e7fcbee..4143d44 100644
 --- a/luci-app-passwall/luasrc/controller/passwall.lua
 +++ b/luci-app-passwall/luasrc/controller/passwall.lua
-@@ -283,7 +283,7 @@ function connect_status()
+@@ -281,7 +281,7 @@ function connect_status()
  			url = "-x socks5h://" .. socks_server .. " " .. url
  		end
  	end
