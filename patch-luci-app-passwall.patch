@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 2b72468..15c6437 100644
+index b167381..53e8463 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -144,7 +144,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geodata
@@ -20,7 +20,7 @@ index 2b72468..15c6437 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/controller/passwall.lua b/luci-app-passwall/luasrc/controller/passwall.lua
-index e7fcbee..4143d44 100644
+index abf7438..0199815 100644
 --- a/luci-app-passwall/luasrc/controller/passwall.lua
 +++ b/luci-app-passwall/luasrc/controller/passwall.lua
 @@ -281,7 +281,7 @@ function connect_status()
@@ -33,10 +33,10 @@ index e7fcbee..4143d44 100644
  	if code ~= 0 then
  		local use_time = luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $2}'")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 70925af..fbf848c 100644
+index 7c84b2a..1715ccc 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-@@ -478,6 +478,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
+@@ -491,6 +491,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
  o:value("149.112.112.112", "149.112.112.112 (Quad9)")
  o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
  o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
@@ -49,7 +49,7 @@ index 70925af..fbf848c 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-@@ -570,7 +576,7 @@ if api.is_finded("smartdns") then
+@@ -590,7 +596,7 @@ if api.is_finded("smartdns") then
  end
  
  o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
@@ -58,26 +58,6 @@ index 70925af..fbf848c 100644
  o.rmempty = false
  
  if (uci:get(appname, "@global_forwarding[0]", "use_nft") or "0") == "1" then
-diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index 8c4e6ef..81089eb 100644
---- a/luci-app-passwall/luasrc/passwall/api.lua
-+++ b/luci-app-passwall/luasrc/passwall/api.lua
-@@ -219,14 +219,7 @@ end
- 
- function is_install(package)
- 	if package and #package > 0 then
--		local file_path = "/usr/lib/opkg/info"
--		local file_ext = ".control"
--		local has = sys.call("[ -d " .. file_path .. " ]")
--		if has == 0 then
--			file_path = "/lib/apk/packages"
--			file_ext = ".list"
--		end
--		return sys.call(string.format('[ -s "%s/%s%s" ]', file_path, package, file_ext)) == 0
-+		return sys.call(string.format('opkg list-installed | grep "%s" > /dev/null 2>&1', package)) == 0
- 	end
- 	return false
- end
 diff --git a/luci-app-passwall/luasrc/view/passwall/global/status.htm b/luci-app-passwall/luasrc/view/passwall/global/status.htm
 index e8d76ec..a872950 100644
 --- a/luci-app-passwall/luasrc/view/passwall/global/status.htm
@@ -174,130 +154,6 @@ index 551c824..2a6a814 100644
  
  config global_forwarding
  	option tcp_no_redir_ports 'disable'
-diff --git a/luci-app-passwall/root/usr/share/passwall/app.sh b/luci-app-passwall/root/usr/share/passwall/app.sh
-index 64b063d..a005f6a 100755
---- a/luci-app-passwall/root/usr/share/passwall/app.sh
-+++ b/luci-app-passwall/root/usr/share/passwall/app.sh
-@@ -1590,9 +1590,7 @@ start_dns() {
- 		[ "$(expr $dnsmasq_version \>= 2.87)" == 0 ] && echolog "Dnsmasq版本低于2.87，有可能无法正常使用！！！"
- 	}
- 
--	local DNSMASQ_TUN_DNS=$(get_first_dns TUN_DNS 53 | sed 's/:/#/g')
- 	local RUN_NEW_DNSMASQ=1
--	RUN_NEW_DNSMASQ=${DNS_REDIRECT}
- 	if [ "${RUN_NEW_DNSMASQ}" == "0" ]; then
- 		#The old logic will be removed in the future.
- 		#Run a copy dnsmasq instance, DNS hijack that don't need a proxy devices.
-@@ -1610,7 +1608,7 @@ start_dns() {
- 		#Modify the default dnsmasq service
- 		lua $APP_PATH/helper_dnsmasq.lua stretch
- 		lua $APP_PATH/helper_dnsmasq.lua add_rule -FLAG "default" -TMP_DNSMASQ_PATH ${GLOBAL_DNSMASQ_CONF_PATH} -DNSMASQ_CONF_FILE ${GLOBAL_DNSMASQ_CONF} \
--			-DEFAULT_DNS ${DEFAULT_DNS} -LOCAL_DNS ${LOCAL_DNS} -TUN_DNS ${DNSMASQ_TUN_DNS} \
-+			-DEFAULT_DNS ${DEFAULT_DNS} -LOCAL_DNS ${LOCAL_DNS} -TUN_DNS ${TUN_DNS} \
- 			-REMOTE_FAKEDNS ${fakedns:-0} -USE_DEFAULT_DNS "${USE_DEFAULT_DNS:-direct}" -CHINADNS_DNS ${china_ng_listen:-0} \
- 			-USE_DIRECT_LIST "${USE_DIRECT_LIST}" -USE_PROXY_LIST "${USE_PROXY_LIST}" -USE_BLOCK_LIST "${USE_BLOCK_LIST}" -USE_GFW_LIST "${USE_GFW_LIST}" -CHN_LIST "${CHN_LIST}" \
- 			-TCP_NODE ${TCP_NODE} -DEFAULT_PROXY_MODE ${TCP_PROXY_MODE} -NO_PROXY_IPV6 ${DNSMASQ_FILTER_PROXY_IPV6:-0} -NFTFLAG ${nftflag:-0} \
-@@ -1622,7 +1620,7 @@ start_dns() {
- 		GLOBAL_DNSMASQ_CONF=${GLOBAL_ACL_PATH}/dnsmasq.conf
- 		GLOBAL_DNSMASQ_CONF_PATH=${GLOBAL_ACL_PATH}/dnsmasq.d
- 		lua $APP_PATH/helper_dnsmasq.lua add_rule -FLAG "default" -TMP_DNSMASQ_PATH ${GLOBAL_DNSMASQ_CONF_PATH} -DNSMASQ_CONF_FILE ${GLOBAL_DNSMASQ_CONF} \
--			-LISTEN_PORT ${GLOBAL_DNSMASQ_PORT} -DEFAULT_DNS ${DEFAULT_DNS} -LOCAL_DNS ${LOCAL_DNS} -TUN_DNS ${DNSMASQ_TUN_DNS} \
-+			-LISTEN_PORT ${GLOBAL_DNSMASQ_PORT} -DEFAULT_DNS ${DEFAULT_DNS} -LOCAL_DNS ${LOCAL_DNS} -TUN_DNS ${TUN_DNS} \
- 			-REMOTE_FAKEDNS ${fakedns:-0} -USE_DEFAULT_DNS "${USE_DEFAULT_DNS:-direct}" -CHINADNS_DNS ${china_ng_listen:-0} \
- 			-USE_DIRECT_LIST "${USE_DIRECT_LIST}" -USE_PROXY_LIST "${USE_PROXY_LIST}" -USE_BLOCK_LIST "${USE_BLOCK_LIST}" -USE_GFW_LIST "${USE_GFW_LIST}" -CHN_LIST "${CHN_LIST}" \
- 			-TCP_NODE ${TCP_NODE} -DEFAULT_PROXY_MODE ${TCP_PROXY_MODE} -NO_PROXY_IPV6 ${DNSMASQ_FILTER_PROXY_IPV6:-0} -NFTFLAG ${nftflag:-0} \
-@@ -1689,7 +1687,8 @@ acl_app() {
- 		socks_port=11100
- 		redir_port=11200
- 		dns_port=11300
--		dnsmasq_port=${GLOBAL_DNSMASQ_PORT:-11400}
-+		dnsmasq_port=11400
-+		[ -n "${GLOBAL_DNSMASQ_PORT}" ] && dnsmasq_port=$(get_new_port $GLOBAL_DNSMASQ_PORT)
- 		chinadns_port=11500
- 		for item in $items; do
- 			sid=$(uci -q show "${CONFIG}.${item}" | grep "=acl_rule" | awk -F '=' '{print $1}' | awk -F '.' '{print $2}')
-@@ -1753,6 +1752,7 @@ acl_app() {
- 
- 			[ -n "$tcp_node" ] && {
- 				local GLOBAL_TCP_NODE=$(get_cache_var "ACL_GLOBAL_TCP_node")
-+				echolog "${GLOBAL_TCP_NODE}"
- 				[ -n "${GLOBAL_TCP_NODE}" ] && GLOBAL_TCP_redir_port=$(get_cache_var "ACL_GLOBAL_TCP_redir_port")
- 				if [ "$tcp_node" = "default" ]; then
- 					if [ -n "${GLOBAL_TCP_NODE}" ]; then
-@@ -2005,10 +2005,8 @@ start() {
- 
- 	if [ "$ENABLED_DEFAULT_ACL" == 1 ] || [ "$ENABLED_ACLS" == 1 ]; then
- 		[ "$(uci -q get dhcp.@dnsmasq[0].dns_redirect)" == "1" ] && {
--			uci -q set ${CONFIG}.@global[0].dnsmasq_dns_redirect='1'
--			uci -q commit ${CONFIG}
--			uci -q set dhcp.@dnsmasq[0].dns_redirect='0'
--			uci -q commit dhcp
-+			uci -q set dhcp.@dnsmasq[0].dns_redirect='0' 2>/dev/null
-+			uci commit dhcp 2>/dev/null
- 			/etc/init.d/dnsmasq restart >/dev/null 2>&1
- 		}
- 	fi
-@@ -2050,23 +2048,11 @@ stop() {
- 	source $APP_PATH/helper_smartdns.sh del
- 	rm -rf $GLOBAL_DNSMASQ_CONF
- 	rm -rf $GLOBAL_DNSMASQ_CONF_PATH
--	[ "1" = "1" ] && {
--		#restore logic
--		bak_dnsmasq_dns_redirect=$(config_t_get global dnsmasq_dns_redirect)
--		[ -n "${bak_dnsmasq_dns_redirect}" ] && {
--			uci -q set dhcp.@dnsmasq[0].dns_redirect="${bak_dnsmasq_dns_redirect}"
--			uci -q commit dhcp
--			uci -q delete ${CONFIG}.@global[0].dnsmasq_dns_redirect
--			uci -q commit ${CONFIG}
--		}
--		if [ -z "$(get_cache_var "ACL_default_dns_port")" ] || [ -n "${bak_dnsmasq_dns_redirect}" ]; then
--			lua $APP_PATH/helper_dnsmasq.lua restart -LOG 0
--		fi
--		bak_bridge_nf_ipt=$(get_cache_var "bak_bridge_nf_ipt")
--		[ -n "${bak_bridge_nf_ipt}" ] && sysctl -w net.bridge.bridge-nf-call-iptables=${bak_bridge_nf_ipt} >/dev/null 2>&1
--		bak_bridge_nf_ip6t=$(get_cache_var "bak_bridge_nf_ip6t")
--		[ -n "${bak_bridge_nf_ip6t}" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=${bak_bridge_nf_ip6t} >/dev/null 2>&1
--	}
-+	[ -z "$(get_cache_var "ACL_default_dns_port")" ] && lua $APP_PATH/helper_dnsmasq.lua restart -LOG 0
-+	bak_bridge_nf_ipt=$(get_cache_var "bak_bridge_nf_ipt")
-+	[ -n "${bak_bridge_nf_ipt}" ] && sysctl -w net.bridge.bridge-nf-call-iptables=${bak_bridge_nf_ipt} >/dev/null 2>&1
-+	bak_bridge_nf_ip6t=$(get_cache_var "bak_bridge_nf_ip6t")
-+	[ -n "${bak_bridge_nf_ip6t}" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=${bak_bridge_nf_ip6t} >/dev/null 2>&1
- 	rm -rf $TMP_PATH
- 	rm -rf /tmp/lock/${CONFIG}_socks_auto_switch*
- 	echolog "清空并关闭相关程序和缓存完成。"
-@@ -2125,7 +2111,6 @@ DNS_CACHE=0
- REMOTE_DNS=$(config_t_get global remote_dns 1.1.1.1:53 | sed 's/#/:/g' | sed -E 's/\:([^:]+)$/#\1/g')
- USE_DEFAULT_DNS=$(config_t_get global use_default_dns direct)
- FILTER_PROXY_IPV6=$(config_t_get global filter_proxy_ipv6 0)
--DNS_REDIRECT=$(config_t_get global dns_redirect 1)
- dns_listen_port=${DNS_PORT}
- 
- REDIRECT_LIST="socks ss ss-rust ssr sing-box xray trojan-plus naiveproxy hysteria2"
-diff --git a/luci-app-passwall/root/usr/share/passwall/iptables.sh b/luci-app-passwall/root/usr/share/passwall/iptables.sh
-index b510f2f..bbdb912 100755
---- a/luci-app-passwall/root/usr/share/passwall/iptables.sh
-+++ b/luci-app-passwall/root/usr/share/passwall/iptables.sh
-@@ -329,7 +329,6 @@ load_acl() {
- 					$ip6t_n -A PSW_DNS $(comment "$remarks") -p udp ${_ipt_source} --dport 53 -j REDIRECT --to-ports ${dns_redirect} 2>/dev/null
- 					$ipt_n -A PSW_DNS $(comment "$remarks") -p tcp ${_ipt_source} --dport 53 -j REDIRECT --to-ports ${dns_redirect}
- 					$ip6t_n -A PSW_DNS $(comment "$remarks") -p tcp ${_ipt_source} --dport 53 -j REDIRECT --to-ports ${dns_redirect} 2>/dev/null
--					[ -z "$(get_cache_var "ACL_${sid}_tcp_default")" ] && echolog "     - ${msg}使用与全局配置不相同节点，已将DNS强制重定向到专用 DNS 服务器。"
- 				fi
- 
- 				[ -n "$tcp_port" -o -n "$udp_port" ] && {
-diff --git a/luci-app-passwall/root/usr/share/passwall/nftables.sh b/luci-app-passwall/root/usr/share/passwall/nftables.sh
-index 1f8126d..94242ea 100755
---- a/luci-app-passwall/root/usr/share/passwall/nftables.sh
-+++ b/luci-app-passwall/root/usr/share/passwall/nftables.sh
-@@ -379,7 +379,6 @@ load_acl() {
- 					nft "add rule $NFTABLE_NAME PSW_DNS ip protocol tcp ${_ipt_source} tcp dport 53 counter redirect to :${dns_redirect} comment \"$remarks\""
- 					nft "add rule $NFTABLE_NAME PSW_DNS meta l4proto udp ${_ipt_source} udp dport 53 counter redirect to :${dns_redirect} comment \"$remarks\""
- 					nft "add rule $NFTABLE_NAME PSW_DNS meta l4proto tcp ${_ipt_source} tcp dport 53 counter redirect to :${dns_redirect} comment \"$remarks\""
--					[ -z "$(get_cache_var "ACL_${sid}_tcp_default")" ] && echolog "     - ${msg}使用与全局配置不相同节点，已将DNS强制重定向到专用 DNS 服务器。"
- 				fi
- 
- 				[ -n "$tcp_port" -o -n "$udp_port" ] && {
 diff --git a/luci-app-passwall/root/usr/share/passwall/rules/direct_host b/luci-app-passwall/root/usr/share/passwall/rules/direct_host
 index a3b1464..90bcf58 100644
 --- a/luci-app-passwall/root/usr/share/passwall/rules/direct_host
