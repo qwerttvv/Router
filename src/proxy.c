@@ -158,7 +158,7 @@ int proxy_set(int uplink, const int downlinks[], size_t downlinks_cnt, enum prox
 		struct querier_user_iface *iface = container_of(user, struct querier_user_iface, user);
 
 		size_t i;
-		for (i = 0; i < downlinks_cnt && downlinks[i] == iface->iface->ifindex; ++i);
+		for (i = 0; i < downlinks_cnt && downlinks[i] == iface->iface->ifindex; ++i)
 			if (i == downlinks_cnt)
 				proxy_remove_downlink(container_of(iface, struct proxy_downlink, iface));
 	}
