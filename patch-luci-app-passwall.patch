@@ -33,7 +33,7 @@ index 99c620f..ba84fc9 100644
  	if code ~= 0 then
  		local use_time = luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $2}'")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index d8719bb..0259d8f 100644
+index 4168039..c4321b5 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -492,6 +492,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
@@ -57,7 +57,7 @@ index d8719bb..0259d8f 100644
 +o.default = "0"
  o.rmempty = false
  
- if (uci:get(appname, "@global_forwarding[0]", "use_nft") or "0") == "1" then
+ if (m.uci:get(appname, "@global_forwarding[0]", "use_nft") or "0") == "1" then
 diff --git a/luci-app-passwall/luasrc/view/passwall/global/status.htm b/luci-app-passwall/luasrc/view/passwall/global/status.htm
 index e8d76ec..a872950 100644
 --- a/luci-app-passwall/luasrc/view/passwall/global/status.htm
