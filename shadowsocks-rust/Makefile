@@ -12,12 +12,7 @@ PKG_RELEASE:=1
 PKG_SOURCE_HEADER:=shadowsocks-v$(PKG_VERSION)
 PKG_SOURCE_BODY:=unknown-linux-musl
 PKG_SOURCE_FOOTER:=tar.xz
-
-ifeq ($(filter $(ARCH),mips mipsel),)
-  PKG_SOURCE_URL:=https://github.com/shadowsocks/shadowsocks-rust/releases/download/v$(PKG_VERSION)/
-else
-  PKG_SOURCE_URL:=https://github.com/sbwml/shadowsocks-rust-mips/releases/download/v$(PKG_VERSION)/
-endif
+PKG_SOURCE_URL:=https://github.com/shadowsocks/shadowsocks-rust/releases/download/v$(PKG_VERSION)/
 
 ifeq ($(ARCH),aarch64)
   PKG_SOURCE:=$(PKG_SOURCE_HEADER).aarch64-$(PKG_SOURCE_BODY).$(PKG_SOURCE_FOOTER)
@@ -38,13 +33,6 @@ else ifeq ($(ARCH),i386)
 else ifeq ($(ARCH),x86_64)
   PKG_SOURCE:=$(PKG_SOURCE_HEADER).x86_64-$(PKG_SOURCE_BODY).$(PKG_SOURCE_FOOTER)
   PKG_HASH:=53e6cc209ab9f925e5a59c9f43d75b8179551fc9e608846d7649b5e3aff22c16
-else ifeq ($(ARCH),mips)
-  PKG_SOURCE:=$(PKG_SOURCE_HEADER).mips-$(PKG_SOURCE_BODY).$(PKG_SOURCE_FOOTER)
-  PKG_HASH:=fa826d72de0c7713fe77570b56931f38e0bb575a370fd8de4e98b2bc29179e97
-else ifeq ($(ARCH),mipsel)
-  PKG_SOURCE:=$(PKG_SOURCE_HEADER).mipsel-$(PKG_SOURCE_BODY).$(PKG_SOURCE_FOOTER)
-  PKG_HASH:=bb34a5fec2c7c3ae22a1bef06d8caf3cb5f06368e311d69189b713d3876dda43
-# Set the default value to make OpenWrt Package Checker happy
 else
   PKG_SOURCE:=dummy
   PKG_HASH:=dummy
@@ -65,7 +53,7 @@ define Package/shadowsocks-rust/Default
     SUBMENU:=Web Servers/Proxies
     TITLE:=shadowsocks-rust $(1)
     URL:=https://github.com/shadowsocks/shadowsocks-rust
-    DEPENDS:=@(aarch64||arm||i386||mips||mipsel||x86_64)
+    DEPENDS:=@(aarch64||arm||i386||x86_64)
   endef
 
   define Package/shadowsocks-rust-$(1)/install
