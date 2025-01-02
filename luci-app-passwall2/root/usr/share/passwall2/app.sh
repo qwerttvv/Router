@@ -342,7 +342,7 @@ eval_cache_var() {
 }
 
 run_xray() {
-	local flag node redir_port socks_address socks_port socks_username socks_password http_address http_port http_username http_password
+	local flag node redir_port tcp_proxy_way socks_address socks_port socks_username socks_password http_address http_port http_username http_password
 	local dns_listen_port direct_dns_query_strategy remote_dns_protocol remote_dns_udp_server remote_dns_tcp_server remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy dns_cache write_ipset_direct
 	local loglevel log_file config_file
 	local _extra_param=""
@@ -444,15 +444,18 @@ run_xray() {
 			_extra_param="${_extra_param} -remote_dns_udp_port ${dns_remote_listen_port} -remote_dns_udp_server 127.0.0.1 -remote_dns_query_strategy ${remote_dns_query_strategy}"
 		fi
 	}
+	[ -n "${redir_port}" ] && {
+		_extra_param="${_extra_param} -redir_port ${redir_port}"
+		set_cache_var "node_${node}_redir_port" "${redir_port}"
+		[ -n "${tcp_proxy_way}" ] && _extra_param="${_extra_param} -tcp_proxy_way ${tcp_proxy_way}"
+	}
 
-	lua $UTIL_XRAY gen_config -node $node -redir_port $redir_port -tcp_proxy_way ${TCP_PROXY_WAY} -loglevel $loglevel ${_extra_param} > $config_file
+	lua $UTIL_XRAY gen_config -node $node -loglevel $loglevel ${_extra_param} > $config_file
 	ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file run -c "$config_file"
-
-	[ -n "${redir_port}" ] && set_cache_var "node_${node}_redir_port" "${redir_port}"
 }
 
 run_singbox() {
-	local flag node redir_port socks_address socks_port socks_username socks_password http_address http_port http_username http_password
+	local flag node redir_port tcp_proxy_way socks_address socks_port socks_username socks_password http_address http_port http_username http_password
 	local dns_listen_port direct_dns_query_strategy remote_dns_protocol remote_dns_udp_server remote_dns_tcp_server remote_dns_doh remote_dns_client_ip remote_dns_detour remote_fakedns remote_dns_query_strategy dns_cache write_ipset_direct
 	local loglevel log_file config_file
 	local _extra_param=""
@@ -547,10 +550,14 @@ run_singbox() {
 		[ "$remote_fakedns" = "1" ] && _extra_param="${_extra_param} -remote_dns_fake 1"
 	}
 
-	lua $UTIL_SINGBOX gen_config -node $node -redir_port $redir_port -tcp_proxy_way ${TCP_PROXY_WAY} ${_extra_param} > $config_file
-	ln_run "$(first_type $(config_t_get global_app singbox_file) sing-box)" "sing-box" "${log_file}" run -c "$config_file"
+	[ -n "${redir_port}" ] && {
+		_extra_param="${_extra_param} -redir_port ${redir_port}"
+		set_cache_var "node_${node}_redir_port" "${redir_port}"
+		[ -n "${tcp_proxy_way}" ] && _extra_param="${_extra_param} -tcp_proxy_way ${tcp_proxy_way}"
+	}
 
-	[ -n "${redir_port}" ] && set_cache_var "node_${node}_redir_port" "${redir_port}"
+	lua $UTIL_SINGBOX gen_config -node $node ${_extra_param} > $config_file
+	ln_run "$(first_type $(config_t_get global_app singbox_file) sing-box)" "sing-box" "${log_file}" run -c "$config_file"
 }
 
 run_socks() {
