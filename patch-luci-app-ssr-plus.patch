@@ -121,7 +121,7 @@ index b469328..3a0b055 100644
  	bool "Include ShadowsocksR Libev Client"
  	default y
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index 8ceaba7..f381a54 100644
+index 0469b87..eb7ccb7 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 @@ -7,7 +7,7 @@ function index()
@@ -134,10 +134,10 @@ index 8ceaba7..f381a54 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
-index 9853997..de97787 100644
+index 88351ff..e5f1593 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
-@@ -70,45 +70,6 @@ o.default = "https://fastly.jsdelivr.net/gh/QiuSimons/Netflix_IP/NF_only.txt"
+@@ -75,45 +75,6 @@ o.default = "https://fastly.jsdelivr.net/gh/QiuSimons/Netflix_IP/NF_only.txt"
  o.description = translate("Customize Netflix IP Url")
  o:depends("netflix_enable", "1")
  
@@ -238,7 +238,7 @@ index 26de9ba..b24183e 100644
  	o = s:option(Value, "chinadns_forward", translate("Domestic DNS Server"))
  	o:value("", translate("Disable ChinaDNS-NG"))
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/status.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/status.lua
-index 2a5c5e2..65b916e 100644
+index c7e84ec..83a88a2 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/status.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/status.lua
 @@ -92,7 +92,7 @@ if Process_list:find("ssr.server") then
@@ -338,7 +338,7 @@ index d0b77f1..259cb7f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 0e19670..a7485ac 100644
+index 2607fb7..62e1b1c 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -69,9 +69,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -398,25 +398,25 @@ index 0e19670..a7485ac 100644
  			return false;
  		case "trojan":
  			try {
-@@ -234,7 +234,7 @@ function import_ssr_url(btn, urlname, sid) {
- 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls')[0].dispatchEvent(event);
- 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_host')[0].value = url.searchParams.get("sni");
+@@ -293,7 +293,7 @@ function import_ssr_url(btn, urlname, sid) {
+ 				break;
+ 			}
  
 -			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
 +			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -296,7 +296,7 @@ function import_ssr_url(btn, urlname, sid) {
- 			}
+@@ -358,7 +358,7 @@ function import_ssr_url(btn, urlname, sid) {
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].checked = true;
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].dispatchEvent(event);
+ 			}
 -			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
 +			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
  			return false;
  		case "vless":
  			try {
-@@ -388,10 +388,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -463,10 +463,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
@@ -430,10 +430,10 @@ index 0e19670..a7485ac 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-index 69dae19..7621a51 100644
+index 9992e81..6d547ca 100644
 --- a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 +++ b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-@@ -569,27 +569,6 @@ msgstr "使用 DNS2TCP 查询"
+@@ -577,27 +577,6 @@ msgstr "使用 DNS2TCP 查询"
  msgid "Use DNS2SOCKS query and cache"
  msgstr "使用 DNS2SOCKS 查询并缓存"
  
