@@ -194,7 +194,6 @@ do
 			local node_id = t[option]
 			CONFIG[#CONFIG + 1] = {
 				log = true,
-				rmempty = true,
 				id = t[".name"],
 				remarks = "HAProxy负载均衡节点列表[" .. i .. "]",
 				currentNode = node_id and uci:get_all(appname, node_id) or nil,
