@@ -105,40 +105,6 @@ index 44e540d..0bb5ea7 100644
  
  config global_forwarding
  	option tcp_no_redir_ports 'disable'
-diff --git a/luci-app-passwall/root/usr/share/passwall/rules/direct_host b/luci-app-passwall/root/usr/share/passwall/rules/direct_host
-index a3b1464..ae67f3b 100644
---- a/luci-app-passwall/root/usr/share/passwall/rules/direct_host
-+++ b/luci-app-passwall/root/usr/share/passwall/rules/direct_host
-@@ -6,6 +6,13 @@ douyucdn.cn
- douyucdn2.cn
- location.services.mozilla.com
- 
-+# google
-+dl.google.com
-+
-+# github proxy
-+gh-proxy.com
-+gitmirror.com
-+
- #steam
- steamcontent.com
- dl.steam.clngaa.com
-@@ -19,6 +26,15 @@ cdn-qc.content.steamchina.com
- cdn-ali.content.steamchina.com
- epicgames-download1-1251447533.file.myqcloud.com
- 
-+# Synology ddns
-+account.synology.com
-+checkip.dyndns.org
-+checkip.synology.com
-+checkipv6.dyndns.org
-+checkipv6.synology.com
-+checkport.synology.com
-+ddns.synology.com
-+
- #DoT/DoH
- dns.alidns.com
- doh.pub
 diff --git a/luci-app-passwall/root/usr/share/passwall/rules/direct_ip b/luci-app-passwall/root/usr/share/passwall/rules/direct_ip
 index b73edaa..ada52ad 100644
 --- a/luci-app-passwall/root/usr/share/passwall/rules/direct_ip

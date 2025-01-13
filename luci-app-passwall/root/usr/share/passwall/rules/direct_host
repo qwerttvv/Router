@@ -6,13 +6,6 @@ douyucdn.cn
 douyucdn2.cn
 location.services.mozilla.com
 
-# google
-dl.google.com
-
-# github proxy
-gh-proxy.com
-gitmirror.com
-
 #steam
 steamcontent.com
 dl.steam.clngaa.com
@@ -26,6 +19,13 @@ cdn-qc.content.steamchina.com
 cdn-ali.content.steamchina.com
 epicgames-download1-1251447533.file.myqcloud.com
 
+#DoT/DoH
+dns.alidns.com
+doh.pub
+dot.pub
+doh.360.cn
+dot.360.cn
+
 # Synology ddns
 account.synology.com
 checkip.dyndns.org
@@ -35,9 +35,10 @@ checkipv6.synology.com
 checkport.synology.com
 ddns.synology.com
 
-#DoT/DoH
-dns.alidns.com
-doh.pub
-dot.pub
-doh.360.cn
-dot.360.cn
+# google
+dl.google.com
+
+# github proxy
+gh-proxy.com
+gitmirror.com
+ghfast.top
