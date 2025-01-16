@@ -221,7 +221,7 @@ table inet mihomo {
 		meta nfproto ipv6 meta l4proto . th dport != @proxy_dport counter return
 		meta l4proto { tcp, udp } ip dscp == @bypass_dscp ip daddr != $FAKE_IP counter return
 		meta l4proto { tcp, udp } ip6 dscp == @bypass_dscp counter return
-		meta nfproto @dns_hijack_nfproto meta l4proto { tcp, udp } th 53 counter return
+		meta nfproto @dns_hijack_nfproto meta l4proto { tcp, udp } th dport 53 counter return
 	}
 
 	chain mangle_output {
@@ -238,6 +238,6 @@ table inet mihomo {
 		meta nfproto ipv6 meta l4proto . th dport != @proxy_dport counter return
 		meta l4proto { tcp, udp } ip dscp == @bypass_dscp ip daddr != $FAKE_IP counter return
 		meta l4proto { tcp, udp } ip6 dscp == @bypass_dscp counter return
-		meta nfproto @dns_hijack_nfproto meta l4proto { tcp, udp } th 53 counter return
+		meta nfproto @dns_hijack_nfproto meta l4proto { tcp, udp } th dport 53 counter return
 	}
 }
