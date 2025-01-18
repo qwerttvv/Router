@@ -121,7 +121,7 @@ index b469328..3a0b055 100644
  	bool "Include ShadowsocksR Libev Client"
  	default y
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index 0469b87..eb7ccb7 100644
+index 31989b0..75e141f 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 @@ -7,7 +7,7 @@ function index()
