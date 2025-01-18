@@ -134,7 +134,7 @@ index 31989b0..75e141f 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
-index 88351ff..e5f1593 100644
+index 6bd7aaa..3c96aad 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/advanced.lua
 @@ -75,45 +75,6 @@ o.default = "https://fastly.jsdelivr.net/gh/QiuSimons/Netflix_IP/NF_only.txt"
@@ -338,7 +338,7 @@ index d0b77f1..259cb7f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 2607fb7..62e1b1c 100644
+index d8dfbdd..255beaa 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -69,9 +69,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -398,7 +398,7 @@ index 2607fb7..62e1b1c 100644
  			return false;
  		case "trojan":
  			try {
-@@ -293,7 +293,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -305,7 +305,7 @@ function import_ssr_url(btn, urlname, sid) {
  				break;
  			}
  
@@ -407,7 +407,7 @@ index 2607fb7..62e1b1c 100644
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -358,7 +358,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -381,7 +381,7 @@ function import_ssr_url(btn, urlname, sid) {
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].checked = true;
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].dispatchEvent(event);
  			}
@@ -416,7 +416,7 @@ index 2607fb7..62e1b1c 100644
  			return false;
  		case "vless":
  			try {
-@@ -463,10 +463,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -499,10 +499,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
@@ -430,7 +430,7 @@ index 2607fb7..62e1b1c 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-index 9992e81..6d547ca 100644
+index 03541f4..3faa805 100644
 --- a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 +++ b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 @@ -577,27 +577,6 @@ msgstr "使用 DNS2TCP 查询"
