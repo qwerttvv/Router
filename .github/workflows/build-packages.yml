@@ -67,7 +67,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.tag }}
           FEEDNAME: packages_ci
-          PACKAGES: chinadns-ng daed dns2socks dns2tcp geoview hysteria ipt2socks lua-neturl luci-app-daed luci-app-homeproxy luci-app-mihomo luci-app-openclash luci-app-passwall luci-app-passwall2 luci-app-ssr-plus microsocks naiveproxy pdnsd redsocks2 shadow-tls shadowsocks-libev shadowsocks-rust shadowsocksr-libev simple-obfs sing-box tcping trojan trojan-plus tuic-client v2ray-core v2ray-geodata xray-core xray-plugin
+          PACKAGES: chinadns-ng daed dns2socks dns2tcp geoview hysteria ipt2socks lua-neturl luci-app-daed luci-app-homeproxy luci-app-mihomo luci-app-openclash luci-app-passwall luci-app-passwall2 luci-app-ssr-plus microsocks naiveproxy pdnsd redsocks2 shadow-tls shadowsocks-libev shadowsocks-rust shadowsocksr-libev simple-obfs sing-box tcping trojan trojan-plus tuic-client v2ray-core v2ray-geodata v2ray-plugin xray-core xray-plugin
           KEY_BUILD: ${{ secrets.sign_key }}
           NO_REFRESH_CHECK: true
           IGNORE_ERRORS: true
