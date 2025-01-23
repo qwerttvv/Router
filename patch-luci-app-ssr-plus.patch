@@ -338,7 +338,7 @@ index d0b77f1..259cb7f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index d8dfbdd..255beaa 100644
+index 1ae02e4..b8f9db4 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -69,9 +69,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -407,16 +407,16 @@ index d8dfbdd..255beaa 100644
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -381,7 +381,7 @@ function import_ssr_url(btn, urlname, sid) {
- 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].checked = true;
- 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].dispatchEvent(event);
+@@ -388,7 +388,7 @@ function import_ssr_url(btn, urlname, sid) {
+ 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].checked = true;
+ 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].dispatchEvent(event);
  			}
 -			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
 +			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
  			return false;
  		case "vless":
  			try {
-@@ -499,10 +499,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -506,10 +506,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
@@ -430,10 +430,10 @@ index d8dfbdd..255beaa 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-index 03541f4..3faa805 100644
+index 11440b6..400c875 100644
 --- a/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
 +++ b/luci-app-ssr-plus/po/zh_Hans/ssr-plus.po
-@@ -577,27 +577,6 @@ msgstr "使用 DNS2TCP 查询"
+@@ -606,27 +606,6 @@ msgstr "使用 DNS2TCP 查询"
  msgid "Use DNS2SOCKS query and cache"
  msgstr "使用 DNS2SOCKS 查询并缓存"
  
