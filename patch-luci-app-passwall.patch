@@ -20,7 +20,7 @@ index 6c16b44..4f42c00 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 3e98ec5..17184a5 100644
+index 5687101..174df8b 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -493,6 +493,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
