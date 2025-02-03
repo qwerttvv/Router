@@ -733,6 +733,7 @@ function gen_config_server(node)
 		-- Migrate logics
 		-- https://sing-box.sagernet.org/migration/
 		for i = #config.outbounds, 1, -1 do
+			local value = config.outbounds[i]
 			if value.type == "block" then
 				-- https://sing-box.sagernet.org/migration/#migrate-legacy-special-outbounds-to-rule-actions
 				table.remove(config.outbounds, i)
