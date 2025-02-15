@@ -132,10 +132,15 @@
             text-align: left;
         }
 
-        @media only screen and (max-width: 600px) {
-            .myip {
-                min-width: 700px !important;
-                flex-direction: column !important;
+        :root[data-darkmode="true"] {
+            #eye-icon {
+                -webkit-filter: invert(1);
+                filter: invert(1);
+            }
+
+            #data-refresh-icon {
+                -webkit-filter: invert(1);
+                filter: invert(1);
             }
         }
     </style>
@@ -144,7 +149,7 @@
 <fieldset class="cbi-section">
 	<table width="100%">
     <tr><td>
-    <div class="myip" style="display: flex; min-width: 820px;">
+    <div style="display: flex; min-width: 820px;">
         <div style="width: 48%">
             <p style="margin: 20px 0 20px 8%; padding: 0px !important; text-align: left; font-size: 25px; font-weight: bold;"><%:IP Address%>
                 <span style="float: right;"><img src="/luci-static/resources/openclash/img/eye-light.svg" height="20px" title="<%:Hide IP%>" alt="<%:Hide IP%>" id="eye-icon" onclick="return privacy_my_ip(this)" /></span>
@@ -164,7 +169,7 @@
         </div>
         <div style="width: 52%">
             <p style="margin: 20px 0 20px 8%; padding: 0px !important;text-align: left; font-size: 25px; font-weight: bold;"><%:Website Access Check%>
-                <span style="float: right; margin: 0 10% 0 0;"><img src="/luci-static/resources/openclash/img/arrow-clockwise-light.svg" height="20px" title="<%:Refresh%>" alt="<%:Refresh%>" onclick="return refresh_myip(this)" /></span>
+                <span style="float: right; margin: 0 10% 0 0;"><img src="/luci-static/resources/openclash/img/arrow-clockwise-light.svg" height="20px" title="<%:Refresh%>" alt="<%:Refresh%>" id="data-refresh-icon" onclick="return refresh_myip(this)" /></span>
             </p>
             <p style="margin: 10px 0 0 8%; text-align: left; padding-left: 0px !important; padding-right: 0px !important;">
                 <span class="ip-state_title"><%:Baidu Search%>:</span><span id="http-baidu"></span><span id="ldtime-baidu"></span>
