@@ -1,0 +1,117 @@
+name: Build Nightly SmartDNS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - aarch64_cortex-a53-24.10-SNAPSHOT
+          - aarch64_cortex-a53-24.10.0
+          - linux_x86_64
+
+    steps:
+
+      - name: Set Timezone
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: Get latest commit SHA for smartdns and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_smartdns = (curl -sSL https://api.github.com/repos/pymumu/smartdns/commits/master | jq -r '.sha')
+          echo "SHA_smartdns=$SHA_smartdns" >> $env:GITHUB_ENV
+          echo "https://github.com/pymumu/smartdns/commits/$SHA_smartdns" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Checkout code
+        uses: actions/checkout@main
+        with:
+          repository: pymumu/smartdns
+          ref: master
+          submodules: recursive
+
+      - name: System update
+        if: matrix.arch == 'linux_x86_64'
+        run: |
+          sudo -E apt-mark hold grub-efi-amd64-signed
+          sudo -E apt -y update --allow-unauthenticated
+          sudo -E apt -y full-upgrade
+          sudo -E systemctl daemon-reload
+          sudo apt-get autoremove -y --purge
+          sudo apt-get clean
+
+      - name: Build openwrt-luci-compat
+        if: matrix.arch == 'linux_x86_64'
+        run: |
+          chmod +x package/luci-compat/make.sh
+          ./package/luci-compat/make.sh --arch compat
+          zip -j -9 openwrt-luci-compat.zip package/luci-compat/luci*ipk
+        
+
+      - name: Build openwrt-luci
+        if: matrix.arch == 'linux_x86_64'
+        run: |
+          chmod +x package/luci/make.sh
+          ./package/luci/make.sh --arch all
+          find package -print
+          zip -j -9 openwrt-luci.zip package/luci/luci*ipk
+        
+
+      - name: Build linux x86_64
+        if: matrix.arch == 'linux_x86_64'
+        run: |
+          chmod +x package/build-pkg.sh
+          ./package/build-pkg.sh --platform linux --arch x86_64
+          mv src/smartdns src/smartdns-x86_64
+          zip -j -9 SmartDNS-linux_x86_64.zip src/smartdns-x86_64
+          ./package/build-pkg.sh --platform linux --arch x86_64 --static
+          mv src/smartdns src/smartdns-x86_64-static
+          zip -j -9 SmartDNS-linux_x86_64-static.zip src/smartdns-x86_64-static
+        
+
+      - name: Update Makefile
+        if: matrix.arch != 'linux_x86_64'
+        run: |
+          mv package/openwrt openwrt-smartdns
+          cd openwrt-smartdns
+          sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=$(date +1.%Y.%m.%d-%H%M)/" Makefile
+          sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$SHA_smartdns/" Makefile
+          cat Makefile
+
+      - name: Setup openwrt sdk and build
+        if: matrix.arch != 'linux_x86_64'
+        uses: qwerttvv/Router/@gh-action-sdk
+        env:
+          ARCH: ${{ matrix.arch }}
+          FEEDNAME: packages_ci
+          PACKAGES: openwrt-smartdns
+          FIXUP: 1
+          NO_REFRESH_CHECK: true
+        
+        
+      - name: Zip ipk packages
+        if: matrix.arch != 'linux_x86_64'
+        run: |
+          zip -j -9 SmartDNS-${{ matrix.arch }}.zip bin/packages/*/packages_ci/*.ipk
+        
+          
+      - name: Generate release tag
+        run: echo "tag=$(date +"%Y.%m.%d-%H.%M_smartdns-${{ matrix.arch }}")" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.tag }}
+          files: |
+            openwrt-luci*.zip
+            SmartDNS*.zip
+          body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
+        
