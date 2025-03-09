@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index aca3e70..8b26594 100644
+index ae464ba..54b5f1a 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -67,7 +67,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
@@ -20,10 +20,10 @@ index aca3e70..8b26594 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 908dc46..d33a679 100644
+index 12adebe..fa97b4a 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-@@ -506,6 +506,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
+@@ -509,6 +509,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
  o:value("149.112.112.112", "149.112.112.112 (Quad9)")
  o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
  o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
@@ -36,7 +36,7 @@ index 908dc46..d33a679 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-@@ -605,7 +611,7 @@ if api.is_finded("smartdns") then
+@@ -608,7 +614,7 @@ if api.is_finded("smartdns") then
  end
  
  o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
@@ -93,7 +93,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/root/usr/share/passwall/0_default_config b/luci-app-passwall/root/usr/share/passwall/0_default_config
-index 2d4242e..3fe0cad 100644
+index d665ed8..3e8b9cd 100644
 --- a/luci-app-passwall/root/usr/share/passwall/0_default_config
 +++ b/luci-app-passwall/root/usr/share/passwall/0_default_config
 @@ -32,7 +32,7 @@ config global_haproxy
