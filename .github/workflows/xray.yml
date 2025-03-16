@@ -1,0 +1,64 @@
+name: Build Nightly xray
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    
+    - name: Set Timezone
+      run: |
+        sudo timedatectl set-timezone Asia/Shanghai
+          
+    - name: Get latest commit SHA for xray and Prepare Release Notes
+      shell: pwsh
+      run: |
+        $SHA_xray = (curl -sSL https://api.github.com/repos/XTLS/Xray-core/commits/main | jq -r '.sha')
+        echo "SHA_xray=$SHA_xray" >> $env:GITHUB_ENV
+        echo "https://github.com/XTLS/Xray-core/commits/$SHA_xray" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+    
+    - name: Check out code
+      uses: actions/checkout@main
+      with:
+        repository: XTLS/Xray-core
+        ref: main
+        submodules: recursive
+
+    - name: System update
+      run: |
+        sudo -E apt-mark hold grub-efi-amd64-signed
+        sudo -E apt -y update --allow-unauthenticated
+        sudo -E apt -y full-upgrade
+        sudo -E systemctl daemon-reload
+        sudo apt-get autoremove -y --purge
+        sudo apt-get clean
+
+    - name: Install latest UPX
+      run: |
+        UPX_VERSION=$(curl --silent "https://api.github.com/repos/upx/upx/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        curl -L -o upx.tar.xz "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+        tar -xf upx.tar.xz
+        sudo mv upx-${UPX_VERSION}-amd64_linux/upx /usr/local/bin
+
+    - name: Build and Compress
+      run: |
+        go version
+        go mod download
+        CGO_ENABLED=0 GOOS="linux" GOARCH="arm64" go build -o xray -trimpath -ldflags "-s -w -buildid=" ./main
+        upx --best xray
+        tar -cJvf xray-linux-arm64.tar.xz --mode=755 --no-same-owner xray
+        
+    - name: Generate release tag
+      run: echo "tag=$(date +"%Y.%m.%d-%H.%M_xray")" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Release
+      uses: softprops/action-gh-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.tag }}
+        files: |
+          xray-linux-arm64.tar.xz
+        body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt

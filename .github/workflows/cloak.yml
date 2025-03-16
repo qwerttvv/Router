@@ -1,0 +1,84 @@
+name: Build Nightly cloak
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    
+    - name: Set Timezone
+      run: |
+        sudo timedatectl set-timezone Asia/Shanghai
+          
+    - name: Get latest commit SHA for Cloak and Prepare Release Notes
+      shell: pwsh
+      run: |
+        $SHA_Cloak = (curl -sSL https://api.github.com/repos/cbeuw/Cloak/commits/master | jq -r '.sha')
+        echo "SHA_Cloak=$SHA_Cloak" >> $env:GITHUB_ENV
+        echo "https://github.com/cbeuw/Cloak/commits/$SHA_Cloak" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+    
+    - name: Check out code
+      uses: actions/checkout@main
+      with:
+        repository: cbeuw/Cloak
+        ref: master
+        submodules: recursive
+
+    - name: System update
+      run: |
+        sudo -E apt-mark hold grub-efi-amd64-signed
+        sudo -E apt -y update --allow-unauthenticated
+        sudo -E apt -y full-upgrade
+        sudo -E systemctl daemon-reload
+        sudo apt-get autoremove -y --purge
+        sudo apt-get clean
+
+    - name: Install latest UPX
+      run: |
+        UPX_VERSION=$(curl --silent "https://api.github.com/repos/upx/upx/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        curl -L -o upx.tar.xz "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+        tar -xf upx.tar.xz
+        sudo mv upx-${UPX_VERSION}-amd64_linux/upx /usr/local/bin
+
+    - name: Build and Compress
+      run: |
+        go version
+        go get -u ./...
+        go mod tidy
+        go mod download
+        mkdir -p release
+        rm -f ./release/*
+        pushd cmd/ck-client
+        CGO_ENABLED=0 GOOS="linux" GOARCH="arm64" go build -ldflags "-s -w" -o ck-client-linux-arm64
+        CGO_ENABLED=0 GOOS="windows" GOARCH="amd64" go build -ldflags "-s -w" -o ck-client.exe
+        mv ck-client-linux-* ../../release
+        mv ck-client.exe ../../release
+        popd
+        upx --best ./release/ck-client*
+        cd ./release/
+        tar -cJvf ck-client-linux-arm64.tar.xz --mode=755 --no-same-owner ck-client-linux-arm64
+        zip -j -9 ck-client-windows-amd64.zip ck-client.exe
+        cd ../
+        pushd cmd/ck-server
+        CGO_ENABLED=0 GOOS="linux" GOARCH="amd64" go build -ldflags "-s -w" -o ck-server-linux-amd64
+        mv ck-server-* ../../release
+        popd
+        upx --best ./release/ck-server-linux-amd64
+        cd ./release/
+        tar -cJvf ck-server-linux-amd64.tar.xz --mode=755 --no-same-owner ck-server-linux-amd64
+        
+    - name: Generate release tag
+      run: echo "tag=$(date +"%Y.%m.%d-%H.%M_cloak")" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Release
+      uses: softprops/action-gh-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.tag }}
+        files: |
+          ./release/ck-*.xz
+          ./release/ck-*.zip
+        body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
