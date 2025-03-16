@@ -1,0 +1,204 @@
+#
+# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+# Description: Build OpenWrt using GitHub Actions
+#
+
+name: Firmware-M2-VIKINGYFY
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ax18_or_m2:
+        description: 'ax18_or_m2? (ax18/m2)'
+        required: true
+        default: 'ax18'
+      only_config:
+        description: "only_config?"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REPO_URL: https://github.com/VIKINGYFY/immortalwrt
+  REPO_BRANCH: main
+  FEEDS_CONF: feeds.conf.default
+  CONFIG_FILE: config-M2-org.cfg
+  DIY_P1_SH: diy-part1-M2-ORG.sh
+  DIY_P2_SH: diy-part2-M2-ORG.sh
+  UPLOAD_BIN_DIR: true
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+    
+    - name: Show system & Setup
+      run: |
+        echo -e "Total CPU cores\t: $(nproc)"
+        cat /proc/cpuinfo
+        cat /proc/meminfo
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: ax18_or_m2
+      if: contains('ax18.AX18', github.event.inputs.ax18_or_m2)
+      run: |
+        sed -i "s/CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_zn_m2=y/CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_cmiot_ax18=y/g" config-M2-org.cfg
+
+    - name: Clone source code
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    # - name: Free Disk Space
+      # if: ${{ github.event.inputs.only_config != 'true' }}
+      # uses: jlumbroso/free-disk-space@main
+      # with:
+        # tool-cache: true
+        # android: true
+        # dotnet: true
+        # haskell: true
+        # large-packages: true
+        # docker-images: true
+        # swap-storage: true
+        
+    - name: Initialization environment
+      if: ${{ github.event.inputs.only_config != 'true' }}
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo -E apt-mark hold grub-efi-amd64-signed
+        sudo -E apt -y update --allow-unauthenticated
+        sudo -E apt -y full-upgrade
+        # sudo -E apt -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison btrfs-progs build-essential bzip2 ca-certificates ccache clang cmake coreutils cpio curl device-tree-compiler ecj fakeroot fastjar file flex g++ g++-multilib gawk gcc-multilib genisoimage gettext git git-core gnutls-dev gperf gzip haveged help2man intltool jq lib32gcc-s1 libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev libpython3-dev libreadline-dev libssl-dev libtool libyaml-dev libz-dev lld llvm lrzsz mkisofs mold msmtp nano ninja-build p7zip p7zip-full patch pigz pkgconf python3 python3-docutils python3-pip python3-ply python3-pyelftools python3-setuptools qemu-utils quilt re2c rename rsync scons squashfs-tools subversion swig tar texinfo uglifyjs unzip upx upx-ucl vim wget xmlto xsltproc xxd xz-utils yasm zip zlib1g-dev zstd
+        sudo -E apt -y install build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget
+        sudo -E systemctl daemon-reload
+        sudo apt-get autoremove -y --purge
+        sudo apt-get clean
+
+    # - name: Initialization environment - immortalwrt
+      # if: ${{ github.event.inputs.only_config != 'true' }}
+      # env:
+        # DEBIAN_FRONTEND: noninteractive
+      # run: |
+        # curl -s https://raw.githubusercontent.com/immortalwrt/build-scripts/master/init_build_environment.sh | sudo bash
+
+    - name: Cache
+      if: ${{ github.event.inputs.only_config != 'true' }}
+      uses: HiGarfield/cachewrtbuild@main
+      with:
+        ccache: 'true'
+        mixkey: 'M2-VIKINGYFY'
+        prefix: ${{ github.workspace }}/openwrt
+
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+        make defconfig
+        cp .config CONFIG_M2-VIKINGYFY.txt
+
+    - name: Upload CONFIG
+      uses: actions/upload-artifact@main
+      with:
+        name: CONFIG_M2-VIKINGYFY
+        path: openwrt/CONFIG_M2-VIKINGYFY.txt
+
+    - name: Download package
+      if: ${{ github.event.inputs.only_config != 'true' }}
+      id: package
+      run: |
+        cd openwrt
+        make download -j$(nproc)
+
+    - name: Compile the firmware
+      if: ${{ github.event.inputs.only_config != 'true' }}
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Check space usage
+      run: df -hT
+
+    - name: Upload bin directory
+      uses: actions/upload-artifact@main
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true' && github.event.inputs.only_config != 'true'
+      with:
+        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}-VIKINGYFY
+        path: openwrt/bin
+      continue-on-error: true
+
+    - name: Organize files
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled() && github.event.inputs.only_config != 'true'
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware directory
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled() && github.event.inputs.only_config != 'true'
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}-VIKINGYFY
+        path: ${{ env.FIRMWARE }}
+      continue-on-error: true
+
+    - name: Generate release tag
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled() && github.event.inputs.only_config != 'true'
+      run: |
+        echo "release_tag=$(date +"%Y.%m.%d-%H.%M")_M2-VIKINGYFY" >> $GITHUB_OUTPUT
+        touch release.txt
+        echo "M2-VIKINGYFY firmware" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@master
+      if: steps.tag.outputs.status == 'success' && !cancelled() && github.event.inputs.only_config != 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+      continue-on-error: true

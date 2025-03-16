@@ -1,0 +1,146 @@
+name: Repo-Sync upstream for backup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+
+      - name: Setup Git
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+
+      - name: Sync helloworld_fw876
+        run: |
+          git remote add helloworld_fw876 https://github.com/fw876/helloworld.git
+          git fetch helloworld_fw876 master:helloworld_fw876
+          git checkout helloworld_fw876
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin helloworld_fw876 --force
+        continue-on-error: true
+
+      - name: Sync helloworld_sbwml
+        run: |
+          git remote add helloworld_sbwml https://github.com/sbwml/openwrt_helloworld.git
+          git fetch helloworld_sbwml
+          git checkout FETCH_HEAD
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin HEAD:refs/heads/helloworld_sbwml --force
+        continue-on-error: true
+
+      - name: Sync shadowsocks-rust
+        run: |
+          git remote add shadowsocks-rust https://github.com/shadowsocks/shadowsocks-rust.git
+          git fetch shadowsocks-rust master:shadowsocks-rust
+          git checkout shadowsocks-rust
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin shadowsocks-rust --force
+        continue-on-error: true
+
+      - name: Sync Cloak
+        run: |
+          git remote add Cloak https://github.com/cbeuw/Cloak.git
+          git fetch Cloak master:Cloak
+          git checkout Cloak
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin Cloak --force
+        continue-on-error: true
+
+      - name: Sync Xray-core
+        run: |
+          git remote add Xray-core https://github.com/XTLS/Xray-core.git
+          git fetch Xray-core main:Xray-core
+          git checkout Xray-core
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin Xray-core --force
+        continue-on-error: true
+
+      - name: Sync SmartDNS
+        run: |
+          git remote add SmartDNS https://github.com/pymumu/smartdns.git
+          git fetch SmartDNS master:SmartDNS
+          git checkout SmartDNS
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin SmartDNS --force
+        continue-on-error: true
+
+      - name: Sync omcproxy
+        run: |
+          git remote add omcproxy https://github.com/philwo/omcproxy.git
+          git fetch omcproxy main:omcproxy
+          git checkout omcproxy
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin omcproxy --force
+        continue-on-error: true
+
+      - name: Sync ipq6000
+        run: |
+          git remote add ipq6000 https://github.com/sdf8057/ipq6000.git
+          git fetch ipq6000 master:ipq6000
+          git checkout ipq6000
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin ipq6000 --force
+        continue-on-error: true
+
+      - name: Sync luci
+        run: |
+          git remote add luci https://github.com/sdf8057/luci.git
+          git fetch luci 2023:luci
+          git checkout luci
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin luci --force
+        continue-on-error: true
+
+      - name: Sync packages
+        run: |
+          git remote add packages https://github.com/sdf8057/packages.git
+          git fetch packages 2023:packages
+          git checkout packages
+          git submodule update --init --recursive
+          if [ -d ".github" ]; then
+            git rm -rf .github
+            git commit -m "Remove .github directory"
+          fi
+          git push origin packages --force
+        continue-on-error: true
