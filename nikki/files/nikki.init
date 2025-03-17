@@ -4,6 +4,13 @@ START=99
 STOP=10
 USE_PROCD=1
 
+# disbale cgroupfs-mount
+if [ -f "/etc/rc.d/S01cgroupfs-mount" ]; then
+	service cgroupfs-mount disable  > /dev/null 2>&1
+	cgroupfs-umount  > /dev/null 2>&1
+	mount -t cgroup2 -o rw,nosuid,nodev,noexec,relatime,nsdelegate cgroup2 /sys/fs/cgroup  > /dev/null 2>&1
+fi
+
 . "$IPKG_INSTROOT/lib/functions/network.sh"
 . "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
 
