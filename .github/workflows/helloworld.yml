@@ -48,16 +48,14 @@ jobs:
           echo "LUCI_TITLE:=SS/Xray LuCI interface" >> MyNewMakefile666
           echo "LUCI_PKGARCH:=all" >> MyNewMakefile666
           echo "LUCI_DEPENDS:= \\" >> MyNewMakefile666
-          echo "	@(PACKAGE_libustream-mbedtls||PACKAGE_libustream-openssl||PACKAGE_libustream-wolfssl) \\" >> MyNewMakefile666
           echo "	+coreutils +coreutils-base64 +dns2socks +dns2tcp +dnsmasq-full +@PACKAGE_dnsmasq_full_ipset +ipset +kmod-ipt-nat \\" >> MyNewMakefile666
           echo "	+ip-full +iptables +iptables-mod-tproxy +lua +lua-neturl +libuci-lua +microsocks \\" >> MyNewMakefile666
-          echo "	+tcping +resolveip +shadowsocksr-libev-ssr-check +uclient-fetch \\" >> MyNewMakefile666
+          echo "	+tcping +resolveip +shadowsocksr-libev-ssr-check +wget-ssl +luci-lib-ipkg \\" >> MyNewMakefile666
           echo "	+PACKAGE_\$(PKG_NAME)_INCLUDE_Xray:curl \\" >> MyNewMakefile666
           echo "	+PACKAGE_\$(PKG_NAME)_INCLUDE_Xray:xray-core \\" >> MyNewMakefile666
           echo "	+PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client:shadowsocks-rust-sslocal \\" >> MyNewMakefile666
           echo "" >> MyNewMakefile666
           echo "define Package/\$(PKG_NAME)/config" >> MyNewMakefile666
-          echo "	select PACKAGE_luci-lib-ipkg if PACKAGE_\$(PKG_NAME)" >> MyNewMakefile666
           echo "" >> MyNewMakefile666
           echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client" >> MyNewMakefile666
           echo "	bool \"Shadowsocks-rust\"" >> MyNewMakefile666
