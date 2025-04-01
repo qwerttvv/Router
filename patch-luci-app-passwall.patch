@@ -93,7 +93,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/root/usr/share/passwall/0_default_config b/luci-app-passwall/root/usr/share/passwall/0_default_config
-index eea62fb..b34be6e 100644
+index a11dc4d..bbc634e 100644
 --- a/luci-app-passwall/root/usr/share/passwall/0_default_config
 +++ b/luci-app-passwall/root/usr/share/passwall/0_default_config
 @@ -32,7 +32,7 @@ config global_haproxy
