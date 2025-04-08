@@ -511,10 +511,7 @@ local hysteria2_type = map:get("@global_subscribe[0]", "hysteria2_type") or "sin
 					params += "&obfs=" + "salamander";
 					params += opt.query("obfs-password", "hysteria2_obfs");
 				}
-				var dom_ports = opt.get(dom_prefix + "hop");
-				if (dom_ports && dom_ports.value != "") {
-					params += opt.query("mport", dom_prefix + "hop");
-				}
+				params += opt.query("mport", "hysteria2_hop");
 			} else {
 				v_password = opt.get(dom_prefix + "hysteria2_auth_password");
 				var dom_obfs_type = opt.get(dom_prefix + "hysteria2_obfs_type");
@@ -522,10 +519,7 @@ local hysteria2_type = map:get("@global_subscribe[0]", "hysteria2_type") or "sin
 					params += opt.query("obfs", dom_prefix + "hysteria2_obfs_type");
 					params += opt.query("obfs-password", dom_prefix + "hysteria2_obfs_password");
 				}
-				var dom_ports = opt.get(dom_prefix + "hysteria2_ports");
-				if (dom_ports && dom_ports.value != "") {
-					params += opt.query("mport", dom_prefix + "hysteria2_ports");
-				}
+				params += opt.query("mport", dom_prefix + "hysteria2_ports");
 			}
 			params = params.replace(/^&/, "");
 			url =
