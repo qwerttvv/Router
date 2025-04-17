@@ -1,0 +1,66 @@
+name: Build Nightly cdnspeedtest
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    
+    - name: Set Timezone
+      run: |
+        sudo timedatectl set-timezone Asia/Shanghai
+          
+    - name: Get latest commit SHA for cdnspeedtest and Prepare Release Notes
+      shell: pwsh
+      run: |
+        $SHA_cdnspeedtest = (curl -sSL https://api.github.com/repos/XIU2/CloudflareSpeedTest/commits/master | jq -r '.sha')
+        echo "SHA_cdnspeedtest=$SHA_cdnspeedtest" >> $env:GITHUB_ENV
+        echo "https://github.com/XIU2/CloudflareSpeedTest/commits/$SHA_cdnspeedtest" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+    
+    - name: Check out code
+      uses: actions/checkout@main
+      with:
+        repository: XIU2/CloudflareSpeedTest
+        ref: master
+        submodules: recursive
+
+    - name: System update
+      run: |
+        sudo -E apt-mark hold grub-efi-amd64-signed
+        sudo -E apt -y update --allow-unauthenticated
+        sudo -E apt -y full-upgrade
+        sudo -E systemctl daemon-reload
+        sudo apt-get autoremove -y --purge
+        sudo apt-get clean
+
+    - name: Install latest UPX
+      run: |
+        UPX_VERSION=$(curl --silent "https://api.github.com/repos/upx/upx/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        curl -L -o upx.tar.xz "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+        tar -xf upx.tar.xz
+        sudo mv upx-${UPX_VERSION}-amd64_linux/upx /usr/local/bin
+
+    - name: Build and Compress
+      run: |
+        go version
+        go get -u ./...
+        go mod tidy
+        go mod download
+        CGO_ENABLED=0 GOOS="linux" GOARCH="arm64" go build -ldflags "-s -w -X main.version=v6.6.6" -o cdnspeedtest
+        upx --best cdnspeedtest
+        tar -cJvf cdnspeedtest-linux-arm64.tar.xz --mode=755 --no-same-owner cdnspeedtest
+
+    - name: Generate release tag
+      run: echo "tag=$(date +"%Y.%m.%d-%H.%M_cdnspeedtest")" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Release
+      uses: softprops/action-gh-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.tag }}
+        files: |
+          cdnspeedtest-linux-arm64.tar.xz
+        body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
