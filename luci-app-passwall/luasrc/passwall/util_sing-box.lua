@@ -1759,14 +1759,18 @@ function gen_config(var)
 				strategy = "prefer_ipv6"
 			}
 			direct_outbound.domain_resolver = domain_resolver
+
 			-- 当没有 direct dns 服务器时添加 local
+			local hasDirect = false
 			if config.dns and config.dns.servers then
 				for _, server in ipairs(config.dns.servers) do
 					if server.tag == "direct" then
+						hasDirect = true
 						break
 					end
 				end
-			else
+			end
+			if not hasDirect then
 				config.dns = {
 					servers = {
 						{
