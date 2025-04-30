@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 92278d8..0065eeb 100644
+index fcd7602..6bd9e31 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -67,7 +67,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
