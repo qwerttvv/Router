@@ -117,13 +117,3 @@ index b73edaa..ada52ad 100644
 +203.208.40.0/23
 +34.149.0.0/16
 +72.18.83.0/24
-diff --git a/luci-app-passwall/root/usr/share/passwall/rules/proxy_host b/luci-app-passwall/root/usr/share/passwall/rules/proxy_host
-index 72c498c..4aa1a8c 100644
---- a/luci-app-passwall/root/usr/share/passwall/rules/proxy_host
-+++ b/luci-app-passwall/root/usr/share/passwall/rules/proxy_host
-@@ -9,5 +9,4 @@ googleapis.cn
- googleapis.com
- google.com.tw
- google.com.hk
--gstatic.com
- xn--ngstr-lra8j.com
