@@ -184,11 +184,11 @@ if proto and proto:find("tcp") and socks_port ~= "0" then
         -- socks
         protocol = "socks",
         port = tonumber(socks_port),
-        settings = (socks_server.server ~= "same") and {
-			auth = socks_server.socks5_auth,
+        settings = {
+			auth = socks_server.socks5_auth or "noauth",
 			udp = true,
-			mixed = (socks_server.socks5_mixed == '1') and true or false,
-			accounts = (socks_server.socks5_auth ~= "noauth") and {
+			mixed = ((socks_server.socks5_mixed == '1') and true or false) or (socks_server.server == 'same') and nil,
+			accounts = (socks_server.server ~= "same" and (socks_server.socks5_auth and socks_server.socks5_auth ~= "noauth")) and {
 				{
 					user = socks_server.socks5_user,
 					pass = socks_server.socks5_pass
@@ -310,7 +310,7 @@ end
 				} or nil,
 				sockopt = {
 					mark = 250,
-					tcpFastOpen = (server.tcpfastOpen == "1") and true or false, -- XHTTP Tcp Fast Open
+					tcpFastOpen = ((server.transport == "xhttp" and server.tcpfastopen == "1") and true or false) or (server.transport ~= "xhttp") and nil, -- XHTTP Tcp Fast Open
 					tcpMptcp = (server.mptcp == "1") and true or nil, -- MPTCP
 					Penetrate = (server.mptcp == "1") and true or nil, -- Penetrate MPTCP
 					tcpcongestion = server.custom_tcpcongestion, -- 连接服务器节点的 TCP 拥塞控制算法
@@ -350,7 +350,7 @@ if xray_fragment.fragment ~= "0" or (xray_fragment.noise ~= "0" and xray_noise.e
 		streamSettings = {
 			sockopt = {
 			mark = 250,
-			tcpFastOpen = (server.tcpfastOpen == "1") and true or false, -- XHTTP Tcp Fast Open
+			tcpFastOpen = ((server.transport == "xhttp" and server.tcpfastopen == "1") and true or false) or (server.transport ~= "xhttp") and nil, -- XHTTP Tcp Fast Open
 			tcpMptcp = (server.mptcp == "1") and true or nil, -- MPTCP
 			Penetrate = (server.mptcp == "1") and true or nil, -- Penetrate MPTCP
 			tcpcongestion = server.custom_tcpcongestion -- 连接服务器节点的 TCP 拥塞控制算法
@@ -411,36 +411,36 @@ local ss = {
 	fast_open = (server.fast_open == "1") and true or false,
 	reuse_port = true
 }
-local hysteria = {
-	server = (server.server_port and (server.port_range and (server.server .. ":" .. server.server_port .. "," .. server.port_range) or (server.server .. ":" .. server.server_port) or (server.port_range and server.server .. ":" .. server.port_range or server.server .. ":443"))),
+local hysteria2 = {
+	server = (server.server_port and (server.port_range and (server.server .. ":" .. server.server_port .. "," .. string.gsub(server.port_range, ":", "-")) or (server.server .. ":" .. server.server_port) or (server.port_range and server.server .. ":" .. string.gsub(server.port_range, ":", "-") or server.server .. ":443"))),
 	bandwidth = (server.uplink_capacity or server.downlink_capacity) and {
 	up = tonumber(server.uplink_capacity) and tonumber(server.uplink_capacity) .. " mbps" or nil,
 	down = tonumber(server.downlink_capacity) and tonumber(server.downlink_capacity) .. " mbps" or nil 
-	},
+	} or nil,
 	socks5 = (proto:find("tcp") and tonumber(socks_port) and tonumber(socks_port) ~= 0) and {
 		listen = "0.0.0.0:" .. tonumber(socks_port),
 		disable_udp = false
 	} or nil,
-	transport = (server.transport_protocol) and {
-		type = (server.transport_protocol) or udp,
+	transport = server.transport_protocol and {
+		type = server.transport_protocol or "udp",
 		udp = (server.port_range and (server.hopinterval) and {
-                        hopInterval = (server.port_range and (tonumber(server.hopinterval) .. "s") or nil)
-                } or nil)
-        } or nil,
+			hopInterval = (server.port_range and (tonumber(server.hopinterval) .. "s") or nil)
+		} or nil)
+	} or nil,
 --[[
 	tcpTProxy = (proto:find("tcp") and local_port ~= "0") and {
-					listen = "0.0.0.0:" .. tonumber(local_port)
+		listen = "0.0.0.0:" .. tonumber(local_port)
 	} or nil,
 ]]--
 	tcpRedirect = (proto:find("tcp") and local_port ~= "0") and {
-					listen = "0.0.0.0:" .. tonumber(local_port)
+		listen = "0.0.0.0:" .. tonumber(local_port)
 	} or nil,
 	udpTProxy = (proto:find("udp") and local_port ~= "0") and {
-					listen = "0.0.0.0:" .. tonumber(local_port)
+		listen = "0.0.0.0:" .. tonumber(local_port)
 	} or nil,
 	obfs = (server.flag_obfs == "1") and {
-				type = server.obfs_type,
-				salamander = { password = server.salamander }
+		type = server.obfs_type,
+		salamander = { password = server.salamander }
 	} or nil,
 	quic = (server.flag_quicparam == "1" ) and {
 		initStreamReceiveWindow = (server.initstreamreceivewindow and server.initstreamreceivewindow or nil),
@@ -579,8 +579,12 @@ function config:handleIndex(index)
 	local switch = {
 		ss = function()
 			ss.protocol = socks_port
-			if server.plugin and server.plugin ~= "none" then
-				ss.plugin = server.plugin
+			if server.enable_plugin == "1" and server.plugin and server.plugin ~= "none" then
+				if server.plugin == "custom" then
+					ss.plugin = server.custom_plugin
+				else
+					ss.plugin = server.plugin
+				end
 				ss.plugin_opts = server.plugin_opts or nil
 			end
 			print(json.stringify(ss, 1))
@@ -602,8 +606,8 @@ function config:handleIndex(index)
 		naiveproxy = function()
 			print(json.stringify(naiveproxy, 1))
 		end,
-		hysteria = function()
-			print(json.stringify(hysteria, 1))
+		hysteria2 = function()
+			print(json.stringify(hysteria2, 1))
 		end,
 		shadowtls = function()
 			local chain_switch = {
@@ -637,3 +641,4 @@ function config:handleIndex(index)
 end
 local f = config:new()
 f:handleIndex(server.type)
+

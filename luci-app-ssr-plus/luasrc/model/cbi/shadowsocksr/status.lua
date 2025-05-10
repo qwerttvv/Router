@@ -15,7 +15,7 @@ local ad_count = 0
 local ip_count = 0
 local nfip_count = 0
 local Process_list = luci.sys.exec("busybox ps -w")
-local uci = luci.model.uci.cursor()
+local uci = require "luci.model.uci".cursor()
 -- html constants
 font_blue = [[<b style=color:green>]]
 style_blue = [[<b style=color:red>]]
@@ -92,7 +92,11 @@ if Process_list:find("ssr.server") then
 	server_run = 1
 end
 
-if Process_list:find("ssrplus/bin/dns2tcp") or (Process_list:find("ssrplus.dns") and Process_list:find("dns2socks.127.0.0.1.*127.0.0.1.5335")) then
+if  Process_list:find("ssrplus/bin/dns2tcp") or
+    Process_list:find("ssrplus/bin/mosdns") or
+    Process_list:find("dnsproxy.*127.0.0.1.*5335") or
+    Process_list:find("chinadns.*127.0.0.1.*5335") or
+    (Process_list:find("ssrplus.dns") and Process_list:find("dns2socks.*127.0.0.1.*127.0.0.1.5335")) then
 	pdnsd_run = 1
 end
 
