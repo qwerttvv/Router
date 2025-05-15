@@ -1,0 +1,156 @@
+name: Build Nightly ss-rust
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      RUST_BACKTRACE: full
+
+    steps:
+
+      - name: Set Timezone
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: Get latest commit SHA for SS-RUST and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_SS_RUST = (curl -sSL https://api.github.com/repos/shadowsocks/shadowsocks-rust/commits/master | jq -r '.sha')
+          echo "SHA_SS_RUST=$SHA_SS_RUST" >> $env:GITHUB_ENV
+          echo "https://github.com/shadowsocks/shadowsocks-rust/commits/$SHA_SS_RUST" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Checkout code
+        uses: actions/checkout@main
+        with:
+          repository: shadowsocks/shadowsocks-rust
+          ref: master
+          submodules: recursive
+
+      - name: System update
+        run: |
+          sudo -E apt-mark hold grub-efi-amd64-signed
+          sudo -E apt -y update --allow-unauthenticated
+          sudo -E apt -y full-upgrade
+          sudo -E systemctl daemon-reload
+          sudo apt-get autoremove -y --purge
+          sudo apt-get clean
+
+      - name: Install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Install latest UPX
+        run: |
+          UPX_VERSION=$(curl --silent "https://api.github.com/repos/upx/upx/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+          curl -L -o upx.tar.xz "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+          tar -xf upx.tar.xz
+          sudo mv upx-${UPX_VERSION}-amd64_linux/upx /usr/local/bin
+
+      - name: update rust
+        run: |
+          rustup self update
+          rustup set profile minimal
+          rustup update
+          rustup toolchain install stable
+          rustup default stable
+          rustup override set stable
+          rustup target add --toolchain stable aarch64-unknown-linux-musl x86_64-unknown-linux-musl
+
+      - name: Build aarch64-unknown-linux-musl
+        run: |
+          cross build --target aarch64-unknown-linux-musl --bin sslocal --release
+          upx --best target/aarch64-unknown-linux-musl/release/sslocal
+          cd target/aarch64-unknown-linux-musl/release/
+          tar -cJvf sslocal-aarch64-unknown-linux-musl.tar.xz --mode=755 --no-same-owner sslocal
+
+      - name: Build x86_64-unknown-linux-musl
+        run: |
+          cross build --target x86_64-unknown-linux-musl --bin ssserver --release
+          cd target/x86_64-unknown-linux-musl/release/
+          tar -cJvf ssserver-x86_64-unknown-linux-musl.tar.xz --mode=755 --no-same-owner ssserver
+
+      - name: Generate release tag
+        run: |
+          echo "release_tag=$(date +"%Y.%m.%d-%H.%M")_ss-rust" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.release_tag }}
+          files: |
+            target/aarch64-unknown-linux-musl/release/sslocal-aarch64-unknown-linux-musl.tar.xz
+            target/x86_64-unknown-linux-musl/release/ssserver-x86_64-unknown-linux-musl.tar.xz
+          body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
+
+  build-windows:
+    runs-on: windows-latest
+    env:
+      RUSTFLAGS: "-C target-feature=+crt-static"
+      RUST_BACKTRACE: full
+
+    steps:
+
+      - name: Get latest commit SHA for SS-RUST and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_SS_RUST = (curl -sSL https://api.github.com/repos/shadowsocks/shadowsocks-rust/commits/master | jq -r '.sha')
+          echo "SHA_SS_RUST=$SHA_SS_RUST" >> $env:GITHUB_ENV
+          echo "https://github.com/shadowsocks/shadowsocks-rust/commits/$SHA_SS_RUST" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Checkout code
+        uses: actions/checkout@main
+        with:
+          repository: shadowsocks/shadowsocks-rust
+          ref: master
+          submodules: recursive
+
+      - name: Install GitHub Actions toolkit packages
+        run: npm install @actions/core
+
+      - name: update rust
+        run: |
+          rustup self update
+          rustup set profile minimal
+          rustup update
+          rustup toolchain install stable
+          rustup default stable
+          rustup override set stable
+          rustup target add --toolchain stable x86_64-pc-windows-msvc
+
+      - name: TimeZone
+        shell: pwsh
+        run: tzutil /s "China Standard Time"
+
+      - name: Build release
+        run: |
+          pwsh ./build/build-host-release.ps1
+
+      - name: Unzip shadowsocks release
+        run: |
+          $zipPath = "build/release/shadowsocks*.zip"
+          $unzipPath = "build/release/unzipped"
+          mkdir $unzipPath
+          Expand-Archive -Path $zipPath -DestinationPath $unzipPath
+
+      - name: Zip sslocal.exe
+        run: |
+          $exePath = "build/release/unzipped/sslocal.exe"
+          $zipName = "build/release/sslocal-x86_64-pc-windows-msvc.zip"
+          Compress-Archive -Path $exePath -DestinationPath $zipName
+
+      - name: Generate release tag
+        run: echo "release_tag=$(date +"%Y.%m.%d-%H.%M")_ss-rust-windows" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.release_tag }}
+          files: |
+            build/release/sslocal-x86_64-pc-windows-msvc.zip
+          body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
