@@ -128,7 +128,7 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
         make defconfig
-        sudo cp .config /FULL_CONFIG_IPQ60xx-VIKINGYFY
+        sudo cp .config /FULL_CONFIG_IPQ60xx-VIKINGYFY.cfg
 
     - name: Upload CONFIG
       uses: actions/upload-artifact@main
@@ -162,7 +162,7 @@ jobs:
     - name: Copy full config
       if: ${{ github.event.inputs.only_config != 'true' }}
       run: |
-        cp /FULL_CONFIG_IPQ60xx-VIKINGYFY openwrt/bin/targets/*/*/
+        cp /FULL_CONFIG_IPQ60xx-VIKINGYFY.cfg openwrt/bin/targets/*/*/
 
     - name: Upload bin directory
       uses: actions/upload-artifact@main
