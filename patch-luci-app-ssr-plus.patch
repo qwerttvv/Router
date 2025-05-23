@@ -1,5 +1,5 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 697d594..ce23c14 100644
+index 28753af..0d1470d 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
 @@ -29,6 +29,7 @@ PKG_CONFIG_DEPENDS:= \
@@ -237,7 +237,7 @@ index cf4ca1f..04f2896 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index 22b6c7c..f086636 100755
+index 58f1976..b81d0af 100755
 --- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 +++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 @@ -1287,8 +1287,18 @@ start_server() {
