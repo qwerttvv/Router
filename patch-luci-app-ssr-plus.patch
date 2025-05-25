@@ -72,7 +72,7 @@ index 4ba5d06..636566c 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-index 0bf9474..c6194fa 100644
+index b8286c7..26f4988 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 @@ -27,7 +27,7 @@ local function is_finded(e)
