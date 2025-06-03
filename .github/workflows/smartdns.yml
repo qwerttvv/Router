@@ -51,7 +51,6 @@ jobs:
           chmod +x package/luci-compat/make.sh
           ./package/luci-compat/make.sh --arch compat
           zip -j -9 openwrt-luci-compat.zip package/luci-compat/luci*ipk
-        
 
       - name: Build openwrt-luci
         if: matrix.arch == 'linux_x86_64'
@@ -60,7 +59,6 @@ jobs:
           ./package/luci/make.sh --arch all
           find package -print
           zip -j -9 openwrt-luci.zip package/luci/luci*ipk
-        
 
       - name: Build linux x86_64
         if: matrix.arch == 'linux_x86_64'
@@ -72,15 +70,16 @@ jobs:
           ./package/build-pkg.sh --platform linux --arch x86_64 --static
           mv src/smartdns src/smartdns-x86_64-static
           zip -j -9 SmartDNS-linux_x86_64-static.zip src/smartdns-x86_64-static
-        
 
       - name: Update Makefile
         if: matrix.arch != 'linux_x86_64'
         run: |
-          mv package/openwrt openwrt-smartdns
+          mkdir openwrt-smartdns
+          wget -O openwrt-smartdns/Makefile https://github.com/pymumu/smartdns/raw/fd9a592dbeecbca6fa53bf9ce1edafde1e335607/package/openwrt/Makefile
           cd openwrt-smartdns
           sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=$(date +1.%Y.%m.%d-%H%M)/" Makefile
           sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$SHA_smartdns/" Makefile
+          sed -i "s/DEPENDS:=+libpthread +libopenssl/DEPENDS:=+libpthread +libopenssl +libatomic/" Makefile
           cat Makefile
 
       - name: Setup openwrt sdk and build
@@ -92,14 +91,12 @@ jobs:
           PACKAGES: openwrt-smartdns
           FIXUP: 1
           NO_REFRESH_CHECK: true
-        
-        
+
       - name: Zip ipk packages
         if: matrix.arch != 'linux_x86_64'
         run: |
           zip -j -9 SmartDNS-${{ matrix.arch }}.zip bin/packages/*/packages_ci/*.ipk
-        
-          
+
       - name: Generate release tag
         run: echo "tag=$(date +"%Y.%m.%d-%H.%M_smartdns-${{ matrix.arch }}")" >> $GITHUB_ENV
         shell: bash
@@ -114,4 +111,3 @@ jobs:
             openwrt-luci*.zip
             SmartDNS*.zip
           body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
-        
