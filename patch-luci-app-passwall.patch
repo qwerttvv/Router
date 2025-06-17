@@ -20,7 +20,7 @@ index ef08c45..a902169 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 7e19e04..75ef15b 100644
+index 3e2a20a..d333297 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -512,6 +512,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
@@ -36,7 +36,7 @@ index 7e19e04..75ef15b 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-@@ -624,7 +630,7 @@ o:depends({direct_dns_mode = "dot"})
+@@ -623,7 +629,7 @@ o:depends({direct_dns_mode = "dot"})
  o:depends({dns_mode = "dot"})
  
  o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
