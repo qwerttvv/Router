@@ -59,7 +59,7 @@ index 28753af..0d1470d 100644
  	bool "Include ShadowsocksR Libev Client"
  	default y
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index 4ba5d06..636566c 100644
+index 8906a67..1bd4ffe 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 @@ -7,7 +7,7 @@ function index()
@@ -172,7 +172,7 @@ index 2ba1be9..ed7148f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index cf4ca1f..04f2896 100644
+index 15a709d..c5988d6 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -75,9 +75,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -196,7 +196,7 @@ index cf4ca1f..04f2896 100644
  			return false;
  		}
  		s.innerHTML = "";
-@@ -274,7 +274,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -307,7 +307,7 @@ function import_ssr_url(btn, urlname, sid) {
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.protocol_param')[0].value = dictvalue(pdict, 'protoparam');
  			var rem = pdict['remarks'];
  			if (typeof (rem) != 'undefined' && rem != '' && rem.length > 0) document.getElementsByName('cbid.shadowsocksr.' + sid + '.alias')[0].value = b64decutf8safe(rem);
@@ -205,7 +205,7 @@ index cf4ca1f..04f2896 100644
  			return false;
  		case "trojan":
  			try {
-@@ -367,7 +367,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -400,7 +400,7 @@ function import_ssr_url(btn, urlname, sid) {
  				break;
  			}
  
@@ -214,7 +214,7 @@ index cf4ca1f..04f2896 100644
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -450,7 +450,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -483,7 +483,7 @@ function import_ssr_url(btn, urlname, sid) {
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].checked = true;
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].dispatchEvent(event);
  			}
@@ -223,7 +223,7 @@ index cf4ca1f..04f2896 100644
  			return false;
  		case "vless":
  			try {
-@@ -568,10 +568,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -601,10 +601,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
