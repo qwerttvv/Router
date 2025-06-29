@@ -172,7 +172,7 @@ index 2ba1be9..ed7148f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 15a709d..c5988d6 100644
+index 8f57302..03ba998 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -75,9 +75,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -196,7 +196,7 @@ index 15a709d..c5988d6 100644
  			return false;
  		}
  		s.innerHTML = "";
-@@ -307,7 +307,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -324,7 +324,7 @@ function import_ssr_url(btn, urlname, sid) {
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.protocol_param')[0].value = dictvalue(pdict, 'protoparam');
  			var rem = pdict['remarks'];
  			if (typeof (rem) != 'undefined' && rem != '' && rem.length > 0) document.getElementsByName('cbid.shadowsocksr.' + sid + '.alias')[0].value = b64decutf8safe(rem);
@@ -205,7 +205,7 @@ index 15a709d..c5988d6 100644
  			return false;
  		case "trojan":
  			try {
-@@ -400,7 +400,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -417,7 +417,7 @@ function import_ssr_url(btn, urlname, sid) {
  				break;
  			}
  
@@ -214,7 +214,7 @@ index 15a709d..c5988d6 100644
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -483,7 +483,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -500,7 +500,7 @@ function import_ssr_url(btn, urlname, sid) {
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].checked = true;
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].dispatchEvent(event);
  			}
@@ -223,7 +223,7 @@ index 15a709d..c5988d6 100644
  			return false;
  		case "vless":
  			try {
-@@ -601,10 +601,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -618,10 +618,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
@@ -237,7 +237,7 @@ index 15a709d..c5988d6 100644
  		}
  	}
 diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index 58f1976..b81d0af 100755
+index 27c9d6b..23b5f29 100755
 --- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 +++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
 @@ -1287,8 +1287,18 @@ start_server() {
