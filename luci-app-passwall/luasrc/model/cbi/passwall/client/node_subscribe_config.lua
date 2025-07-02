@@ -9,19 +9,6 @@ if not arg[1] or not m:get(arg[1]) then
 	luci.http.redirect(m.redirect)
 end
 
-function m.commit_handler(self)
-	self:del(arg[1], "md5")
-end
-
-if api.is_js_luci() then
-	m.apply_on_parse = false
-	m.on_after_apply = function(self)
-		uci:delete(appname, arg[1], "md5")
-		uci:commit(appname)
-		api.showMsg_Redirect(self.redirect, 3000)
-	end
-end
-
 local has_ss = api.is_finded("ss-redir")
 local has_ss_rust = api.is_finded("sslocal")
 local has_trojan_plus = api.is_finded("trojan-plus")
@@ -68,6 +55,10 @@ end
 s = m:section(NamedSection, arg[1])
 s.addremove = false
 s.dynamic = false
+
+function m.commit_handler(self)
+	self:del(arg[1], "md5")
+end
 
 o = s:option(Value, "remark", translate("Subscribe Remark"))
 o.rmempty = false

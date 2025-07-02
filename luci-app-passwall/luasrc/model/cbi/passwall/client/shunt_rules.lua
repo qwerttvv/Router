@@ -4,7 +4,6 @@ local datatypes = api.datatypes
 
 m = Map(appname, "Sing-Box/Xray " .. translate("Shunt Rule"))
 m.redirect = api.url()
-api.set_apply_on_parse(m)
 
 function clean_text(text)
 	local nbsp = string.char(0xC2, 0xA0) -- 不间断空格（U+00A0）
