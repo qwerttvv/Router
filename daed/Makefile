@@ -24,8 +24,6 @@ PKG_BUILD_FLAGS:=no-mips16
 
 ifeq ($(ARCH),arm)
 PATCH_DIR:=patches_arm
-else ifeq ($(ARCH),riscv64)
-PATCH_DIR:=patches_riscv
 endif
 
 GO_PKG:=github.com/daeuniverse/dae-wing
