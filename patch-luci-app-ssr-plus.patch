@@ -1,8 +1,8 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 796e454..f6a303a 100644
+index cdda857..e6e7efd 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
-@@ -29,6 +29,7 @@ PKG_CONFIG_DEPENDS:= \
+@@ -30,6 +30,7 @@ PKG_CONFIG_DEPENDS:= \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin \
@@ -10,7 +10,7 @@ index 796e454..f6a303a 100644
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
-@@ -62,6 +63,7 @@ LUCI_DEPENDS:= \
+@@ -63,6 +64,7 @@ LUCI_DEPENDS:= \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server:shadowsocks-rust-ssserver \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs:simple-obfs \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin:v2ray-plugin \
@@ -18,7 +18,7 @@ index 796e454..f6a303a 100644
  	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-local \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-redir \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server:shadowsocksr-libev-ssr-server \
-@@ -73,7 +75,7 @@ select PACKAGE_luci-lib-ipkg if PACKAGE_$(PKG_NAME)
+@@ -74,7 +76,7 @@ select PACKAGE_luci-lib-ipkg if PACKAGE_$(PKG_NAME)
  
  choice
  	prompt "Shadowsocks Client Selection"
@@ -27,7 +27,7 @@ index 796e454..f6a303a 100644
  	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
  
  	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Client
-@@ -90,8 +92,8 @@ endchoice
+@@ -91,8 +93,8 @@ endchoice
  
  choice
  	prompt "Shadowsocks Server Selection"
@@ -38,7 +38,7 @@ index 796e454..f6a303a 100644
  	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
  
  	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
-@@ -139,7 +141,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_DNSPROXY
+@@ -140,7 +142,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_DNSPROXY
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_MosDNS
  	bool "Include MosDNS"
@@ -47,7 +47,7 @@ index 796e454..f6a303a 100644
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria
  	bool "Include Hysteria"
-@@ -187,6 +189,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin
+@@ -188,6 +190,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin
  	bool "Include Shadowsocks V2ray Plugin"
  	default n
  
