@@ -32,7 +32,7 @@ index 9d5edc7..d825e87 100644
  s = m:section(TypedSection, "global", translate("ACLs"), "<font color='red'>" .. translate("ACLs is a tools which used to designate specific IP proxy mode.") .. "</font>")
  s.anonymous = true
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua
-index b97cae9..db0373e 100644
+index 41b2e2b..c255149 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua
 @@ -2,11 +2,9 @@ local api = require "luci.passwall.api"
