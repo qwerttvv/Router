@@ -20,7 +20,7 @@ index 2568ff2..8f11744 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
-index 9d5edc7..d825e87 100644
+index ca13ef3..0ed57d6 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
 @@ -3,7 +3,6 @@ local appname = "passwall"
@@ -217,7 +217,7 @@ index 28b4e88..2f5c9c7 100644
  o.rmempty = false
  
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
-index d4f45b7..85608a8 100644
+index 3d283a1..8f556e6 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 @@ -11,7 +11,6 @@ local port_validate = function(self, value, t)
