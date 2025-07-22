@@ -20,7 +20,7 @@ index 2568ff2..8f11744 100644
  
  define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
-index ca13ef3..0ed57d6 100644
+index 9d5edc7..d825e87 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
 @@ -3,7 +3,6 @@ local appname = "passwall"
@@ -137,7 +137,7 @@ index 0cd8ad9..5659632 100644
  -- [[ Other Settings ]]--
  s = m:section(TypedSection, "global_other")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
-index fa5dc57..57e5949 100644
+index 481e25b..9baef0d 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 @@ -46,6 +46,10 @@ end
@@ -151,7 +151,7 @@ index fa5dc57..57e5949 100644
  function m.commit_handler(self)
  	if self.no_commit then
  		return
-@@ -55,21 +59,6 @@ function m.commit_handler(self)
+@@ -55,26 +59,11 @@ function m.commit_handler(self)
  	end)
  end
  
@@ -166,6 +166,11 @@ index fa5dc57..57e5949 100644
 -	end
 -end
 -
+ m.render = function(self, ...)
+ 	Map.render(self, ...)
+ 	api.optimize_cbi_ui()
+ end
+ 
 --- [[ Subscribe Settings ]]--
 -s = m:section(TypedSection, "global_subscribe", "")
 -s.anonymous = true
@@ -173,7 +178,15 @@ index fa5dc57..57e5949 100644
  o = s:option(ListValue, "filter_keyword_mode", translate("Filter keyword Mode"))
  o:value("0", translate("Close"))
  o:value("1", translate("Discard List"))
-@@ -157,7 +146,6 @@ s.sortable = true
+@@ -151,7 +140,6 @@ o = s:option(Button, "_update", translate("Manual subscription All"))
+ o.inputstyle = "apply"
+ function o.write(t, n)
+ 	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start all manual > /dev/null 2>&1 &")
+-	m.no_commit = true
+ 	luci.http.redirect(api.url("log"))
+ end
+ 
+@@ -162,7 +150,6 @@ s.sortable = true
  s.template = "cbi/tblsection"
  s.extedit = api.url("node_subscribe_config", "%s")
  function s.create(e, t)
@@ -181,8 +194,16 @@ index fa5dc57..57e5949 100644
  	local id = TypedSection.create(e, t)
  	luci.http.redirect(e.extedit:format(id))
  end
+@@ -221,7 +208,6 @@ o = s:option(Button, "_update", translate("Manual subscription"))
+ o.inputstyle = "apply"
+ function o.write(t, n)
+ 	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start " .. n .. " manual > /dev/null 2>&1 &")
+-	m.no_commit = true
+ 	luci.http.redirect(api.url("log"))
+ end
+ 
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
-index 28b4e88..2f5c9c7 100644
+index fccedeb..67e8456 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 @@ -9,19 +9,6 @@ if not arg[1] or not m:get(arg[1]) then
@@ -202,10 +223,10 @@ index 28b4e88..2f5c9c7 100644
 -	end
 -end
 -
- local has_ss = api.is_finded("ss-redir")
- local has_ss_rust = api.is_finded("sslocal")
- local has_trojan_plus = api.is_finded("trojan-plus")
-@@ -69,6 +56,10 @@ s = m:section(NamedSection, arg[1])
+ m.render = function(self, ...)
+ 	Map.render(self, ...)
+ 	api.optimize_cbi_ui()
+@@ -74,6 +61,10 @@ s = m:section(NamedSection, arg[1])
  s.addremove = false
  s.dynamic = false
  
@@ -217,7 +238,7 @@ index 28b4e88..2f5c9c7 100644
  o.rmempty = false
  
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
-index 3d283a1..8f556e6 100644
+index d4f45b7..85608a8 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 @@ -11,7 +11,6 @@ local port_validate = function(self, value, t)
@@ -311,10 +332,10 @@ index a42a0ac..6affd2c 100644
  s = m:section(NamedSection, arg[1], "user", "")
  s.addremove = false
 diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index d73daac..3bc978d 100644
+index 536a7bf..772d881 100644
 --- a/luci-app-passwall/luasrc/passwall/api.lua
 +++ b/luci-app-passwall/luasrc/passwall/api.lua
-@@ -38,68 +38,6 @@ function is_old_uci()
+@@ -38,72 +38,6 @@ function is_old_uci()
  	return sys.call("grep -E 'require[ \t]*\"uci\"' /usr/lib/lua/luci/model/uci.lua >/dev/null 2>&1") == 0
  end
  
@@ -327,6 +348,10 @@ index d73daac..3bc978d 100644
 -		map.on_after_apply = function(self)
 -			showMsg_Redirect(self.redirect, 3000)
 -		end
+-	end
+-	map.render = function(self, ...)
+-		getmetatable(self).__index.render(self, ...) -- 保持原渲染流程
+-		optimize_cbi_ui()
 -	end
 -end
 -

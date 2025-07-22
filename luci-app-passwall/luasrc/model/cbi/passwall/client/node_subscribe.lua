@@ -59,6 +59,11 @@ function m.commit_handler(self)
 	end)
 end
 
+m.render = function(self, ...)
+	Map.render(self, ...)
+	api.optimize_cbi_ui()
+end
+
 o = s:option(ListValue, "filter_keyword_mode", translate("Filter keyword Mode"))
 o:value("0", translate("Close"))
 o:value("1", translate("Discard List"))
@@ -134,8 +139,7 @@ end
 o = s:option(Button, "_update", translate("Manual subscription All"))
 o.inputstyle = "apply"
 function o.write(t, n)
-	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start > /dev/null 2>&1 &")
-	m.no_commit = true
+	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start all manual > /dev/null 2>&1 &")
 	luci.http.redirect(api.url("log"))
 end
 
@@ -203,8 +207,7 @@ end
 o = s:option(Button, "_update", translate("Manual subscription"))
 o.inputstyle = "apply"
 function o.write(t, n)
-	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start " .. n .. " > /dev/null 2>&1 &")
-	m.no_commit = true
+	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start " .. n .. " manual > /dev/null 2>&1 &")
 	luci.http.redirect(api.url("log"))
 end
 
