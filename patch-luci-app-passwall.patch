@@ -137,7 +137,7 @@ index 0cd8ad9..5659632 100644
  -- [[ Other Settings ]]--
  s = m:section(TypedSection, "global_other")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
-index 481e25b..9baef0d 100644
+index c5be76f..9d56d48 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 @@ -46,6 +46,10 @@ end
@@ -178,15 +178,7 @@ index 481e25b..9baef0d 100644
  o = s:option(ListValue, "filter_keyword_mode", translate("Filter keyword Mode"))
  o:value("0", translate("Close"))
  o:value("1", translate("Discard List"))
-@@ -151,7 +140,6 @@ o = s:option(Button, "_update", translate("Manual subscription All"))
- o.inputstyle = "apply"
- function o.write(t, n)
- 	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start all manual > /dev/null 2>&1 &")
--	m.no_commit = true
- 	luci.http.redirect(api.url("log"))
- end
- 
-@@ -162,7 +150,6 @@ s.sortable = true
+@@ -162,7 +151,6 @@ s.sortable = true
  s.template = "cbi/tblsection"
  s.extedit = api.url("node_subscribe_config", "%s")
  function s.create(e, t)
@@ -194,14 +186,6 @@ index 481e25b..9baef0d 100644
  	local id = TypedSection.create(e, t)
  	luci.http.redirect(e.extedit:format(id))
  end
-@@ -221,7 +208,6 @@ o = s:option(Button, "_update", translate("Manual subscription"))
- o.inputstyle = "apply"
- function o.write(t, n)
- 	luci.sys.call("lua /usr/share/" .. appname .. "/subscribe.lua start " .. n .. " manual > /dev/null 2>&1 &")
--	m.no_commit = true
- 	luci.http.redirect(api.url("log"))
- end
- 
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 index fccedeb..67e8456 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
@@ -332,7 +316,7 @@ index a42a0ac..6affd2c 100644
  s = m:section(NamedSection, arg[1], "user", "")
  s.addremove = false
 diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index 536a7bf..772d881 100644
+index a4efdd7..2515f57 100644
 --- a/luci-app-passwall/luasrc/passwall/api.lua
 +++ b/luci-app-passwall/luasrc/passwall/api.lua
 @@ -38,72 +38,6 @@ function is_old_uci()
@@ -456,7 +440,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 1f0d6b6..0b76142 100644
+index 0ed1380..080f5c3 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
 @@ -1837,9 +1837,6 @@ msgstr "是否要恢复客户端默认配置？"
@@ -482,15 +466,3 @@ index 0c5490e..6771513 100644
  
  config global_forwarding
  	option tcp_no_redir_ports 'disable'
-diff --git a/luci-app-passwall/root/usr/share/passwall/rules/direct_ip b/luci-app-passwall/root/usr/share/passwall/rules/direct_ip
-index b73edaa..ada52ad 100644
---- a/luci-app-passwall/root/usr/share/passwall/rules/direct_ip
-+++ b/luci-app-passwall/root/usr/share/passwall/rules/direct_ip
-@@ -8,3 +8,7 @@
- 120.53.53.53
- 180.184.1.1
- 180.184.2.2
-+203.208.39.192/28
-+203.208.40.0/23
-+34.149.0.0/16
-+72.18.83.0/24
