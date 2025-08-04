@@ -1,0 +1,167 @@
+From 60a751dc4220728692f441557e9cff977ee26ed1 Mon Sep 17 00:00:00 2001
+From: sbwml <admin@cooluc.com>
+Date: Mon, 4 Aug 2025 21:21:50 +0800
+Subject: [PATCH] tcping: add IPv6 support
+
+- Refactor connect_to to use getaddrinfo for dual-stack (IPv4/IPv6) support
+- Remove gethostbyname usage in main.c, pass hostname as string
+- tcping now works with both IPv4 and IPv6 addresses
+
+Signed-off-by: sbwml <admin@cooluc.com>
+---
+ main.c | 20 ++++++++++------
+ tcp.c  | 75 ++++++++++++++++++++++++++--------------------------------
+ tcp.h  |  2 +-
+ 3 files changed, 48 insertions(+), 49 deletions(-)
+
+--- a/main.c
++++ b/main.c
+@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
+ 	int wait = 1, quiet = 0;
+ 	int ok = 0, err = 0;
+ 	double min = 999999999999999.0, avg = 0.0, max = 0.0;
+-	struct hostent  *hostdnsentries;
+ 
+ 		while((c = getopt(argc, argv, "p:c:i:t:fq?")) != -1)
+ 		{
+@@ -87,12 +86,19 @@ int main(int argc, char *argv[])
+ 	}
+ 	hostname = argv[optind];
+ 
+-	hostdnsentries = gethostbyname(hostname);
+-	if (hostdnsentries == NULL)
+-	{
+-		fprintf(stderr, "%s: Name or service not known\n", hostname);
++	// domain name resolution
++	struct addrinfo hints, *res = NULL;
++	memset(&hints, 0, sizeof(hints));
++	hints.ai_family = AF_UNSPEC;
++	hints.ai_socktype = SOCK_STREAM;
++	char portstr[16];
++	snprintf(portstr, sizeof(portstr), "%d", portnr);
++	int rv = getaddrinfo(hostname, portstr, &hints, &res);
++	if (rv != 0) {
++		fprintf(stderr, "%s: %s\n", hostname, gai_strerror(rv));
+ 		return 2;
+ 	}
++	freeaddrinfo(res);
+ 
+ 	if (!quiet)
+ 		printf("tcping %s:%d\n", hostname, portnr);
+@@ -116,7 +122,7 @@ int main(int argc, char *argv[])
+ 
+ 		for(;;)
+ 		{
+-			fd = connect_to(hostdnsentries, portnr, timeout);
++			fd = connect_to(hostname, portnr, timeout);
+ 			if (fd == -1)
+ 			{
+ 				printf("error connecting to host: %s\n", strerror(errno));
+@@ -141,7 +147,7 @@ int main(int argc, char *argv[])
+ 			min = min > ms ? ms : min;
+ 			max = max < ms ? ms : max;
+ 
+-			printf("connected to %s:%d, seq=%d time=%.2f ms\n", hostname, portnr, curncount, (dend - dstart) * 1000.0);
++			printf("connected to %s:%d, seq=%d time=%.2f ms\n", hostname, portnr, curncount, ms);
+ 
+ 			break;
+ 		}
+--- a/tcp.c
++++ b/tcp.c
+@@ -1,6 +1,5 @@
+ #include <sys/types.h>
+ #include <sys/socket.h>
+-#include <netinet/in.h>
+ #include <netdb.h>
+ #include <errno.h>
+ #include <stdio.h>
+@@ -10,50 +9,44 @@
+ #include <sys/time.h>
+ #include <fcntl.h>
+ 
+-#include "tcp.h"
+-
+-#define incopy(a)       *((struct in_addr *)a)
+-
+-int connect_to(struct hostent *host, int portnr, int timeout)
++int connect_to(const char *hostname, int portnr, int timeout)
+ {
+-		int fd;
+-		int loop;
+-		struct sockaddr_in addr;
++		int fd = -1;
++		int rv;
++		char portstr[16];
++		struct addrinfo hints, *servinfo, *p;
+ 		struct timeval tv;
+ 
+-		/* create socket */
+-		fd = socket(AF_INET, SOCK_STREAM, 0);
+-		if (fd == -1)
+-		{
+-				perror("problem creating socket ");
+-				exit(2);
++		snprintf(portstr, sizeof(portstr), "%d", portnr);
++
++		memset(&hints, 0, sizeof hints);
++		hints.ai_family = AF_UNSPEC;		// Allow IPv4 or IPv6
++		hints.ai_socktype = SOCK_STREAM;	// TCP
++
++		rv = getaddrinfo(hostname, portstr, &hints, &servinfo);
++		if (rv != 0) {
++			fprintf(stderr, "%s: %s\n", hostname, gai_strerror(rv));
++			return -1;
+ 		}
+ 
+-		/* Set Socket Read-Write Timeout */
+-		tv.tv_sec = timeout;
+-		tv.tv_usec = 0;
+-		setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+-
+-		/* initialize address structure */
+-		memset((void *)&addr, 0, sizeof(addr));
+-		addr.sin_port   = htons(portnr);
+-		addr.sin_family = host -> h_addrtype;
+-
+-		/* try to connect for each of the entries: */
+-		for(loop=0; ; loop++)
+-		{
+-				if ((host -> h_addr_list[loop]) == NULL)
+-						break;
+-
+-				addr.sin_addr = incopy(host -> h_addr_list[loop]);
+-				/* connect to peer */
+-				if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0)
+-				{
+-						/* connection made, return */
+-						return fd;
+-				}
++		for (p = servinfo; p != NULL; p = p->ai_next) {
++			fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
++			if (fd == -1)
++				continue;
++
++			tv.tv_sec = timeout;
++			tv.tv_usec = 0;
++			setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
++			setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
++
++			if (connect(fd, p->ai_addr, p->ai_addrlen) == 0)
++				break;
++
++			close(fd);
++			fd = -1;
+ 		}
+-		close(fd);
+-		if (errno = EALREADY) errno = ETIMEDOUT;
+-		return -1;
++
++		freeaddrinfo(servinfo);
++
++		return fd;
+ }
+--- a/tcp.h
++++ b/tcp.h
+@@ -1 +1 @@
+-int connect_to(struct hostent *host, int portnr, int timeout);
++int connect_to(const char *hostname, int portnr, int timeout);
