@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 15937c6..c93204a 100644
+index 1612847..feea7c2 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -68,7 +68,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
@@ -11,7 +11,7 @@ index 15937c6..c93204a 100644
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy
  	bool "Include Haproxy"
-@@ -184,7 +184,6 @@ define Package/$(PKG_NAME)/conffiles
+@@ -185,7 +185,6 @@ define Package/$(PKG_NAME)/conffiles
  /usr/share/passwall/rules/lanlist_ipv4
  /usr/share/passwall/rules/lanlist_ipv6
  /usr/share/passwall/rules/domains_excluded
