@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 1612847..feea7c2 100644
+index 93fffe0..974c40c 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -68,7 +68,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
@@ -11,7 +11,7 @@ index 1612847..feea7c2 100644
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy
  	bool "Include Haproxy"
-@@ -185,7 +185,6 @@ define Package/$(PKG_NAME)/conffiles
+@@ -184,7 +184,6 @@ define Package/$(PKG_NAME)/conffiles
  /usr/share/passwall/rules/lanlist_ipv4
  /usr/share/passwall/rules/lanlist_ipv6
  /usr/share/passwall/rules/domains_excluded
@@ -61,7 +61,7 @@ index b39d6df..d105b3f 100644
  -- [[ App Settings ]]--
  s = m:section(TypedSection, "global_app", translate("App Update"),
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 93ba2b8..6cb5892 100644
+index d3b16f7..02c7a55 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -10,7 +10,6 @@ local has_chnroute = fs.access("/usr/share/passwall/rules/chnroute")
@@ -440,10 +440,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 2163e79..5a6f8dc 100644
+index 92c3ad0..67ebf43 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1849,9 +1849,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1852,9 +1852,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
