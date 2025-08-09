@@ -1,5 +1,5 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 07968a7..dc454c6 100644
+index 80993d4..f768683 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
 @@ -31,6 +31,7 @@ PKG_CONFIG_DEPENDS:= \
@@ -12,7 +12,7 @@ index 07968a7..dc454c6 100644
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 @@ -64,6 +65,7 @@ LUCI_DEPENDS:= \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server:shadowsocks-rust-ssserver \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs:simple-obfs \
+ 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs:simple-obfs-client \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin:v2ray-plugin \
 +	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Xray_Plugin:xray-plugin \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-local \
