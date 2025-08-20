@@ -16,7 +16,7 @@ on:
         required: true
         default: 'no'
       releases_keep_latest:
-        description: "How many latest releases to keep. (0 = all, false = skip)"
+        description: "How many latest releases to keep. (0 = none, false = skip)"
         required: false
         default: "0"
         type: choice
@@ -36,7 +36,7 @@ on:
           - 20
           - 30
       workflows_keep_day:
-        description: "Days to keep workflows. (0 = all, false = skip)"
+        description: "Days to keep workflows. (0 = none, false = skip)"
         required: false
         default: "0"
         type: choice
