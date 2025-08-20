@@ -1,0 +1,144 @@
+name: Build Nightly helloworld
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - aarch64_cortex-a53-main
+
+    steps:
+      - name: Set Timezone
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: System update
+        run: |
+          sudo -E apt-mark hold grub-efi-amd64-signed
+          sudo -E apt -y update --allow-unauthenticated
+          sudo -E apt -y full-upgrade
+          sudo -E systemctl daemon-reload
+          sudo apt-get autoremove -y --purge
+          sudo apt-get clean
+
+      - name: Get latest commit SHA for helloworld and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_helloworld = (curl -sSL https://api.github.com/repos/fw876/helloworld/commits/master | jq -r '.sha')
+          echo "SHA_helloworld=$SHA_helloworld" >> $env:GITHUB_ENV
+          echo "https://github.com/fw876/helloworld/commits/$SHA_helloworld" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Checkout code
+        uses: actions/checkout@main
+        with:
+          repository: fw876/helloworld
+          ref: master
+          submodules: recursive
+
+      - name: Create SSR+ MyMyNewMakefile666
+        run: |
+          echo "include \$(TOPDIR)/rules.mk" > MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "PKG_NAME:=luci-app-ssr-plus" >> MyNewMakefile666
+          echo "PKG_VERSION:=$(date +%Y%m%d.%H%M)" >> MyNewMakefile666
+          echo "PKG_RELEASE:=9" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "PKG_CONFIG_DEPENDS:= \\" >> MyNewMakefile666
+          echo "	CONFIG_PACKAGE_\$(PKG_NAME)_INCLUDE_Xray \\" >> MyNewMakefile666
+          echo "	CONFIG_PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client \\" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "LUCI_TITLE:=SS/Xray LuCI interface" >> MyNewMakefile666
+          echo "LUCI_PKGARCH:=all" >> MyNewMakefile666
+          echo "LUCI_DEPENDS:= \\" >> MyNewMakefile666
+          echo "	+coreutils +coreutils-base64 +dns2tcp +dnsmasq-full +@PACKAGE_dnsmasq_full_ipset +ipset +kmod-ipt-nat \\" >> MyNewMakefile666
+          echo "	+ip-full +iptables +iptables-mod-tproxy +lua +lua-neturl +libuci-lua +microsocks \\" >> MyNewMakefile666
+          echo "	+tcping +resolveip +shadowsocksr-libev-ssr-check +wget-ssl \\" >> MyNewMakefile666
+          echo "	+PACKAGE_\$(PKG_NAME)_INCLUDE_Xray:curl \\" >> MyNewMakefile666
+          echo "	+PACKAGE_\$(PKG_NAME)_INCLUDE_Xray:xray-core \\" >> MyNewMakefile666
+          echo "	+PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client:shadowsocks-rust-sslocal \\" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "define Package/\$(PKG_NAME)/config" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client" >> MyNewMakefile666
+          echo "	bool \"Shadowsocks-rust\"" >> MyNewMakefile666
+          echo "	default y" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_Xray" >> MyNewMakefile666
+          echo "	bool \"Xray-core\"" >> MyNewMakefile666
+          echo "	default n" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "endef" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "define Package/\$(PKG_NAME)/conffiles" >> MyNewMakefile666
+          echo "/etc/config/shadowsocksr" >> MyNewMakefile666
+          echo "/etc/ssrplus/" >> MyNewMakefile666
+          echo "endef" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "include \$(TOPDIR)/feeds/luci/luci.mk" >> MyNewMakefile666
+          echo "" >> MyNewMakefile666
+          echo "# call BuildPackage - OpenWrt buildroot signature" >> MyNewMakefile666
+          cat MyNewMakefile666
+
+      - name: Remove old SSR+ Makefile and Move new one
+        run: |
+          rm -f luci-app-ssr-plus/Makefile
+          mv MyNewMakefile666 luci-app-ssr-plus/Makefile
+
+      - name: Download SS Rust Makefile and Move new one
+        run: |
+            wget -O SSRustNewMakefile https://raw.githubusercontent.com/sbwml/openwrt_helloworld/v5/shadowsocks-rust/Makefile
+            rm -f shadowsocks-rust/Makefile
+            mv SSRustNewMakefile shadowsocks-rust/Makefile
+
+      - name: Build
+        uses: sbwml/openwrt-gh-action-sdk@helloworld
+        env:
+          ARCH: ${{ matrix.arch }}
+          FEEDNAME: packages_ci
+          PACKAGES: luci-app-ssr-plus
+          NO_REFRESH_CHECK: true
+
+      - name: Delete files
+        run: |
+          rm -f bin/packages/*/packages_ci/shadowsocksr-libev-ssr-local*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocksr-libev-ssr-nat*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocksr-libev-ssr-redir*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocksr-libev-ssr-server*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssmanager*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssserver*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssservice*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssurl*.?pk
+        continue-on-error: true
+
+      - name: Zip ?pk packages
+        run: |
+          zip -j -9 helloworld-${{ matrix.arch }}.zip bin/packages/*/packages_ci/*.?pk
+
+      - name: upload helloworld-${{ matrix.arch }}
+        uses: actions/upload-artifact@main
+        with:
+          name: helloworld-${{ matrix.arch }}
+          path: helloworld-${{ matrix.arch }}.zip
+          compression-level: 9
+        continue-on-error: true
+
+      - name: Generate release tag
+        run: echo "tag=$(date +"%Y.%m.%d-%H.%M_helloworld-${{ matrix.arch }}")" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.tag }}
+          files: |
+            helloworld-${{ matrix.arch }}.zip
+          body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
+        continue-on-error: true
