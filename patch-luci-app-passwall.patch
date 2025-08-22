@@ -187,7 +187,7 @@ index c5be76f..9d56d48 100644
  	luci.http.redirect(e.extedit:format(id))
  end
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
-index fccedeb..67e8456 100644
+index e2bdc97..c4c57a3 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 @@ -9,19 +9,6 @@ if not arg[1] or not m:get(arg[1]) then
@@ -440,10 +440,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 92c3ad0..67ebf43 100644
+index a78dd4f..3c2e153 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1852,9 +1852,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1858,9 +1858,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
