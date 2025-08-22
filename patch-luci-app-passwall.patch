@@ -125,7 +125,7 @@ index 31c6d12..b6a3511 100644
  
  s = m:section(NamedSection, arg[1], "nodes", "")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
-index c1e6440..49aa9e6 100644
+index 2c7af3f..1811aa3 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 @@ -4,7 +4,6 @@ local sys = api.sys
@@ -187,7 +187,7 @@ index c5be76f..9d56d48 100644
  	luci.http.redirect(e.extedit:format(id))
  end
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
-index e2bdc97..c4c57a3 100644
+index 445902d..7d6edd2 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 @@ -9,19 +9,6 @@ if not arg[1] or not m:get(arg[1]) then
@@ -210,7 +210,7 @@ index e2bdc97..c4c57a3 100644
  m.render = function(self, ...)
  	Map.render(self, ...)
  	api.optimize_cbi_ui()
-@@ -74,6 +61,10 @@ s = m:section(NamedSection, arg[1])
+@@ -86,6 +73,10 @@ s = m:section(NamedSection, arg[1])
  s.addremove = false
  s.dynamic = false
  
@@ -440,10 +440,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index a78dd4f..3c2e153 100644
+index 7b268cb..0e0ecfd 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1858,9 +1858,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1867,9 +1867,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
