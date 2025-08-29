@@ -125,7 +125,7 @@ index 31c6d12..b6a3511 100644
  
  s = m:section(NamedSection, arg[1], "nodes", "")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
-index 5a75489..6f5f63e 100644
+index a1e8b1d..afd8907 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 @@ -4,7 +4,6 @@ local sys = api.sys
@@ -316,7 +316,7 @@ index a42a0ac..6affd2c 100644
  s = m:section(NamedSection, arg[1], "user", "")
  s.addremove = false
 diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index 539c4d4..4f7ff8a 100644
+index 179b539..d293c2a 100644
 --- a/luci-app-passwall/luasrc/passwall/api.lua
 +++ b/luci-app-passwall/luasrc/passwall/api.lua
 @@ -38,72 +38,6 @@ function is_old_uci()
