@@ -222,7 +222,7 @@ index 445902d..7d6edd2 100644
  o.rmempty = false
  
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
-index 17485c9..90d7939 100644
+index 470e5d7..e80d841 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 @@ -11,7 +11,6 @@ local port_validate = function(self, value, t)
@@ -440,10 +440,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 7fcc4f7..112f2d8 100644
+index 4c35579..2f58045 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1867,9 +1867,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1876,9 +1876,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
