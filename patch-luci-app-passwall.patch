@@ -316,7 +316,7 @@ index a42a0ac..6affd2c 100644
  s = m:section(NamedSection, arg[1], "user", "")
  s.addremove = false
 diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index ba0524c..78e071a 100644
+index 8bb4d8a..797ee1b 100644
 --- a/luci-app-passwall/luasrc/passwall/api.lua
 +++ b/luci-app-passwall/luasrc/passwall/api.lua
 @@ -38,72 +38,6 @@ function is_old_uci()
