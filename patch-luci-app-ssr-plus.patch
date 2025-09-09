@@ -172,7 +172,7 @@ index 2ba1be9..ed7148f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 26b72e2..701586e 100644
+index 6c02bb8..1c9a947 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -75,9 +75,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -196,7 +196,7 @@ index 26b72e2..701586e 100644
  			return false;
  		}
  		s.innerHTML = "";
-@@ -332,7 +332,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -336,7 +336,7 @@ function import_ssr_url(btn, urlname, sid) {
  			document.getElementsByName('cbid.shadowsocksr.' + sid + '.protocol_param')[0].value = dictvalue(pdict, 'protoparam');
  			var rem = pdict['remarks'];
  			if (typeof (rem) != 'undefined' && rem != '' && rem.length > 0) document.getElementsByName('cbid.shadowsocksr.' + sid + '.alias')[0].value = b64decutf8safe(rem);
@@ -205,7 +205,7 @@ index 26b72e2..701586e 100644
  			return false;
  		case "trojan":
  			try {
-@@ -430,7 +430,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -434,7 +434,7 @@ function import_ssr_url(btn, urlname, sid) {
  				break;
  			}
  
@@ -214,7 +214,7 @@ index 26b72e2..701586e 100644
  			return false;
  		case "vmess":
  			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -517,7 +517,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -526,7 +526,7 @@ function import_ssr_url(btn, urlname, sid) {
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].checked = true;
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].dispatchEvent(event);
  			}
@@ -223,7 +223,7 @@ index 26b72e2..701586e 100644
  			return false;
  		case "vless":
  			try {
-@@ -643,10 +643,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -656,10 +656,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
