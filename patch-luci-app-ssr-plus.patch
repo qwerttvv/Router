@@ -172,7 +172,7 @@ index 2ba1be9..ed7148f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 6c02bb8..1c9a947 100644
+index d557d42..4557c66 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -75,9 +75,9 @@ function export_ssr_url(btn, urlname, sid) {
@@ -205,7 +205,7 @@ index 6c02bb8..1c9a947 100644
  			return false;
  		case "trojan":
  			try {
-@@ -434,7 +434,7 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -432,7 +432,7 @@ function import_ssr_url(btn, urlname, sid) {
  				break;
  			}
  
@@ -213,8 +213,8 @@ index 6c02bb8..1c9a947 100644
 +			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
  			return false;
  		case "vmess":
- 			var sstr = b64DecodeUnicode(ssu[1]);
-@@ -526,7 +526,7 @@ function import_ssr_url(btn, urlname, sid) {
+ 			var sstr = b64DecodeUnicode((ssu[1] || "").replace(/#.*/, "").trim());
+@@ -523,7 +523,7 @@ function import_ssr_url(btn, urlname, sid) {
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].checked = true;
  				document.getElementsByName('cbid.shadowsocksr.' + sid + '.xmux')[0].dispatchEvent(event);
  			}
@@ -223,7 +223,7 @@ index 6c02bb8..1c9a947 100644
  			return false;
  		case "vless":
  			try {
-@@ -656,10 +656,10 @@ function import_ssr_url(btn, urlname, sid) {
+@@ -653,10 +653,10 @@ function import_ssr_url(btn, urlname, sid) {
  				}
  				break;
  			}
