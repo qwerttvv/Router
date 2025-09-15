@@ -172,7 +172,7 @@ index 2ba1be9..ed7148f 100644
  					res();
  				});
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index a22a67d..691ff56 100644
+index 53f6428..88e6b74 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
 @@ -75,9 +75,9 @@ function export_ssr_url(btn, urlname, sid) {
