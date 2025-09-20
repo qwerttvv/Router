@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 328617a..8db7ab4 100644
+index 0b91928..f5fd49a 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -68,7 +68,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
@@ -11,14 +11,6 @@ index 328617a..8db7ab4 100644
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy
  	bool "Include Haproxy"
-@@ -184,7 +184,6 @@ define Package/$(PKG_NAME)/conffiles
- /usr/share/passwall/rules/lanlist_ipv4
- /usr/share/passwall/rules/lanlist_ipv6
- /usr/share/passwall/rules/domains_excluded
--/www/luci-static/resources/qrcode.min.js
- endef
- 
- define Package/$(PKG_NAME)/postrm
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
 index 9d5edc7..d825e87 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl.lua
@@ -234,7 +226,7 @@ index 470e5d7..e80d841 100644
  -- [[ Delay Settings ]]--
  s = m:section(TypedSection, "global_delay", translate("Delay Settings"))
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
-index 2f30dff..2347e65 100644
+index 39a105a..031522c 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
 @@ -4,8 +4,6 @@ local has_xray = api.finded_com("xray")
@@ -440,7 +432,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 7681e66..fe59a3d 100644
+index 75b11e1..49068d0 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
 @@ -1879,9 +1879,6 @@ msgstr "是否要恢复客户端默认配置？"

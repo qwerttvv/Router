@@ -355,7 +355,6 @@ o = s:option(Flag, _n("reality"), translate("REALITY"), translate("Only recommen
 o.default = 0
 o:depends({ [_n("tls")] = true, [_n("transport")] = "raw" })
 o:depends({ [_n("tls")] = true, [_n("transport")] = "ws" })
-o:depends({ [_n("tls")] = true, [_n("transport")] = "quic" })
 o:depends({ [_n("tls")] = true, [_n("transport")] = "grpc" })
 o:depends({ [_n("tls")] = true, [_n("transport")] = "httpupgrade" })
 o:depends({ [_n("tls")] = true, [_n("transport")] = "xhttp" })
@@ -369,7 +368,7 @@ o:value("h3,h2")
 o:value("http/1.1")
 o:value("h2,http/1.1")
 o:value("h3,h2,http/1.1")
-o:depends({ [_n("tls")] = true })
+o:depends({ [_n("tls")] = true, [_n("reality")] = false })
 
 -- o = s:option(Value, _n("minversion"), translate("minversion"))
 -- o.default = "1.3"
@@ -450,11 +449,9 @@ o = s:option(ListValue, _n("transport"), translate("Transport"))
 o:value("raw", "RAW (TCP)")
 o:value("mkcp", "mKCP")
 o:value("ws", "WebSocket")
-o:value("ds", "DomainSocket")
-o:value("quic", "QUIC")
 o:value("grpc", "gRPC")
 o:value("httpupgrade", "HttpUpgrade")
-o:value("xhttp", "XHTTP (SplitHTTP)")
+o:value("xhttp", "XHTTP")
 o:depends({ [_n("protocol")] = "vmess" })
 o:depends({ [_n("protocol")] = "vless" })
 o:depends({ [_n("protocol")] = "socks" })
@@ -554,24 +551,6 @@ o = s:option(Value, _n("ws_heartbeatPeriod"), translate("HeartbeatPeriod(second)
 o.datatype = "integer"
 o:depends({ [_n("transport")] = "ws" })
 
--- [[ DomainSocket部分 ]]--
-o = s:option(Value, _n("ds_path"), "Path", translate("A legal file path. This file must not exist before running."))
-o:depends({ [_n("transport")] = "ds" })
-
--- [[ QUIC部分 ]]--
-o = s:option(ListValue, _n("quic_security"), translate("Encrypt Method"))
-o:value("none")
-o:value("aes-128-gcm")
-o:value("chacha20-poly1305")
-o:depends({ [_n("transport")] = "quic" })
-
-o = s:option(Value, _n("quic_key"), translate("Encrypt Method") .. translate("Key"))
-o:depends({ [_n("transport")] = "quic" })
-
-o = s:option(ListValue, _n("quic_guise"), translate("Camouflage Type"))
-for a, t in ipairs(header_type_list) do o:value(t) end
-o:depends({ [_n("transport")] = "quic" })
-
 -- [[ gRPC部分 ]]--
 o = s:option(Value, _n("grpc_serviceName"), "ServiceName")
 o:depends({ [_n("transport")] = "grpc" })
@@ -639,6 +618,7 @@ o.custom_write = function(self, section, value)
 		local address = (data.extra and data.extra.downloadSettings and data.extra.downloadSettings.address)
 			or (data.downloadSettings and data.downloadSettings.address)
 		if address and address ~= "" then
+			address = address:gsub("^%[", ""):gsub("%]$", "")
 			m:set(section, "download_address", address)
 		else
 			m:del(section, "download_address")
@@ -662,24 +642,22 @@ end
 -- [[ Mux.Cool ]]--
 o = s:option(Flag, _n("mux"), "Mux", translate("Enable Mux.Cool"))
 o:depends({ [_n("protocol")] = "vmess" })
-o:depends({ [_n("protocol")] = "vless", [_n("flow")] = "" })
+o:depends({ [_n("protocol")] = "vless", [_n("transport")] = "raw" })
+o:depends({ [_n("protocol")] = "vless", [_n("transport")] = "ws" })
+o:depends({ [_n("protocol")] = "vless", [_n("transport")] = "grpc" })
+o:depends({ [_n("protocol")] = "vless", [_n("transport")] = "httpupgrade" })
 o:depends({ [_n("protocol")] = "http" })
 o:depends({ [_n("protocol")] = "socks" })
 o:depends({ [_n("protocol")] = "shadowsocks" })
 o:depends({ [_n("protocol")] = "trojan" })
 
 o = s:option(Value, _n("mux_concurrency"), translate("Mux concurrency"))
-o.default = 8
+o.default = -1
 o:depends({ [_n("mux")] = true })
-
--- [[ XUDP Mux ]]--
-o = s:option(Flag, _n("xmux"), "XUDP Mux")
-o.default = 1
-o:depends({ [_n("protocol")] = "vless", [_n("flow")] = "xtls-rprx-vision" })
 
 o = s:option(Value, _n("xudp_concurrency"), translate("XUDP Mux concurrency"))
 o.default = 8
-o:depends({ [_n("xmux")] = true })
+o:depends({ [_n("mux")] = true })
 
 --[[tcpMptcp]]
 o = s:option(Flag, _n("tcpMptcp"), "tcpMptcp", translate("Enable Multipath TCP, need to be enabled in both server and client configuration."))
