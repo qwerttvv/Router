@@ -129,7 +129,7 @@ index a1e8b1d..afd8907 100644
  -- [[ Other Settings ]]--
  s = m:section(TypedSection, "global_other")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
-index c5be76f..9d56d48 100644
+index a604594..c194d78 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 @@ -46,6 +46,10 @@ end
@@ -170,7 +170,7 @@ index c5be76f..9d56d48 100644
  o = s:option(ListValue, "filter_keyword_mode", translate("Filter keyword Mode"))
  o:value("0", translate("Close"))
  o:value("1", translate("Discard List"))
-@@ -162,7 +151,6 @@ s.sortable = true
+@@ -167,7 +156,6 @@ s.sortable = true
  s.template = "cbi/tblsection"
  s.extedit = api.url("node_subscribe_config", "%s")
  function s.create(e, t)
@@ -432,7 +432,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 75b11e1..49068d0 100644
+index 83cc18e..40d1aa9 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
 @@ -1879,9 +1879,6 @@ msgstr "是否要恢复客户端默认配置？"
