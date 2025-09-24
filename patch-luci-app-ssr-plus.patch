@@ -1,5 +1,5 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 80993d4..f768683 100644
+index 69aba9a..e33610e 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
 @@ -31,6 +31,7 @@ PKG_CONFIG_DEPENDS:= \
@@ -59,7 +59,7 @@ index 80993d4..f768683 100644
  	bool "Include ShadowsocksR Libev Client"
  	default y
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index 8906a67..1bd4ffe 100644
+index 4c56e47..a7e96fe 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 @@ -7,7 +7,7 @@ function index()
