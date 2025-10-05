@@ -53,18 +53,18 @@ index b39d6df..d105b3f 100644
  -- [[ App Settings ]]--
  s = m:section(TypedSection, "global_app", translate("App Update"),
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index d3b16f7..02c7a55 100644
+index ba9cdfa..8da6901 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-@@ -10,7 +10,6 @@ local has_chnroute = fs.access("/usr/share/passwall/rules/chnroute")
- local chinadns_tls = os.execute("chinadns-ng -V | grep -i wolfssl >/dev/null")
+@@ -9,7 +9,6 @@ local has_chnlist = fs.access("/usr/share/passwall/rules/chnlist")
+ local has_chnroute = fs.access("/usr/share/passwall/rules/chnroute")
  
  m = Map(appname)
 -api.set_apply_on_parse(m)
  
  local nodes_table = {}
  for k, e in ipairs(api.get_valid_nodes()) do
-@@ -512,6 +511,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
+@@ -463,6 +462,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
  o:value("149.112.112.112", "149.112.112.112 (Quad9)")
  o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
  o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
@@ -77,8 +77,8 @@ index d3b16f7..02c7a55 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-@@ -623,7 +628,7 @@ o:depends({direct_dns_mode = "dot"})
- o:depends({dns_mode = "dot"})
+@@ -553,7 +558,7 @@ if api.is_finded("smartdns") then
+ end
  
  o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
 -o.default = "1"
@@ -432,10 +432,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 83cc18e..40d1aa9 100644
+index b9d9c37..b440a97 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1879,9 +1879,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1867,9 +1867,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
