@@ -117,7 +117,7 @@ index 31c6d12..b6a3511 100644
  
  s = m:section(NamedSection, arg[1], "nodes", "")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
-index a1e8b1d..afd8907 100644
+index f5f29e3..229cd30 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 @@ -4,7 +4,6 @@ local sys = api.sys
