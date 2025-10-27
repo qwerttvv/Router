@@ -226,7 +226,7 @@ index 3862bab..621884e 100644
  -- [[ Delay Settings ]]--
  s = m:section(TypedSection, "global_delay", translate("Delay Settings"))
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
-index 39a105a..031522c 100644
+index 433ed33..a75c505 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
 @@ -4,8 +4,6 @@ local has_xray = api.finded_com("xray")
