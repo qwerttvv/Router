@@ -1,8 +1,8 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 84ff929..2edd6fa 100644
+index ff2afc9..a7f578b 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
-@@ -68,7 +68,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
+@@ -69,7 +69,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
  config PACKAGE_$(PKG_NAME)_INCLUDE_Geoview
  	bool "Include Geoview"
  	select PACKAGE_geoview
@@ -308,7 +308,7 @@ index a42a0ac..6affd2c 100644
  s = m:section(NamedSection, arg[1], "user", "")
  s.addremove = false
 diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index 8bb4d8a..797ee1b 100644
+index 6b30d38..802d92f 100644
 --- a/luci-app-passwall/luasrc/passwall/api.lua
 +++ b/luci-app-passwall/luasrc/passwall/api.lua
 @@ -38,72 +38,6 @@ function is_old_uci()
