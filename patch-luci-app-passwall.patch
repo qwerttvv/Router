@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index ff2afc9..a7f578b 100644
+index 31b3edb..e9aecde 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -69,7 +69,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
@@ -251,17 +251,17 @@ index 6d4631f..2738beb 100644
  function clean_text(text)
  	local nbsp = string.char(0xC2, 0xA0) -- 不间断空格（U+00A0）
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua
-index f387d70..1571e63 100644
+index 715bcf3..8555754 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua
 @@ -4,7 +4,6 @@ local datatypes = api.datatypes
  
  m = Map(appname, "Sing-Box/Xray " .. translate("Shunt Rule"))
- m.redirect = api.url()
+ m.redirect = api.url("rule")
 -api.set_apply_on_parse(m)
  
- function clean_text(text)
- 	local nbsp = string.char(0xC2, 0xA0) -- 不间断空格（U+00A0）
+ if not arg[1] or not m:get(arg[1]) then
+ 	luci.http.redirect(m.redirect)
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/socks_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/socks_config.lua
 index ffb269b..b20475e 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/socks_config.lua
