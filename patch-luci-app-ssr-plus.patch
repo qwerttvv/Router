@@ -1,8 +1,8 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 69aba9a..e33610e 100644
+index addfb09..57b53eb 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
-@@ -31,6 +31,7 @@ PKG_CONFIG_DEPENDS:= \
+@@ -33,6 +33,7 @@ PKG_CONFIG_DEPENDS:= \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin \
@@ -10,15 +10,15 @@ index 69aba9a..e33610e 100644
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server \
  	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
-@@ -64,6 +65,7 @@ LUCI_DEPENDS:= \
+@@ -66,6 +67,7 @@ LUCI_DEPENDS:= \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server:shadowsocks-rust-ssserver \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs:simple-obfs-client \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin:v2ray-plugin \
 +	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Xray_Plugin:xray-plugin \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-local \
  	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-redir \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server:shadowsocksr-libev-ssr-server \
-@@ -76,7 +78,7 @@ select PACKAGE_luci-lua-runtime if PACKAGE_$(PKG_NAME)
+ 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-redir \
+@@ -104,7 +106,7 @@ endchoice
  
  choice
  	prompt "Shadowsocks Client Selection"
@@ -27,7 +27,7 @@ index 69aba9a..e33610e 100644
  	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
  
  	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Client
-@@ -93,8 +95,8 @@ endchoice
+@@ -121,8 +123,8 @@ endchoice
  
  choice
  	prompt "Shadowsocks Server Selection"
@@ -38,7 +38,7 @@ index 69aba9a..e33610e 100644
  	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
  
  	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
-@@ -142,7 +144,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_DNSPROXY
+@@ -170,7 +172,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_DNSPROXY
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_MosDNS
  	bool "Include MosDNS"
@@ -47,7 +47,7 @@ index 69aba9a..e33610e 100644
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria
  	bool "Include Hysteria"
-@@ -190,6 +192,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin
+@@ -218,6 +220,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin
  	bool "Include Shadowsocks V2ray Plugin"
  	default n
  
@@ -59,7 +59,7 @@ index 69aba9a..e33610e 100644
  	bool "Include ShadowsocksR Libev Client"
  	default y
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index 4c56e47..a7e96fe 100644
+index 18d3b42..d5c093f 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 @@ -7,7 +7,7 @@ function index()
@@ -72,14 +72,14 @@ index 4c56e47..a7e96fe 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-index b8286c7..26f4988 100644
+index 56f7dc1..e055920 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-@@ -27,7 +27,7 @@ local function is_finded(e)
+@@ -35,7 +35,7 @@ local function is_finded(e)
  	return luci.sys.exec(string.format('type -t -p "%s" 2>/dev/null', e)) ~= ""
  end
  
--m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"), translate("<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc.</h3>"))
+-m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"), translate("<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/TUIC/HYSTERIA2/NAIVEPROXY/SOCKS5/TUN etc.</h3>"))
 +m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"))
  m:section(SimpleSection).template = "shadowsocksr/status"
  
@@ -171,173 +171,3 @@ index 2ba1be9..ed7148f 100644
  					}
  					res();
  				});
-diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-index 1ae1d95..a3efaf6 100644
---- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-+++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/ssrurl.htm
-@@ -75,9 +75,9 @@ function export_ssr_url(btn, urlname, sid) {
- 	textarea.select();
- 	try {
- 		document.execCommand("copy"); // Security exception may be thrown by some browsers.
--		s.innerHTML = "<font style=\'color:green\'><%:Copy SSR to clipboard successfully.%></font>";
-+		s.innerHTML = "<font color='green'><%:Copy SSR to clipboard successfully.%></font>";
- 	} catch (ex) {
--		s.innerHTML = "<font style=\'color:red\'><%:Unable to copy SSR to clipboard.%></font>";
-+		s.innerHTML = "<font color='red'><%:Unable to copy SSR to clipboard.%></font>";
- 	} finally {
- 		document.body.removeChild(textarea);
- 	}
-@@ -89,7 +89,7 @@ function import_ssr_url(btn, urlname, sid) {
- 		if (!s) return false;
- 		var ssrurl = prompt("<%:Paste sharing link here%>", "");
- 		if (ssrurl == null || ssrurl == "") {
--			s.innerHTML = "<font style=\'color:red\'><%:User cancelled.%></font>";
-+			s.innerHTML = "<font color='red'><%:User cancelled.%></font>";
- 			return false;
- 		}
- 		s.innerHTML = "";
-@@ -349,7 +349,7 @@ function import_ssr_url(btn, urlname, sid) {
- 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.protocol_param')[0].value = dictvalue(pdict, 'protoparam');
- 			var rem = pdict['remarks'];
- 			if (typeof (rem) != 'undefined' && rem != '' && rem.length > 0) document.getElementsByName('cbid.shadowsocksr.' + sid + '.alias')[0].value = b64decutf8safe(rem);
--			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
-+			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
- 			return false;
- 		case "trojan":
- 			try {
-@@ -445,7 +445,7 @@ function import_ssr_url(btn, urlname, sid) {
- 				break;
- 			}
- 
--			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
-+			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
- 			return false;
- 		case "vmess":
- 			var sstr = b64DecodeUnicode((ssu[1] || "").replace(/#.*/, "").trim());
-@@ -532,7 +532,7 @@ function import_ssr_url(btn, urlname, sid) {
- 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].checked = true;
- 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].dispatchEvent(event);
- 			}
--			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
-+			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
- 			return false;
- 		case "vless":
- 			try {
-@@ -807,10 +807,10 @@ function import_ssr_url(btn, urlname, sid) {
- 				}
- 				break;
- 			}
--			s.innerHTML = "<font style=\'color:green\'><%:Import configuration information successfully.%></font>";
-+			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";
- 			return false;
- 		default:
--			s.innerHTML = "<font style=\'color:red\'><%:Invalid format.%></font>";
-+			s.innerHTML = "<font color='red'><%:Invalid format.%></font>";
- 			return false;
- 		}
- 	}
-diff --git a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-index 27c9d6b..23b5f29 100755
---- a/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-+++ b/luci-app-ssr-plus/root/etc/init.d/shadowsocksr
-@@ -1287,8 +1287,18 @@ start_server() {
- 			echolog "Server:Socks5 Server$server_count Started!"
- 			;;
- 		esac
--		iptables -t filter -A SSR-SERVER-RULE -p tcp --dport $(uci_get_by_name $1 server_port) -j ACCEPT
--		iptables -t filter -A SSR-SERVER-RULE -p udp --dport $(uci_get_by_name $1 server_port) -j ACCEPT
-+		ssr_server_port=$(uci show shadowsocksr | grep 'server_config.*server_port' | awk -F"'" '{print $2}' | tr "\n" " ")
-+		if [ -n "$ssr_server_port" ]; then
-+			uci -q delete firewall.shadowsocksr_server
-+			uci set firewall.shadowsocksr_server=rule
-+			uci set firewall.shadowsocksr_server.name="shadowsocksr_server"
-+			uci set firewall.shadowsocksr_server.target="ACCEPT"
-+			uci set firewall.shadowsocksr_server.src="wan"
-+			uci set firewall.shadowsocksr_server.dest_port="$ssr_server_port"
-+			uci set firewall.shadowsocksr_server.enabled="1"
-+			uci commit firewall
-+			/etc/init.d/firewall reload >/dev/null 2>&1
-+		fi
- 		return 0
- 	}
- 	gen_serv_include() {
-@@ -1445,12 +1455,6 @@ stop() {
- 	unlock
- 	set_lock
- 	/usr/bin/ssr-rules -f
--	local srulecount=$(iptables -L | grep SSR-SERVER-RULE | wc -l)
--	if [ $srulecount -gt 0 ]; then
--		iptables -F SSR-SERVER-RULE
--		iptables -t filter -D INPUT -j SSR-SERVER-RULE
--		iptables -X SSR-SERVER-RULE 2>/dev/null
--	fi
- 	if [ -z "$switch_server" ]; then
- 		$PS -w | grep -v "grep" | grep ssr-switch | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
- 		rm -f /var/lock/ssr-switch.lock
-@@ -1461,7 +1465,7 @@ stop() {
- 	( \
- 		# Graceful kill first, so programs have the chance to stop its subprocesses
- 		$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill >/dev/null 2>&1 ; \
--		sleep 3s; \
-+		sleep 1s; \
- 		# Force kill hanged programs
- 		$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 ; \
- 	)
-@@ -1484,6 +1488,9 @@ stop() {
- 
- 		/etc/init.d/dnsmasq restart >/dev/null 2>&1
- 	fi
-+	uci -q delete firewall.shadowsocksr_server
-+	uci commit firewall
-+	/etc/init.d/firewall reload >/dev/null 2>&1
- 	del_cron
- 	unset_lock
- }
-diff --git a/luci-app-ssr-plus/root/etc/ssrplus/white.list b/luci-app-ssr-plus/root/etc/ssrplus/white.list
-index 9055fcb..8c3ca2b 100644
---- a/luci-app-ssr-plus/root/etc/ssrplus/white.list
-+++ b/luci-app-ssr-plus/root/etc/ssrplus/white.list
-@@ -1,7 +1,37 @@
--bilibili.com
--bilibili.cn
--bilivideo.com
--bilivideo.cn
-+aaplimg.com
-+account.synology.com
-+apple-cloudkit.com
-+apple.co
-+apple.com
-+apple.com.cn
-+appstore.com
- biliapi.com
- biliapi.net
--apple.com
-\ No newline at end of file
-+bilibili.cn
-+bilibili.com
-+bilivideo.cn
-+bilivideo.com
-+bing.com
-+cdn-apple.com
-+checkip.dyndns.org
-+checkip.synology.com
-+checkipv6.synology.com
-+checkport.synology.com
-+crashlytics.com
-+ddns.synology.com
-+gitmirror.com
-+icloud-content.com
-+icloud.com
-+icloud.com.cn
-+images-cn.ssl-images-amazon.com
-+mirrorlist.centos.org
-+mzstatic.com
-+office365.com
-+officecdn-microsoft-com.akamaized.net
-+teamviewer.com
-+whatismyip.akamai.com
-+windows.com
-+windowsupdate.com
-+worldbank.org
-+worldscientific.com
-+www-cdn.icloud.com.akadns.net
