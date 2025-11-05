@@ -99,7 +99,7 @@ index 8be9f27..4c6b3f2 100644
  -- [[ Haproxy Settings ]]--
  s = m:section(TypedSection, "global_haproxy", translate("Basic Settings"))
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
-index 31c6d12..b6a3511 100644
+index 03d6fab..e20ba02 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
 @@ -2,11 +2,10 @@ local api = require "luci.passwall.api"
@@ -117,7 +117,7 @@ index 31c6d12..b6a3511 100644
  
  s = m:section(NamedSection, arg[1], "nodes", "")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
-index f5f29e3..229cd30 100644
+index 58348cb..8311476 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_list.lua
 @@ -4,7 +4,6 @@ local sys = api.sys
@@ -129,7 +129,7 @@ index f5f29e3..229cd30 100644
  -- [[ Other Settings ]]--
  s = m:section(TypedSection, "global_other")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
-index a604594..c194d78 100644
+index e7157ec..a2d3694 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 @@ -46,6 +46,10 @@ end
@@ -432,7 +432,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index b9d9c37..b440a97 100644
+index ceb30f3..59b47bd 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
 @@ -1867,9 +1867,6 @@ msgstr "是否要恢复客户端默认配置？"
