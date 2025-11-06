@@ -99,7 +99,7 @@ index 8be9f27..4c6b3f2 100644
  -- [[ Haproxy Settings ]]--
  s = m:section(TypedSection, "global_haproxy", translate("Basic Settings"))
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
-index 03d6fab..e20ba02 100644
+index f2ced5f..4d713e6 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
 @@ -2,11 +2,10 @@ local api = require "luci.passwall.api"
