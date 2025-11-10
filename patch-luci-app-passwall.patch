@@ -53,7 +53,7 @@ index b39d6df..d105b3f 100644
  -- [[ App Settings ]]--
  s = m:section(TypedSection, "global_app", translate("App Update"),
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index b024ca5..c3cf6f2 100644
+index e90aa06..20cb114 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -9,7 +9,6 @@ local has_chnlist = fs.access("/usr/share/passwall/rules/chnlist")
@@ -226,7 +226,7 @@ index 3862bab..621884e 100644
  -- [[ Delay Settings ]]--
  s = m:section(TypedSection, "global_delay", translate("Delay Settings"))
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
-index 433ed33..a75c505 100644
+index d4febfc..c39b683 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/rule.lua
 @@ -4,8 +4,6 @@ local has_xray = api.finded_com("xray")
@@ -251,7 +251,7 @@ index 6d4631f..2738beb 100644
  function clean_text(text)
  	local nbsp = string.char(0xC2, 0xA0) -- 不间断空格（U+00A0）
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua
-index 715bcf3..8555754 100644
+index db14415..608f41f 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/shunt_rules.lua
 @@ -4,7 +4,6 @@ local datatypes = api.datatypes
@@ -432,10 +432,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 0112384..4ee45fa 100644
+index e8664f3..c7e5a0c 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1864,9 +1864,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1873,9 +1873,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
