@@ -53,7 +53,7 @@ index b39d6df..d105b3f 100644
  -- [[ App Settings ]]--
  s = m:section(TypedSection, "global_app", translate("App Update"),
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index bcb8b47..1f1f468 100644
+index b024ca5..c3cf6f2 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -9,7 +9,6 @@ local has_chnlist = fs.access("/usr/share/passwall/rules/chnlist")
@@ -85,7 +85,7 @@ index bcb8b47..1f1f468 100644
 +o.default = "0"
  o.rmempty = false
  
- if (m:get("@global_forwarding[0]", "use_nft") or "0") == "1" then
+ local use_nft = m:get("@global_forwarding[0]", "use_nft") == "1"
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/haproxy.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/haproxy.lua
 index 8be9f27..4c6b3f2 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/haproxy.lua
