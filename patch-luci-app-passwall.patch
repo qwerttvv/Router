@@ -129,7 +129,7 @@ index 58348cb..8311476 100644
  -- [[ Other Settings ]]--
  s = m:section(TypedSection, "global_other")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
-index e7157ec..a2d3694 100644
+index 6a60587..1dbd9bd 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 @@ -46,6 +46,10 @@ end
@@ -179,7 +179,7 @@ index e7157ec..a2d3694 100644
  	luci.http.redirect(e.extedit:format(id))
  end
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
-index 445902d..7d6edd2 100644
+index e78e5ff..b891920 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 @@ -9,19 +9,6 @@ if not arg[1] or not m:get(arg[1]) then
@@ -212,7 +212,7 @@ index 445902d..7d6edd2 100644
 +
  o = s:option(Value, "remark", translate("Subscribe Remark"))
  o.rmempty = false
- 
+ o.validate = function(self, value, section)
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
 index 3862bab..621884e 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/other.lua
@@ -308,7 +308,7 @@ index a42a0ac..6affd2c 100644
  s = m:section(NamedSection, arg[1], "user", "")
  s.addremove = false
 diff --git a/luci-app-passwall/luasrc/passwall/api.lua b/luci-app-passwall/luasrc/passwall/api.lua
-index 6b30d38..802d92f 100644
+index 55ffe57..1a743ed 100644
 --- a/luci-app-passwall/luasrc/passwall/api.lua
 +++ b/luci-app-passwall/luasrc/passwall/api.lua
 @@ -38,72 +38,6 @@ function is_old_uci()
@@ -432,10 +432,10 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index e8664f3..c7e5a0c 100644
+index 959b426..6bb3658 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
-@@ -1873,9 +1873,6 @@ msgstr "是否要恢复客户端默认配置？"
+@@ -1879,9 +1879,6 @@ msgstr "是否要恢复客户端默认配置？"
  msgid "Are you sure you want to restore the client to default settings?"
  msgstr "是否真的要恢复客户端默认配置？"
  
