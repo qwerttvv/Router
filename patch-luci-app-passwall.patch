@@ -99,7 +99,7 @@ index 8be9f27..4c6b3f2 100644
  -- [[ Haproxy Settings ]]--
  s = m:section(TypedSection, "global_haproxy", translate("Basic Settings"))
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
-index f2ced5f..4d713e6 100644
+index f384eec..deec72c 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_config.lua
 @@ -2,11 +2,10 @@ local api = require "luci.passwall.api"
@@ -129,7 +129,7 @@ index 58348cb..8311476 100644
  -- [[ Other Settings ]]--
  s = m:section(TypedSection, "global_other")
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
-index 6a60587..1dbd9bd 100644
+index 3a49009..537d8b9 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe.lua
 @@ -46,6 +46,10 @@ end
@@ -179,7 +179,7 @@ index 6a60587..1dbd9bd 100644
  	luci.http.redirect(e.extedit:format(id))
  end
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
-index e78e5ff..b891920 100644
+index 8619ad9..23ea3ed 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/node_subscribe_config.lua
 @@ -9,19 +9,6 @@ if not arg[1] or not m:get(arg[1]) then
