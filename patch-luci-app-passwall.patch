@@ -24,7 +24,7 @@ index 9d5edc7..d825e87 100644
  s = m:section(TypedSection, "global", translate("ACLs"), "<font color='red'>" .. translate("ACLs is a tools which used to designate specific IP proxy mode.") .. "</font>")
  s.anonymous = true
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua
-index 50f5c36..0a27fb6 100644
+index 35c352b..6710e46 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/acl_config.lua
 @@ -2,11 +2,9 @@ local api = require "luci.passwall.api"
@@ -53,7 +53,7 @@ index b39d6df..d105b3f 100644
  -- [[ App Settings ]]--
  s = m:section(TypedSection, "global_app", translate("App Update"),
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index e90aa06..20cb114 100644
+index 8aca6f8..3dfb002 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -9,7 +9,6 @@ local has_chnlist = fs.access("/usr/share/passwall/rules/chnlist")
