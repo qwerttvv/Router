@@ -431,6 +431,8 @@ if api.is_finded("smartdns") then
 end
 
 o = s:taboption("DNS", ListValue, "xray_dns_mode", translate("Remote DNS") .. " " .. translate("Request protocol"))
+o.default = "tcp"
+o:value("udp", "UDP")
 o:value("tcp", "TCP")
 o:value("tcp+doh", "TCP + DoH (" .. translate("A/AAAA type") .. ")")
 o:depends("dns_mode", "xray")
@@ -445,6 +447,8 @@ o.write = function(self, section, value)
 end
 
 o = s:taboption("DNS", ListValue, "singbox_dns_mode", translate("Remote DNS") .. " " .. translate("Request protocol"))
+o.default = "tcp"
+o:value("udp", "UDP")
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
 o:depends("dns_mode", "sing-box")
@@ -490,8 +494,10 @@ end
 o:depends({dns_mode = "dns2socks"})
 o:depends({dns_mode = "tcp"})
 o:depends({dns_mode = "udp"})
+o:depends({xray_dns_mode = "udp"})
 o:depends({xray_dns_mode = "tcp"})
 o:depends({xray_dns_mode = "tcp+doh"})
+o:depends({singbox_dns_mode = "udp"})
 o:depends({singbox_dns_mode = "tcp"})
 
 ---- DoH
