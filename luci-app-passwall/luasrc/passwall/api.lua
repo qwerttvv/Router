@@ -438,7 +438,7 @@ function get_domain_from_url(url)
 end
 
 function get_valid_nodes()
-	local show_node_info = uci_get_type("@global_other[0]", "show_node_info", "0")
+	local show_node_info = uci_get_type("global_other", "show_node_info", "0")
 	local nodes = {}
 	uci:foreach(appname, "nodes", function(e)
 		e.id = e[".name"]
@@ -562,7 +562,15 @@ function gen_short_uuid()
 end
 
 function uci_get_type(type, config, default)
-	local value = uci:get(appname, type, config) or default
+	local value = uci:get_first(appname, type, config, default) or sys.exec("echo -n $(uci -q get " .. appname .. ".@" .. type .."[0]." .. config .. ")")
+	if (value == nil or value == "") and (default and default ~= "") then
+		value = default
+	end
+	return value
+end
+
+function uci_get_type_id(id, config, default)
+	local value = uci:get(appname, id, config, default) or sys.exec("echo -n $(uci -q get " .. appname .. "." .. id .. "." .. config .. ")")
 	if (value == nil or value == "") and (default and default ~= "") then
 		value = default
 	end
@@ -578,7 +586,7 @@ local function chmod_755(file)
 end
 
 function get_customed_path(e)
-	return uci_get_type("@global_app[0]", e .. "_file")
+	return uci_get_type("global_app", e .. "_file")
 end
 
 function finded_com(e)
@@ -637,7 +645,7 @@ end
 function get_app_path(app_name)
 	if com[app_name] then
 		local def_path = com[app_name].default_path
-		local path = uci_get_type("@global_app[0]", app_name:gsub("%-","_") .. "_file")
+		local path = uci_get_type("global_app", app_name:gsub("%-","_") .. "_file")
 		path = path and (#path>0 and path or def_path) or def_path
 		return path
 	end
