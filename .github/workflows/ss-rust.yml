@@ -69,7 +69,7 @@ jobs:
       - name: Build x86_64-unknown-linux-musl
         run: |
           export RUSTFLAGS="-C target-cpu=x86-64-v2 -C target-feature=+avx,+aes,+pclmul,+f16c,+rdrand"
-          cross build --target x86_64-unknown-linux-musl --bin ssserver --release
+          cross build --target x86_64-unknown-linux-musl --bin ssserver --release --features mimalloc
           upx --lzma --best target/x86_64-unknown-linux-musl/release/ssserver
           cd target/x86_64-unknown-linux-musl/release/
           tar -cJvf ssserver-x86_64-unknown-linux-musl.tar.xz --mode=755 --no-same-owner ssserver
