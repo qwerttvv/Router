@@ -179,7 +179,7 @@ jobs:
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled() && github.event.inputs.only_config != 'true'
       run: |
         cd openwrt/bin/targets/*/*
-        rm -rf packages
+        rm -rf packages *initramfs-uImage.itb
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -191,6 +191,12 @@ jobs:
         path: ${{ env.FIRMWARE }}
         compression-level: 9
       continue-on-error: true
+
+    - name: zip pkg
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled() && github.event.inputs.only_config != 'true'
+      run: |
+        cd "${FIRMWARE}"
+        zip -r -9 "${DEVICE_NAME}_${FILE_DATE}.zip" .
 
     - name: Generate release tag
       id: tag
