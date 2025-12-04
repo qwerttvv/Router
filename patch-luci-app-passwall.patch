@@ -432,7 +432,7 @@ index eb5527e..133c295 100644
  		cursor: pointer;
  	}
 diff --git a/luci-app-passwall/po/zh-cn/passwall.po b/luci-app-passwall/po/zh-cn/passwall.po
-index 732a415..2080140 100644
+index f6ca393..15dfdf4 100644
 --- a/luci-app-passwall/po/zh-cn/passwall.po
 +++ b/luci-app-passwall/po/zh-cn/passwall.po
 @@ -1894,9 +1894,6 @@ msgstr "是否要恢复客户端默认配置？"
