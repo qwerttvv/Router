@@ -144,7 +144,7 @@ index ff0c486..1882ac5 100644
  		return false;
  	}
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
-index 7257577..0cc31da 100644
+index 3e5cfc9..72d83f0 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
 @@ -18,7 +18,7 @@
