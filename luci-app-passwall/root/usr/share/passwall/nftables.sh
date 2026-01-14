@@ -1113,7 +1113,7 @@ add_firewall_rule() {
 		[ -z "${is_tproxy}" ] && nft "add rule $NFTABLE_NAME PSW_NAT ip daddr @$NFTSET_WAN counter return comment \"WAN_IP_RETURN\""
 		nft "add rule $NFTABLE_NAME PSW_MANGLE ip daddr @$NFTSET_WAN counter return comment \"WAN_IP_RETURN\""
 		for wan_ip in $WAN_IP; do
-			echolog "  - [$?]追加WAN IPv4到nftables：${wan_ip}"
+			echolog "  - [$?]加入WAN IPv4到nftset[$NFTSET_WAN]：${wan_ip}"
 		done
 	fi
 	unset WAN_IP wan_ip
@@ -1163,7 +1163,7 @@ add_firewall_rule() {
 			insert_nftset $NFTSET_WAN6 "-1" $WAN6_IP
 			nft "add rule $NFTABLE_NAME PSW_MANGLE_V6 ip6 daddr @$NFTSET_WAN6 counter return comment \"WAN6_IP_RETURN\""
 			for wan6_ip in $WAN6_IP; do
-				echolog "  - [$?]追加WAN IPv6到nftables：${wan6_ip}"
+				echolog "  - [$?]加入WAN IPv6到nftset[$NFTSET_WAN6]：${wan6_ip}"
 			done
 		}
 		unset WAN6_IP wan6_ip

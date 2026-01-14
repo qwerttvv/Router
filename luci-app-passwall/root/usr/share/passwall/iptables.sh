@@ -1040,7 +1040,7 @@ add_firewall_rule() {
 		ipset -F $IPSET_WAN
 		for wan_ip in $WAN_IP; do
 			ipset -! add $IPSET_WAN ${wan_ip}
-			echolog "  - [$?]追加WAN IPv4到iptables：${wan_ip}"
+			echolog "  - [$?]加入WAN IPv4到ipset[$IPSET_WAN]：${wan_ip}"
 		done
 		$ipt_m -A PSW $(comment "WAN_IP_RETURN") $(dst $IPSET_WAN) -j RETURN
 	}
@@ -1118,7 +1118,7 @@ add_firewall_rule() {
 		ipset -F $IPSET_WAN6
 		for wan6_ip in $WAN6_IP; do
 			ipset -! add $IPSET_WAN6 ${wan6_ip}
-			echolog "  - [$?]追加WAN IPv6到iptables：${wan6_ip}"
+			echolog "  - [$?]加入WAN IPv6到ipset[$IPSET_WAN6]：${wan6_ip}"
 		done
 		$ip6t_m -A PSW $(comment "WAN6_IP_RETURN") $(dst $IPSET_WAN6) -j RETURN
 	}
