@@ -1,0 +1,35 @@
+From 32a6c33e6c5e0befb57df184151f49f419a6b4c5 Mon Sep 17 00:00:00 2001
+From: sbwml <admin@cooluc.com>
+Date: Mon, 19 Jan 2026 18:23:04 +0800
+Subject: [PATCH] fix build with go1.26
+
+Signed-off-by: sbwml <admin@cooluc.com>
+---
+ go.mod | 2 +-
+ go.sum | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+--- a/go.mod
++++ b/go.mod
+@@ -30,7 +30,7 @@ require (
+ 	golang.zx2c4.com/wireguard v0.0.0-20231211153847-12269c276173
+ 	google.golang.org/grpc v1.78.0
+ 	google.golang.org/protobuf v1.36.11
+-	gvisor.dev/gvisor v0.0.0-20260109181451-4be7c433dae2
++	gvisor.dev/gvisor v0.0.0-20260117034648-554030c7ed7e
+ 	h12.io/socks v1.0.3
+ 	lukechampine.com/blake3 v1.4.1
+ )
+--- a/go.sum
++++ b/go.sum
+@@ -158,8 +158,8 @@ gopkg.in/yaml.v3 v3.0.0-20200313102051-9
+ gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+ gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+-gvisor.dev/gvisor v0.0.0-20260109181451-4be7c433dae2 h1:fr6L00yGG2RP5NMea6njWpdC+bm+cMdFClrSpaicp1c=
+-gvisor.dev/gvisor v0.0.0-20260109181451-4be7c433dae2/go.mod h1:QkHjoMIBaYtpVufgwv3keYAbln78mBoCuShZrPrer1Q=
++gvisor.dev/gvisor v0.0.0-20260117034648-554030c7ed7e h1:DJlUBiQoMXfSpOQOhk1iqSPoQPQeAYvEpcB6pXtN6aA=
++gvisor.dev/gvisor v0.0.0-20260117034648-554030c7ed7e/go.mod h1:QkHjoMIBaYtpVufgwv3keYAbln78mBoCuShZrPrer1Q=
+ h12.io/socks v1.0.3 h1:Ka3qaQewws4j4/eDQnOdpr4wXsC//dXtWvftlIcCQUo=
+ h12.io/socks v1.0.3/go.mod h1:AIhxy1jOId/XCz9BO+EIgNL2rQiPTBNnOfnVnQ+3Eck=
+ lukechampine.com/blake3 v1.4.1 h1:I3Smz7gso8w4/TunLKec6K2fn+kyKtDxr/xcQEN84Wg=
