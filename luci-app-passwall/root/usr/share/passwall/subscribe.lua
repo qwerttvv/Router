@@ -1560,11 +1560,11 @@ local function curl(url, file, ua, mode)
 	curl_args[#curl_args + 1] = get_headers()
 	local return_code, result
 	if mode == "direct" then
-		return_code, result = api.curl_direct(url, file, curl_args)
+		return_code, result = api.curl_base(url, file, curl_args)
 	elseif mode == "proxy" then
 		return_code, result = api.curl_proxy(url, file, curl_args)
 	else
-		return_code, result = api.curl_auto(url, file, curl_args)
+		return_code, result = api.curl_logic(url, file, curl_args)
 	end
 	return tonumber(result)
 end
