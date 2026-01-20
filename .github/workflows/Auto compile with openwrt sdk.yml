@@ -15,6 +15,7 @@ on:
 env:
   TZ: Asia/Shanghai
   passwall: ${{ github.repository }}
+  packages: Openwrt-Passwall/openwrt-passwall-packages
 
 permissions:
   contents: write
@@ -160,7 +161,7 @@ jobs:
               "feeds.conf.default"
 
           cat > feeds.tmp <<'EOF'
-          src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main
+          src-git passwall_packages https://github.com/${{ env.packages }}.git;main
           src-git passwall https://github.com/${{ env.passwall }}.git;${{ github.ref_name }}
           EOF
           cat feeds.conf.default >> feeds.tmp
