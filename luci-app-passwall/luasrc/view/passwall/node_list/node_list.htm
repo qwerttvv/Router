@@ -842,7 +842,9 @@ table td, .table .td {
 			} else if (protocol == "ssh") {
 				p = "SSH";
 			} else {
-				p = protocol.charAt(0).toUpperCase() + protocol.slice(1);
+				if (protocol && protocol.length > 1) {
+					p = protocol.charAt(0).toUpperCase() + protocol.slice(1);
+				}
 			}
 			if (type == "sing-box") {
 				type = "Sing-Box";
