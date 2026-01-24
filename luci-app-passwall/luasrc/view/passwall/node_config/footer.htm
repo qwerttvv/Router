@@ -8,9 +8,11 @@ local api = self.api
 			let o_val = el.value;
 			el.addEventListener("change", () => {
 				el.blur();
-				update_node({
-					type: getOption("type").value
-				})
+				if (o_val != el.value) {
+					update_node({
+						type: getOption("type").value
+					})
+				}
 			});
 		});
 		waitForElement('select[name*="<%=api.appname%>"][name*="protocol"]', function(el) {
