@@ -1,0 +1,182 @@
+name: Build Nightly passwall
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - aarch64_cortex-a53-main
+
+    steps:
+      - name: Set Timezone
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
+
+      - name: System update
+        run: |
+          sudo -E apt-mark hold grub-efi-amd64-signed firefox snapd mysql* || true
+          sudo -E apt -y update --allow-unauthenticated
+          sudo -E apt -y full-upgrade
+          sudo -E systemctl daemon-reload
+          sudo apt-get autoremove -y --purge
+          sudo apt-get clean
+
+      - name: Get latest commit SHA for passwall and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_passwall = (curl -sSL https://api.github.com/repos/Openwrt-Passwall/openwrt-passwall/commits/main | jq -r '.sha')
+          echo "SHA_passwall=$SHA_passwall" >> $env:GITHUB_ENV
+          echo "https://github.com/Openwrt-Passwall/openwrt-passwall/commits/$SHA_passwall`n" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Get latest commit SHA for passwall-packages and Prepare Release Notes
+        shell: pwsh
+        run: |
+          $SHA_pwpkg = (curl -sSL https://api.github.com/repos/Openwrt-Passwall/openwrt-passwall-packages/commits/main | jq -r '.sha')
+          echo "SHA_pwpkg=$SHA_pwpkg" >> $env:GITHUB_ENV
+          echo "https://github.com/Openwrt-Passwall/openwrt-passwall-packages/commits/$SHA_pwpkg" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+
+      - name: Checkout code - luci-app-passwall
+        run: |
+          git clone --recursive https://github.com/Openwrt-Passwall/openwrt-passwall.git
+          mv -f openwrt-passwall/* ./
+
+      - name: Checkout code - passwall-packages
+        run: |
+          git clone --recursive https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git
+          mv -f openwrt-passwall-packages/* ./
+
+      - name: Create MyPasswallMakefile
+        run: |
+          echo "include \$(TOPDIR)/rules.mk" > MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "PKG_NAME:=luci-app-passwall" >> MyPasswallMakefile
+          echo "PKG_VERSION:=$(date +%Y%m%d.%H%M)" >> MyPasswallMakefile
+          echo "PKG_RELEASE:=9" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "PKG_CONFIG_DEPENDS:= \\" >> MyPasswallMakefile
+          echo "	CONFIG_PACKAGE_\$(PKG_NAME)_Nftables_Transparent_Proxy \\" >> MyPasswallMakefile
+          echo "	CONFIG_PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client \\" >> MyPasswallMakefile
+          echo "	CONFIG_PACKAGE_\$(PKG_NAME)_INCLUDE_SingBox \\" >> MyPasswallMakefile
+          echo "	CONFIG_PACKAGE_\$(PKG_NAME)_INCLUDE_Xray" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "LUCI_TITLE:=LuCI support for PassWall" >> MyPasswallMakefile
+          echo "LUCI_PKGARCH:=all" >> MyPasswallMakefile
+          echo "LUCI_DEPENDS:=+coreutils +coreutils-base64 +coreutils-nohup +curl \\" >> MyPasswallMakefile
+          echo "	+chinadns-ng +dns2socks +dnsmasq-full +ip-full \\" >> MyPasswallMakefile
+          echo "	+libuci-lua +lua +luci-compat +luci-lib-jsonc \\" >> MyPasswallMakefile
+          echo "	+microsocks +resolveip +tcping" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "define Package/\$(PKG_NAME)/config" >> MyPasswallMakefile
+          echo "menu \"Configuration\"" >> MyPasswallMakefile
+          echo "	depends on PACKAGE_\$(PKG_NAME)" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "config PACKAGE_\$(PKG_NAME)_Nftables_Transparent_Proxy" >> MyPasswallMakefile
+          echo "	bool \"Nftables Transparent Proxy\"" >> MyPasswallMakefile
+          echo "	select PACKAGE_ipt2socks" >> MyPasswallMakefile
+          echo "	select PACKAGE_nftables" >> MyPasswallMakefile
+          echo "	select PACKAGE_kmod-nft-socket" >> MyPasswallMakefile
+          echo "	select PACKAGE_kmod-nft-tproxy" >> MyPasswallMakefile
+          echo "	select PACKAGE_kmod-nft-nat" >> MyPasswallMakefile
+          echo "	default y" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client" >> MyPasswallMakefile
+          echo "	bool \"Include Shadowsocks Rust Client\"" >> MyPasswallMakefile
+          echo "	depends on aarch64||arm||i386||mips||mipsel||x86_64" >> MyPasswallMakefile
+          echo "	select PACKAGE_shadowsocks-rust-sslocal" >> MyPasswallMakefile
+          echo "	default n" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_SingBox" >> MyPasswallMakefile
+          echo "	bool \"Include Sing-Box\"" >> MyPasswallMakefile
+          echo "	select PACKAGE_sing-box" >> MyPasswallMakefile
+          echo "	default n" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "config PACKAGE_\$(PKG_NAME)_INCLUDE_Xray" >> MyPasswallMakefile
+          echo "	bool \"Include Xray\"" >> MyPasswallMakefile
+          echo "	select PACKAGE_xray-core" >> MyPasswallMakefile
+          echo "	select PACKAGE_unzip" >> MyPasswallMakefile
+          echo "	default n" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "endmenu" >> MyPasswallMakefile
+          echo "endef" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "define Package/\$(PKG_NAME)/conffiles" >> MyPasswallMakefile
+          echo "/etc/config/passwall" >> MyPasswallMakefile
+          echo "/etc/config/passwall_server" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/direct_host" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/direct_ip" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/proxy_host" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/proxy_ip" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/block_host" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/block_ip" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/lanlist_ipv4" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/lanlist_ipv6" >> MyPasswallMakefile
+          echo "/usr/share/passwall/rules/domains_excluded" >> MyPasswallMakefile
+          echo "/www/luci-static/resources/qrcode.min.js" >> MyPasswallMakefile
+          echo "endef" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "define Package/\$(PKG_NAME)/postrm" >> MyPasswallMakefile
+          echo "#!/bin/sh" >> MyPasswallMakefile
+          echo "rm -f \$\${IPKG_INSTROOT}/usr/share/passwall/rules/*.nft" >> MyPasswallMakefile
+          echo "exit 0" >> MyPasswallMakefile
+          echo "endef" >> MyPasswallMakefile
+          echo "" >> MyPasswallMakefile
+          echo "include \$(TOPDIR)/feeds/luci/luci.mk" >> MyPasswallMakefile
+          echo "# call BuildPackage - OpenWrt buildroot signature" >> MyPasswallMakefile
+          cat MyPasswallMakefile
+
+      - name: Remove old pw Makefile and Move new one
+        run: |
+          rm -f luci-app-passwall/Makefile
+          mv MyPasswallMakefile luci-app-passwall/Makefile
+
+      - name: Download SS Rust Makefile and Move new one
+        run: |
+            wget -O SSRustNewMakefile https://raw.githubusercontent.com/sbwml/openwrt_helloworld/v5/shadowsocks-rust/Makefile
+            rm -f shadowsocks-rust/Makefile
+            mv SSRustNewMakefile shadowsocks-rust/Makefile
+
+      - name: Build
+        uses: qwerttvv/Router/@gh-action-sdk
+        env:
+          ARCH: ${{ matrix.arch }}
+          FEEDNAME: packages_ci
+          PACKAGES: luci-app-passwall ipt2socks
+          NO_REFRESH_CHECK: true
+          # V: s
+
+      - name: Zip apk packages
+        run: |
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssmanager*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssserver*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssservice*.?pk
+          rm -f bin/packages/*/packages_ci/shadowsocks-rust-ssurl*.?pk
+          zip -j -9 passwall-${{ matrix.arch }}.zip bin/packages/*/packages_ci/*.?pk
+
+      - name: upload passwall-${{ matrix.arch }}
+        uses: actions/upload-artifact@main
+        with:
+          name: passwall-${{ matrix.arch }}
+          path: passwall-${{ matrix.arch }}.zip
+          compression-level: 9
+        continue-on-error: true
+
+      - name: Generate release tag
+        run: echo "tag=$(date +"%Y.%m.%d-%H.%M_passwall-${{ matrix.arch }}")" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Release
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.tag }}
+          files: |
+            passwall-${{ matrix.arch }}.zip
+          body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
+        continue-on-error: true
