@@ -9,7 +9,6 @@ util = require "luci.util"
 datatypes = require "luci.cbi.datatypes"
 jsonc = require "luci.jsonc"
 i18n = require "luci.i18n"
-conf = require "luci.config"
 
 curl_args = { "-skfL", "--connect-timeout 3", "--retry 3" }
 command_timeout = 300
@@ -23,7 +22,7 @@ TMP_IFACE_PATH = TMP_PATH .. "/iface"
 
 NEW_PORT = nil
 
-local lang = conf.main.lang or "auto"
+local lang = uci:get("luci", "main", "lang") or "auto"
 if lang == "auto" then
 	local auto_lang = uci:get(appname, "@global[0]", "auto_lang")
 	if auto_lang then lang = auto_lang end
@@ -467,9 +466,9 @@ function get_node_name(node_id)
 	if e then
 		if e.type and e.remarks then
 			if e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt" or e.protocol == "_iface") then
-				local type = e.type
-				if type == "sing-box" then type = "Sing-Box" end
-				local remark = "%s：[%s] " % {type .. " " .. i18n.translatef(e.protocol), e.remarks}
+				local type_name = e.type
+				if e.type == "sing-box" then type_name = "Sing-Box" end
+				local remark = "%s：[%s] " % {type_name .. " " .. i18n.translatef(e.protocol), e.remarks}
 				return remark
 			end
 		end
@@ -485,10 +484,10 @@ function get_valid_nodes()
 	uci:foreach(appname, "nodes", function(e)
 		e.id = e[".name"]
 		if e.type and e.remarks then
+			local type_name = e.type
+			if e.type == "sing-box" then type_name = "Sing-Box" end
 			if e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt" or e.protocol == "_iface" or e.protocol == "_urltest") then
-				local type = e.type
-				if type == "sing-box" then type = "Sing-Box" end
-				e["remark"] = "%s：[%s] " % {type .. " " .. i18n.translatef(e.protocol), e.remarks}
+				e["remark"] = trim("%s：[%s]" % {type_name .. " " .. i18n.translatef(e.protocol), e.remarks})
 				e["node_type"] = "special"
 				if not e.group or e.group == "" then
 					default_nodes[#default_nodes + 1] = e
@@ -500,8 +499,7 @@ function get_valid_nodes()
 			if port and e.address then
 				local address = e.address
 				if is_ip(address) or datatypes.hostname(address) then
-					local type = e.type
-					if (type == "sing-box" or type == "Xray") and e.protocol then
+					if (e.type == "sing-box" or e.type == "Xray") and e.protocol then
 						local protocol = e.protocol
 						if protocol == "vmess" then
 							protocol = "VMess"
@@ -524,14 +522,13 @@ function get_valid_nodes()
 						else
 							protocol = protocol:gsub("^%l",string.upper)
 						end
-						if type == "sing-box" then type = "Sing-Box" end
-						type = type .. " " .. protocol
+						type_name = type_name .. " " .. protocol
 					end
 					if is_ipv6(address) then address = get_ipv6_full(address) end
-					e["remark"] = "%s：[%s]" % {type, e.remarks}
+					e["remark"] = trim("%s：[%s]" % {type_name, e.remarks})
 					if show_node_info == "1" then
 						port = port:gsub(":", "-")
-						e["remark"] = "%s：[%s] %s:%s" % {type, e.remarks, address, port}
+						e["remark"] = trim("%s：[%s] %s:%s" % {type_name, e.remarks, address, port})
 					end
 					e.node_type = "normal"
 					if not e.group or e.group == "" then
@@ -551,10 +548,11 @@ end
 function get_node_remarks(n)
 	local remarks = ""
 	if n then
+		local type_name = n.type
+		if n.type == "sing-box" then type_name = "Sing-Box" end
 		if n.protocol and (n.protocol == "_balancing" or n.protocol == "_shunt" or n.protocol == "_iface" or n.protocol == "_urltest") then
-			remarks = "%s：[%s] " % {n.type .. " " .. i18n.translatef(n.protocol), n.remarks}
+			remarks = trim("%s：[%s]" % {type_name .. " " .. i18n.translatef(n.protocol), n.remarks})
 		else
-			local type2 = n.type
 			if (n.type == "sing-box" or n.type == "Xray") and n.protocol then
 				local protocol = n.protocol
 				if protocol == "vmess" then
@@ -578,10 +576,9 @@ function get_node_remarks(n)
 				else
 					protocol = protocol:gsub("^%l",string.upper)
 				end
-				if type2 == "sing-box" then type2 = "Sing-Box" end
-				type2 = type2 .. " " .. protocol
+				type_name = type_name .. " " .. protocol
 			end
-			remarks = "%s：[%s]" % {type2, n.remarks}
+			remarks = trim("%s：[%s]" % {type_name, n.remarks})	
 		end
 	end
 	return remarks
@@ -1259,18 +1256,18 @@ function set_apply_on_parse(map)
 	if not map then
 		return
 	end
-	local lang = conf.main.lang or "auto"
+	local lang = uci:get("luci", "main", "lang") or "auto"
 	if lang == "auto" then
 		local http = require "luci.http"
 		local aclang = http.getenv("HTTP_ACCEPT_LANGUAGE") or ""
 		for lpat in aclang:gmatch("[%w-]+") do
 			lpat = lpat and lpat:gsub("-", "_")
-			if conf.languages[lpat] then
+			if uci:get("luci", "languages", lpat) then
 				lang = lpat
 				break
 			end
 			lpat = lpat and lpat:lower()
-			if conf.languages[lpat] then
+			if uci:get("luci", "languages", lpat) then
 				lang = lpat
 				break
 			end

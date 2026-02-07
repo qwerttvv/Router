@@ -1,15 +1,15 @@
-local api = require "luci.passwall2.api"
-local appname = api.appname
-local datatypes = api.datatypes
-local has_singbox = api.finded_com("sing-box")
-local has_xray = api.finded_com("xray")
+api = require "luci.passwall2.api"
+appname = api.appname
+datatypes = api.datatypes
+has_singbox = api.finded_com("sing-box")
+has_xray = api.finded_com("xray")
 
 m = Map(appname)
 api.set_apply_on_parse(m)
 
 m:append(Template(appname .. "/cbi/nodes_listvalue_com"))
 
-local nodes_table = {}
+nodes_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
 	nodes_table[#nodes_table + 1] = e
 end
@@ -72,7 +72,8 @@ end
 
 m:append(Template(appname .. "/global/status"))
 
-local global_cfgid = m:get("@global[0]")[".name"]
+global_cfgid = m:get("@global[0]")[".name"]
+
 s = m:section(TypedSection, "global")
 s.anonymous = true
 s.addremove = false
@@ -89,174 +90,25 @@ o.template = appname .. "/cbi/nodes_listvalue"
 o:value("", translate("Close"))
 o.group = {""}
 
--- Shunt
+-- Shunt Start
 if (has_singbox or has_xray) and #nodes_table > 0 then
-	local function get_cfgvalue(shunt_node_id, option)
-		return function(self, section)
-			return m:get(shunt_node_id, option)
-		end
-	end
-	local function get_write(shunt_node_id, option)
-		return function(self, section, value)
-			if s.fields["node"]:formvalue(section) == shunt_node_id then
-				m:set(shunt_node_id, option, value)
-			end
-		end
-	end
-	local function get_remove(shunt_node_id, option)
-		return function(self, section)
-			if s.fields["node"]:formvalue(section) == shunt_node_id then
-				m:del(shunt_node_id, option)
-			end
-		end
-	end
 	if #normal_list > 0 then
-		for k, v in pairs(shunt_list) do
-			local vid = v.id
-			-- shunt node type, Sing-Box or Xray
-			local type = s:taboption("Main", ListValue, vid .. "-type", translate("Type"))
-			if has_singbox then
-				type:value("sing-box", translate("Sing-Box"))
-			end
-			if has_xray then
-				type:value("Xray", translate("Xray"))
-			end
-			type.cfgvalue = get_cfgvalue(v.id, "type")
-			type.write = get_write(v.id, "type")
-			
-			-- pre-proxy
-			o = s:taboption("Main", Flag, vid .. "-preproxy_enabled", translate("Preproxy"))
-			o:depends("node", v.id)
-			o.rmempty = false
-			o.cfgvalue = get_cfgvalue(v.id, "preproxy_enabled")
-			o.write = get_write(v.id, "preproxy_enabled")
-
-			o = s:taboption("Main", ListValue, vid .. "-main_node", string.format('<a style="color:red">%s</a>', translate("Preproxy Node")), translate("Set the node to be used as a pre-proxy. Each rule (including <code>Default</code>) has a separate switch that controls whether this rule uses the pre-proxy or not."))
-			o:depends(vid .. "-preproxy_enabled", "1")
-			o.template = appname .. "/cbi/nodes_listvalue"
-			o.group = {}
-			for k1, v1 in pairs(socks_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(balancing_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(urltest_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(iface_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(normal_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			if #o.keylist > 0 then
-				o.default = o.keylist[1]
-			end
-			o.cfgvalue = get_cfgvalue(v.id, "main_node")
-			o.write = get_write(v.id, "main_node")
-
-			if (has_singbox and has_xray) or (v.type == "sing-box" and not has_singbox) or (v.type == "Xray" and not has_xray) then
-				type:depends("node", v.id)
-			else
-				type:depends({ __hide = true }) -- Always hidden.
-			end
-
-			m.uci:foreach(appname, "shunt_rules", function(e)
-				local id = e[".name"]
-				local node_option = vid .. "-" .. id .. "_node"
-				if id and e.remarks then
-					o = s:taboption("Main", ListValue, node_option, string.format('* <a href="%s" target="_blank">%s</a>', api.url("shunt_rules", id), e.remarks))
-					o.cfgvalue = get_cfgvalue(v.id, id)
-					o.write = get_write(v.id, id)
-					o.remove = get_remove(v.id, id)
-					o:depends("node", v.id)
-					o:value("", translate("Close"))
-					o:value("_default", translate("Default"))
-					o:value("_direct", translate("Direct Connection"))
-					o:value("_blackhole", translate("Blackhole"))
-					o.template = appname .. "/cbi/nodes_listvalue"
-					o.group = {"","","",""}
-
-					local pt = s:taboption("Main", ListValue, vid .. "-".. id .. "_proxy_tag", string.format('* <a style="color:red">%s</a>', e.remarks .. " " .. translate("Preproxy")))
-					pt.cfgvalue = get_cfgvalue(v.id, id .. "_proxy_tag")
-					pt.write = get_write(v.id, id .. "_proxy_tag")
-					pt.remove = get_remove(v.id, id .. "_proxy_tag")
-					pt:value("", translate("Close"))
-					pt:value("main", translate("Preproxy Node"))
-					for k1, v1 in pairs(socks_list) do
-						o:value(v1.id, v1.remark)
-						o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-					end
-					for k1, v1 in pairs(balancing_list) do
-						o:value(v1.id, v1.remark)
-						o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-					end
-					for k1, v1 in pairs(urltest_list) do
-						o:value(v1.id, v1.remark)
-						o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-					end
-					for k1, v1 in pairs(iface_list) do
-						o:value(v1.id, v1.remark)
-						o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-					end
-					for k1, v1 in pairs(normal_list) do
-						o:value(v1.id, v1.remark)
-						o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-						pt:depends({ [node_option] = v1.id, [vid .. "-preproxy_enabled"] = "1" })
-					end
-				end
-			end)
-
-			local id = "default_node"
-			o = s:taboption("Main", ListValue, vid .. "-" .. id, string.format('* <a style="color:red">%s</a>', translate("Default")))
-			o.cfgvalue = get_cfgvalue(v.id, id)
-			o.write = get_write(v.id, id)
-			o.remove = get_remove(v.id, id)
-			o:depends("node", v.id)
-			o.default = "_direct"
-			o:value("_direct", translate("Direct Connection"))
-			o:value("_blackhole", translate("Blackhole"))
-			o.template = appname .. "/cbi/nodes_listvalue"
-			o.group = {"",""}
-			for k1, v1 in pairs(socks_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(balancing_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(urltest_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(iface_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-			for k1, v1 in pairs(normal_list) do
-				o:value(v1.id, v1.remark)
-				o.group[#o.group+1] = (v1.group and v1.group ~= "") and v1.group or translate("default")
-			end
-
-			local id = "default_proxy_tag"
-			o = s:taboption("Main", ListValue, vid .. "-" .. id, string.format('* <a style="color:red">%s</a>', translate("Default Preproxy")), translate("When using, localhost will connect this node first and then use this node to connect the default node."))
-			o.cfgvalue = get_cfgvalue(v.id, id)
-			o.write = get_write(v.id, id)
-			o.remove = get_remove(v.id, id)
-			o:value("", translate("Close"))
-			o:value("main", translate("Preproxy Node"))
-			for k1, v1 in pairs(normal_list) do
-				if v1.protocol ~= "_balancing" and v1.protocol ~= "_urltest" then
-					o:depends({ [vid .. "-default_node"] = v1.id, [vid .. "-preproxy_enabled"] = "1" })
-				end
-			end
+		current_node_id = m.uci:get(appname, global_cfgid, "node")
+		current_node = current_node_id and m.uci:get_all(appname, current_node_id) or {}
+		if current_node.protocol == "_shunt" then
+			local shunt_lua = loadfile("/usr/lib/lua/luci/model/cbi/passwall2/client/include/shunt_options.lua")
+			setfenv(shunt_lua, getfenv(1))(m, s, {
+				node_id = current_node_id,
+				node = current_node,
+				socks_list = socks_list,
+				urltest_list = urltest_list,
+				balancing_list = balancing_list,
+				iface_list = iface_list,
+				normal_list = normal_list,
+				verify_option = s.fields["node"],
+				tab = "Shunt",
+				tab_desc = translate("Shunt Rule")
+			})
 		end
 	else
 		local tips = s:taboption("Main", DummyValue, "tips", " ")
@@ -292,13 +144,13 @@ if (mods:find("REDIRECT") and mods:find("TPROXY")) or (mods:find("nft_redir") an
 	o.rmempty = false
 else
 	local html = string.format([[<div class="cbi-checkbox"><input class="cbi-input-checkbox" type="checkbox" disabled></div><div class="cbi-value-description"><font color="red">%s</font></div>]], translate("Missing components, transparent proxy is unavailable."))
-	o = s:taboption("Proxy", DummyValue, "localhost_proxy", translate("Localhost Proxy"))
+	o = s:taboption("Main", DummyValue, "localhost_proxy", translate("Localhost Proxy"))
 	o.rawhtml = true
 	function o.cfgvalue(self, section)
 		return html
 	end
 
-	o = s:taboption("Proxy", DummyValue, "client_proxy", translate("Client Proxy"))
+	o = s:taboption("Main", DummyValue, "client_proxy", translate("Client Proxy"))
 	o.rawhtml = true
 	function o.cfgvalue(self, section)
 		return html
@@ -320,10 +172,6 @@ o.default = "UseIP"
 o:value("UseIP")
 o:value("UseIPv4")
 o:value("UseIPv6")
-
-o = s:taboption("DNS", Flag, "write_ipset_direct", translate("Direct DNS result write to IPSet"), translate("Perform the matching direct domain name rules into IP to IPSet/NFTSet, and then connect directly (not entering the core). Maybe conflict with some special circumstances."))
-o.default = "1"
-o.rmempty = false
 
 o = s:taboption("DNS", ListValue, "remote_dns_protocol", translate("Remote DNS Protocol"))
 o:value("tcp", "TCP")
@@ -509,8 +357,17 @@ for k, v in pairs(nodes_table) do
 	if v.type == "Xray" then
 		s.fields["_xray_node"]:depends({ node = v.id })
 	end
+	if v.node_type == "normal" or v.protocol == "_balancing" or v.protocol == "_urltest" then
+		--Shunt node has its own separate options.
+		s.fields["remote_fakedns"]:depends({ node = v.id })
+	end
 end
 
-m:append(Template(appname .. "/global/footer"))
+local footer = Template(appname .. "/global/footer")
+footer.api = api
+footer.global_cfgid = global_cfgid
+footer.shunt_list = api.jsonc.stringify(shunt_list)
+
+m:append(footer)
 
 return m

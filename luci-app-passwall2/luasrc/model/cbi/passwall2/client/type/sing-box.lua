@@ -1,27 +1,36 @@
 local m, s = ...
 
-local api = require "luci.passwall2.api"
-
 local singbox_bin = api.finded_com("sing-box")
 
 if not singbox_bin then
 	return
 end
 
-local local_version = api.get_app_version("sing-box")
-local version_ge_1_12_0 = api.compare_versions(local_version:match("[^v]+"), ">=", "1.12.0")
+type_name = "sing-box"
 
-local singbox_tags = luci.sys.exec(singbox_bin .. " version  | grep 'Tags:' | awk '{print $2}'")
+-- [[ sing-box ]]
 
-local appname = api.appname
+s.fields["type"]:value(type_name, "Sing-Box")
+if not s.fields["type"].default then
+	s.fields["type"].default = type_name
+end
 
-local type_name = "sing-box"
+if s.val["type"] ~= type_name then
+	return
+end
 
 local option_prefix = "singbox_"
 
 local function _n(name)
 	return option_prefix .. name
 end
+
+local formvalue_key = "cbid." .. appname .. "." .. arg[1] .. "."
+local formvalue_proto = luci.http.formvalue(formvalue_key .. _n("protocol"))
+
+if formvalue_proto then s.val["protocol"] = formvalue_proto end
+
+local arg_select_proto = luci.http.formvalue("select_proto") or ""
 
 local ss_method_new_list = {
 	"none", "aes-128-gcm", "aes-192-gcm", "aes-256-gcm", "chacha20-ietf-poly1305", "xchacha20-ietf-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"
@@ -33,12 +42,10 @@ local ss_method_old_list = {
 
 local security_list = { "none", "auto", "aes-128-gcm", "chacha20-poly1305", "zero" }
 
--- [[ sing-box ]]
+local local_version = api.get_app_version("sing-box")
+local version_ge_1_12_0 = api.compare_versions(local_version:match("[^v]+"), ">=", "1.12.0")
 
-s.fields["type"]:value(type_name, translate("Sing-Box"))
-if not s.fields["type"].default then
-	s.fields["type"].default = type_name
-end
+local singbox_tags = luci.sys.exec(singbox_bin .. " version  | grep 'Tags:' | awk '{print $2}'")
 
 o = s:option(ListValue, _n("protocol"), translate("Protocol"))
 o:value("socks", "Socks")
@@ -69,17 +76,31 @@ o:value("ssh", "SSH")
 o:value("_urltest", translate("URLTest"))
 o:value("_shunt", translate("Shunt"))
 o:value("_iface", translate("Custom Interface"))
+function o.custom_cfgvalue(self, section)
+	if arg_select_proto ~= "" then
+		return arg_select_proto
+	else
+		return m:get(section, self.option:sub(1 + #option_prefix))
+	end
+end
 
-o = s:option(Value, _n("iface"), translate("Interface"))
-o.default = "eth1"
-o:depends({ [_n("protocol")] = "_iface" })
+local load_urltest_options = s.val["protocol"] == "_urltest" or arg_select_proto == "_urltest"
+local load_shunt_options = s.val["protocol"] == "_shunt" or arg_select_proto == "_shunt"
+local load_iface_options = s.val["protocol"] == "_iface" or arg_select_proto == "_iface"
+local load_normal_options = true
+if load_urltest_options or load_shunt_options or load_iface_options then
+	load_normal_options = nil
+end
+if not arg_select_proto:find("_") then
+	load_normal_options = true
+end
 
-local nodes_table = {}
-local iface_table = {}
-local urltest_table = {}
+local nodes_list = {}
+local iface_list = {}
+local urltest_list = {}
 for k, e in ipairs(api.get_valid_nodes()) do
 	if e.node_type == "normal" then
-		nodes_table[#nodes_table + 1] = {
+		nodes_list[#nodes_list + 1] = {
 			id = e[".name"],
 			remark = e["remark"],
 			type = e["type"],
@@ -88,14 +109,14 @@ for k, e in ipairs(api.get_valid_nodes()) do
 		}
 	end
 	if e.protocol == "_iface" then
-		iface_table[#iface_table + 1] = {
+		iface_list[#iface_list + 1] = {
 			id = e[".name"],
 			remark = e["remark"],
 			group = e["group"]
 		}
 	end
 	if e.protocol == "_urltest" then
-		urltest_table[#urltest_table + 1] = {
+		urltest_list[#urltest_list + 1] = {
 			id = e[".name"],
 			remark = e["remark"],
 			group = e["group"]
@@ -114,188 +135,94 @@ m.uci:foreach(appname, "socks", function(s)
 	end
 end)
 
---[[ URLTest ]]
-o = s:option(MultiValue, _n("urltest_node"), translate("URLTest node list"), translate("List of nodes to test, <a target='_blank' href='https://sing-box.sagernet.org/configuration/outbound/urltest'>document</a>"))
-o:depends({ [_n("protocol")] = "_urltest" })
-o.widget = "checkbox"
-o.template = appname .. "/cbi/nodes_multivalue"
-o.group = {}
-for k, v in pairs(socks_list) do
-	o:value(v.id, v.remark)
-	o.group[#o.group+1] = v.group or ""
-end
-for i, v in pairs(nodes_table) do
-	o:value(v.id, v.remark)
-	o.group[#o.group+1] = v.group or ""
-end
--- Reading the old DynamicList
-function o.cfgvalue(self, section)
-	return m.uci:get_list(appname, section, "urltest_node") or {}
-end
--- Write-and-hold DynamicList
-function o.custom_write(self, section, value)
-	local old = m.uci:get_list(appname, section, "urltest_node") or {}
-	local new, set = {}, {}
-	for v in value:gmatch("%S+") do
-		new[#new + 1] = v
-		set[v] = 1
-	end
-	for _, v in ipairs(old) do
-		if not set[v] then
-			m.uci:set_list(appname, section, "urltest_node", new)
-			return
-		end
-		set[v] = nil
-	end
-	for _ in pairs(set) do
-		m.uci:set_list(appname, section, "urltest_node", new)
-		return
-	end
-end
-
-o = s:option(Value, _n("urltest_url"), translate("Probe URL"))
-o:depends({ [_n("protocol")] = "_urltest" })
-o:value("https://cp.cloudflare.com/", "Cloudflare")
-o:value("https://www.gstatic.com/generate_204", "Gstatic")
-o:value("https://www.google.com/generate_204", "Google")
-o:value("https://www.youtube.com/generate_204", "YouTube")
-o:value("https://connect.rom.miui.com/generate_204", "MIUI (CN)")
-o:value("https://connectivitycheck.platform.hicloud.com/generate_204", "HiCloud (CN)")
-o.default = "https://www.gstatic.com/generate_204"
-o.description = translate("The URL used to detect the connection status.")
-
-o = s:option(Value, _n("urltest_interval"), translate("Test interval"))
-o:depends({ [_n("protocol")] = "_urltest" })
-o.default = "3m"
-o.placeholder = "3m"
-o.description = translate("The interval between initiating probes.") .. "<br>" ..
-		translate("The time format is numbers + units, such as '10s', '2h45m', and the supported time units are <code>s</code>, <code>m</code>, <code>h</code>, which correspond to seconds, minutes, and hours, respectively.") .. "<br>" ..
-		translate("When the unit is not filled in, it defaults to seconds.") .. "<br>" ..
-		translate("Test interval must be less or equal than idle timeout.")
-
-o = s:option(Value, _n("urltest_tolerance"), translate("Test tolerance"), translate("The test tolerance in milliseconds."))
-o:depends({ [_n("protocol")] = "_urltest" })
-o.datatype = "uinteger"
-o.placeholder = "50"
-o.default = "50"
-
-o = s:option(Value, _n("urltest_idle_timeout"), translate("Idle timeout"))
-o:depends({ [_n("protocol")] = "_urltest" })
-o.placeholder = "30m"
-o.default = "30m"
-o.description = translate("The idle timeout.") .. "<br>" ..
-		translate("The time format is numbers + units, such as '10s', '2h45m', and the supported time units are <code>s</code>, <code>m</code>, <code>h</code>, which correspond to seconds, minutes, and hours, respectively.") .. "<br>" ..
-		translate("When the unit is not filled in, it defaults to seconds.")
-
-o = s:option(Flag, _n("urltest_interrupt_exist_connections"), translate("Interrupt existing connections"))
-o:depends({ [_n("protocol")] = "_urltest" })
-o.default = "0"
-o.description = translate("Interrupt existing connections when the selected outbound has changed.") 
-
--- [[ Shunt Start ]]
-if #nodes_table > 0 then
-	o = s:option(Flag, _n("preproxy_enabled"), translate("Preproxy"))
-	o:depends({ [_n("protocol")] = "_shunt" })
-
-	o = s:option(ListValue, _n("main_node"), string.format('<a style="color:red">%s</a>', translate("Preproxy Node")), translate("Set the node to be used as a pre-proxy. Each rule (including <code>Default</code>) has a separate switch that controls whether this rule uses the pre-proxy or not."))
-	o:depends({ [_n("protocol")] = "_shunt", [_n("preproxy_enabled")] = true })
-	o.template = appname .. "/cbi/nodes_listvalue"
+if load_urltest_options then -- [[ URLTest Start ]]
+	o = s:option(MultiValue, _n("urltest_node"), translate("URLTest node list"), translate("List of nodes to test, <a target='_blank' href='https://sing-box.sagernet.org/configuration/outbound/urltest'>document</a>"))
+	o:depends({ [_n("protocol")] = "_urltest" })
+	o.widget = "checkbox"
+	o.template = appname .. "/cbi/nodes_multivalue"
 	o.group = {}
 	for k, v in pairs(socks_list) do
 		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+		o.group[#o.group+1] = v.group or ""
 	end
-	for k, v in pairs(urltest_table) do
+	for i, v in pairs(nodes_list) do
 		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+		o.group[#o.group+1] = v.group or ""
 	end
-	for k, v in pairs(iface_table) do
-		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+	-- Reading the old DynamicList
+	function o.cfgvalue(self, section)
+		return m.uci:get_list(appname, section, "urltest_node") or {}
 	end
-	for k, v in pairs(nodes_table) do
-		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-	end
-	if #o.keylist > 0 then
-		o.default = o.keylist[1]
-	end
-end
-m.uci:foreach(appname, "shunt_rules", function(e)
-	if e[".name"] and e.remarks then
-		o = s:option(ListValue, _n(e[".name"]), string.format('* <a href="%s" target="_blank">%s</a>', api.url("shunt_rules", e[".name"]), e.remarks))
-		o:value("", translate("Close"))
-		o:value("_default", translate("Default"))
-		o:value("_direct", translate("Direct Connection"))
-		o:value("_blackhole", translate("Blackhole"))
-		o:depends({ [_n("protocol")] = "_shunt" })
-		o.template = appname .. "/cbi/nodes_listvalue"
-		o.group = {"","","",""}
-
-		if #nodes_table > 0 then
-			for k, v in pairs(socks_list) do
-				o:value(v.id, v.remark)
-				o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+	-- Write-and-hold DynamicList
+	function o.custom_write(self, section, value)
+		local old = m.uci:get_list(appname, section, "urltest_node") or {}
+		local new, set = {}, {}
+		for v in value:gmatch("%S+") do
+			new[#new + 1] = v
+			set[v] = 1
+		end
+		for _, v in ipairs(old) do
+			if not set[v] then
+				m.uci:set_list(appname, section, "urltest_node", new)
+				return
 			end
-			for k, v in pairs(urltest_table) do
-				o:value(v.id, v.remark)
-				o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-			end
-			for k, v in pairs(iface_table) do
-				o:value(v.id, v.remark)
-				o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-			end
-			local pt = s:option(ListValue, _n(e[".name"] .. "_proxy_tag"), string.format('* <a style="color:red">%s</a>', e.remarks .. " " .. translate("Preproxy")))
-			pt:value("", translate("Close"))
-			pt:value("main", translate("Preproxy Node"))
-			for k, v in pairs(nodes_table) do
-				o:value(v.id, v.remark)
-				o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-				pt:depends({ [_n("protocol")] = "_shunt", [_n("preproxy_enabled")] = true, [_n(e[".name"])] = v.id })
-			end
+			set[v] = nil
+		end
+		for _ in pairs(set) do
+			m.uci:set_list(appname, section, "urltest_node", new)
+			return
 		end
 	end
-end)
 
-o = s:option(DummyValue, _n("shunt_tips"), " ")
-o.not_rewrite = true
-o.rawhtml = true
-o.cfgvalue = function(t, n)
-	return string.format('<a style="color: red" href="../rule">%s</a>', translate("No shunt rules? Click me to go to add."))
-end
-o:depends({ [_n("protocol")] = "_shunt" })
+	o = s:option(Value, _n("urltest_url"), translate("Probe URL"))
+	o:depends({ [_n("protocol")] = "_urltest" })
+	o:value("https://cp.cloudflare.com/", "Cloudflare")
+	o:value("https://www.gstatic.com/generate_204", "Gstatic")
+	o:value("https://www.google.com/generate_204", "Google")
+	o:value("https://www.youtube.com/generate_204", "YouTube")
+	o:value("https://connect.rom.miui.com/generate_204", "MIUI (CN)")
+	o:value("https://connectivitycheck.platform.hicloud.com/generate_204", "HiCloud (CN)")
+	o.default = "https://www.gstatic.com/generate_204"
+	o.description = translate("The URL used to detect the connection status.")
 
-local o = s:option(ListValue, _n("default_node"), string.format('* <a style="color:red">%s</a>', translate("Default")))
-o:depends({ [_n("protocol")] = "_shunt" })
-o:value("_direct", translate("Direct Connection"))
-o:value("_blackhole", translate("Blackhole"))
-o.template = appname .. "/cbi/nodes_listvalue"
-o.group = {"",""}
+	o = s:option(Value, _n("urltest_interval"), translate("Test interval"))
+	o:depends({ [_n("protocol")] = "_urltest" })
+	o.default = "3m"
+	o.placeholder = "3m"
+	o.description = translate("The interval between initiating probes.") .. "<br>" ..
+			translate("The time format is numbers + units, such as '10s', '2h45m', and the supported time units are <code>s</code>, <code>m</code>, <code>h</code>, which correspond to seconds, minutes, and hours, respectively.") .. "<br>" ..
+			translate("When the unit is not filled in, it defaults to seconds.") .. "<br>" ..
+			translate("Test interval must be less or equal than idle timeout.")
 
-if #nodes_table > 0 then
-	for k, v in pairs(socks_list) do
-		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-	end
-	for k, v in pairs(urltest_table) do
-		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-	end
-	for k, v in pairs(iface_table) do
-		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-	end
-	local dpt = s:option(ListValue, _n("default_proxy_tag"), string.format('* <a style="color:red">%s</a>', translate("Default Preproxy")), translate("When using, localhost will connect this node first and then use this node to connect the default node."))
-	dpt:value("", translate("Close"))
-	dpt:value("main", translate("Preproxy Node"))
-	for k, v in pairs(nodes_table) do
-		o:value(v.id, v.remark)
-		o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
-		dpt:depends({ [_n("protocol")] = "_shunt", [_n("preproxy_enabled")] = true, [_n("default_node")] = v.id })
-	end
-end
+	o = s:option(Value, _n("urltest_tolerance"), translate("Test tolerance"), translate("The test tolerance in milliseconds."))
+	o:depends({ [_n("protocol")] = "_urltest" })
+	o.datatype = "uinteger"
+	o.placeholder = "50"
+	o.default = "50"
 
--- [[ Shunt End ]]
+	o = s:option(Value, _n("urltest_idle_timeout"), translate("Idle timeout"))
+	o:depends({ [_n("protocol")] = "_urltest" })
+	o.placeholder = "30m"
+	o.default = "30m"
+	o.description = translate("The idle timeout.") .. "<br>" ..
+			translate("The time format is numbers + units, such as '10s', '2h45m', and the supported time units are <code>s</code>, <code>m</code>, <code>h</code>, which correspond to seconds, minutes, and hours, respectively.") .. "<br>" ..
+			translate("When the unit is not filled in, it defaults to seconds.")
+
+	o = s:option(Flag, _n("urltest_interrupt_exist_connections"), translate("Interrupt existing connections"))
+	o:depends({ [_n("protocol")] = "_urltest" })
+	o.default = "0"
+	o.description = translate("Interrupt existing connections when the selected outbound has changed.")
+end -- [[ URLTest End ]]
+
+if load_iface_options then -- [[ Custom Interface Start ]]
+	o = s:option(Value, _n("iface"), translate("Interface"))
+	o.default = "eth1"
+	o:depends({ [_n("protocol")] = "_iface" })
+end -- [[ Custom Interface End ]]
+
+
+-- [[ Normal single node Start ]]
+if load_normal_options then
 
 o = s:option(Value, _n("address"), translate("Address (Support Domain Name)"))
 
@@ -899,8 +826,8 @@ o2:depends({ [_n("chain_proxy")] = "2" })
 o2.template = appname .. "/cbi/nodes_listvalue"
 o2.group = {}
 
-for k, v in pairs(nodes_table) do
-	if v.type == "sing-box" and v.id ~= arg[1] and (not v.chain_proxy or v.chain_proxy == "") then
+for k, v in pairs(nodes_list) do
+	if v.id ~= arg[1] and (not v.chain_proxy or v.chain_proxy == "") then
 		o1:value(v.id, v.remark)
 		o1.group[#o1.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
 		o2:value(v.id, v.remark)
@@ -908,4 +835,20 @@ for k, v in pairs(nodes_table) do
 	end
 end
 
+end
+-- [[ Normal single node End ]]
+
 api.luci_types(arg[1], m, s, type_name, option_prefix)
+
+if load_shunt_options then
+	local current_node = m.uci:get_all(appname, arg[1]) or {}
+	local shunt_lua = loadfile("/usr/lib/lua/luci/model/cbi/passwall2/client/include/shunt_options.lua")
+	setfenv(shunt_lua, getfenv(1))(m, s, {
+		node_id = arg[1],
+		node = current_node,
+		socks_list = socks_list,
+		urltest_list = urltest_list,
+		iface_list = iface_list,
+		normal_list = nodes_list
+	})
+end
