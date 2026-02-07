@@ -144,10 +144,10 @@ index ff0c486..1882ac5 100644
  		return false;
  	}
 diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
-index 3e5cfc9..72d83f0 100644
+index d40da9c..5dc5dc3 100644
 --- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
 +++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
-@@ -18,7 +18,7 @@
+@@ -73,7 +73,7 @@ end
  				const wsPath = wsPaths[index];
  				const tls = tlss[index];
  				if (!dom) res();
@@ -156,7 +156,7 @@ index 3e5cfc9..72d83f0 100644
  				XHR.get('<%=luci.dispatcher.build_url("admin/services/shadowsocksr/ping")%>', {
  					index,
  					domain: dom.getAttribute("hint"),
-@@ -34,11 +34,11 @@
+@@ -89,11 +89,11 @@ end
  						if (result.ping < 200) col = '#ff7700';
  						if (result.ping < 100) col = '#249400';
  					}
