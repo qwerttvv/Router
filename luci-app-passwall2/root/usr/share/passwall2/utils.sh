@@ -14,6 +14,8 @@ TMP_IFACE_PATH=${TMP_PATH}/iface
 TMP_ROUTE_PATH=${TMP_PATH}/route
 TMP_SCRIPT_FUNC_PATH=${TMP_PATH}/script_func
 
+. /lib/functions/network.sh
+
 config_get_type() {
 	local ret=$(uci -q get "${CONFIG}.${1}" 2>/dev/null)
 	echo "${ret:=$2}"
@@ -151,16 +153,13 @@ get_geoip() {
 	local geoip_type_flag=""
 	local geoip_path="$(config_t_get global_rules v2ray_location_asset)"
 	geoip_path="${geoip_path%*/}/geoip.dat"
-	[ -e "$geoip_path" ] || { echo ""; return; }
+	local bin="$(first_type $(config_t_get global_app geoview_file) geoview)"
+	[ -n "$bin" ] && [ -s "$geoip_path" ] || { echo ""; return; }
 	case "$2" in
 		"ipv4") geoip_type_flag="-ipv6=false" ;;
 		"ipv6") geoip_type_flag="-ipv4=false" ;;
 	esac
-	if type geoview &> /dev/null; then
-		geoview -input "$geoip_path" -list "$geoip_code" $geoip_type_flag -lowmem=true
-	else
-		echo ""
-	fi
+	"$bin" -input "$geoip_path" -list "$geoip_code" $geoip_type_flag -lowmem=true
 }
 
 get_host_ip() {
@@ -168,16 +167,15 @@ get_host_ip() {
 	local count=$3
 	[ -z "$count" ] && count=3
 	local isip=""
-	local ip=$host
+	local ip=""
 	if [ "$1" == "ipv6" ]; then
 		isip=$(echo $host | grep -E "([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4}")
 		if [ -n "$isip" ]; then
-			isip=$(echo $host | cut -d '[' -f2 | cut -d ']' -f1)
-		else
-			isip=$(echo $host | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+			ip=$(echo "$host" | tr -d '[]')
 		fi
 	else
 		isip=$(echo $host | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+		[ -n "$isip" ] && ip=$isip
 	fi
 	[ -z "$isip" ] && {
 		local t=4
@@ -185,7 +183,7 @@ get_host_ip() {
 		local vpsrip=$(resolveip -$t -t $count $host | awk 'NR==1{print}')
 		ip=$vpsrip
 	}
-	echo $ip
+	[ -n "$ip" ] && echo "$ip"
 }
 
 get_node_host_ip() {
@@ -290,11 +288,20 @@ check_port_exists() {
 }
 
 get_new_port() {
-	local default_start_port=2000
+	local default_start_port=2001
 	local min_port=1025
 	local max_port=49151
 	local port=$1
-	[ "$port" == "auto" ] && port=$default_start_port
+	local last_get_new_port_auto
+	if [ "$1" == "auto" ]; then
+		last_get_new_port_auto=$(get_cache_var "last_get_new_port_auto")
+		if [ -n "$last_get_new_port_auto" ]; then
+			port=$last_get_new_port_auto
+			port=$(expr $port + 1)
+		else
+			port=$default_start_port
+		fi
+	fi
 	[ "$port" -lt $min_port -o "$port" -gt $max_port ] && port=$default_start_port
 	local protocol=$(echo $2 | tr 'A-Z' 'a-z')
 	local result=$(check_port_exists $port $protocol)
@@ -309,6 +316,7 @@ get_new_port() {
 		fi
 		get_new_port $temp $protocol
 	else
+		[ "$1" == "auto" ] && set_cache_var "last_get_new_port_auto" "$port"
 		echo $port
 	fi
 }
@@ -331,7 +339,6 @@ add_ip2route() {
 	local remarks="${1}"
 	[ "$remarks" != "$ip" ] && remarks="${1}(${ip})"
 
-	. /lib/functions/network.sh
 	local gateway device
 	network_get_gateway gateway "$2"
 	network_get_device device "$2"
@@ -385,4 +392,63 @@ ln_run() {
 
 kill_all() {
 	kill -9 $(pidof "$@") >/dev/null 2>&1
+}
+
+gen_lanlist() {
+	cat <<-EOF
+		0.0.0.0/8
+		10.0.0.0/8
+		100.64.0.0/10
+		127.0.0.0/8
+		169.254.0.0/16
+		172.16.0.0/12
+		192.168.0.0/16
+		224.0.0.0/4
+		240.0.0.0/4
+	EOF
+}
+
+gen_lanlist_6() {
+	cat <<-EOF
+		::/128
+		::1/128
+		::ffff:0:0/96
+		::ffff:0:0:0/96
+		64:ff9b::/96
+		100::/64
+		2001::/32
+		2001:20::/28
+		2001:db8::/32
+		2002::/16
+		fc00::/7
+		fe80::/10
+		ff00::/8
+	EOF
+}
+
+get_wan_ips() {
+	local family="$1"
+	local NET_ADDR
+	local iface
+	local INTERFACES=$(ubus call network.interface dump | jsonfilter -e \
+			'@.interface[!(@.interface ~ /lan/) && !(@.l3_device ~ /\./) && @.route[0]].interface')
+	for iface in $INTERFACES; do
+		local addr
+		if [ "$family" = "ip6" ]; then
+			network_get_ipaddr6 addr "$iface"
+			case "$addr" in
+				""|fe80*) continue ;;
+			esac
+		else
+			network_get_ipaddr addr "$iface"
+			case "$addr" in
+				""|"0.0.0.0") continue ;;
+			esac
+		fi
+		case " $NET_ADDR " in
+			*" $addr "*) ;;
+			*) NET_ADDR="${NET_ADDR:+$NET_ADDR }$addr" ;;
+		esac
+	done
+	echo "$NET_ADDR"
 }
