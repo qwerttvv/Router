@@ -1,0 +1,104 @@
+name: Build Nightly xray
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    
+    - name: Set Timezone
+      run: |
+        sudo timedatectl set-timezone Asia/Shanghai
+          
+    - name: Get latest commit SHA for xray and Prepare Release Notes
+      shell: pwsh
+      run: |
+        $SHA_xray = (curl -sSL https://api.github.com/repos/XTLS/Xray-core/commits/main | jq -r '.sha')
+        echo "SHA_xray=$SHA_xray" >> $env:GITHUB_ENV
+        echo "https://github.com/XTLS/Xray-core/commits/$SHA_xray" >> "${{ github.workspace }}-nightly_builds_release_notes.txt"
+    
+    - name: Check out code
+      uses: actions/checkout@main
+      with:
+        repository: XTLS/Xray-core
+        ref: main
+        submodules: recursive
+
+    - name: System update
+      run: |
+        sudo -E apt-mark hold grub-efi-amd64-signed firefox snapd mysql* || true
+        sudo -E apt -y update --allow-unauthenticated
+        sudo -E apt -y full-upgrade
+        sudo -E systemctl daemon-reload
+        sudo apt-get autoremove -y --purge
+        sudo apt-get clean
+
+    - name: Install latest UPX
+      run: |
+        UPX_VERSION=$(curl --silent "https://api.github.com/repos/upx/upx/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        curl -L -o upx.tar.xz "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-amd64_linux.tar.xz"
+        tar -xf upx.tar.xz
+        sudo mv upx-${UPX_VERSION}-amd64_linux/upx /usr/local/bin
+
+    - name: Install latest Go
+      uses: actions/setup-go@main
+      with:
+        go-version: 'stable'
+        check-latest: true
+
+    - name: Build and Compress
+      run: |
+        go version
+        go mod download
+        CGO_ENABLED=0 GOOS="linux" GOARCH="arm64" go build -o xray -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags "-s -w -buildid=" ./main
+        upx --lzma --best xray
+        tar -cJvf xray-linux-arm64.tar.xz --mode=755 --no-same-owner xray
+        rm xray
+        CGO_ENABLED=0 GOOS="linux" GOARCH="amd64" GOAMD64=v3 go build -o xray-linux-amd64 -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags "-s -w -buildid=" ./main
+        upx --lzma --best xray-linux-amd64
+        tar -cJvf xray-linux-amd64.tar.xz --mode=755 --no-same-owner xray-linux-amd64
+        rm xray-linux-amd64
+        CGO_ENABLED=0 GOOS="windows" GOARCH="amd64" GOAMD64=v3 go build -o xray.exe -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags "-s -w -buildid=" ./main
+        upx --lzma --best xray.exe
+        zip -j -9 xray-windows-amd64.zip xray.exe
+        rm xray.exe
+
+    - name: upload xray-linux-arm64
+      uses: actions/upload-artifact@main
+      with:
+        name: xray-linux-arm64
+        path: xray-linux-arm64.tar.xz
+        compression-level: 9
+      continue-on-error: true
+
+    - name: upload xray-linux-amd64
+      uses: actions/upload-artifact@main
+      with:
+        name: xray-linux-amd64
+        path: xray-linux-amd64.tar.xz
+        compression-level: 9
+      continue-on-error: true
+
+    - name: upload xray-windows-amd64
+      uses: actions/upload-artifact@main
+      with:
+        name: xray-windows-amd64
+        path: xray-windows-amd64.zip
+        compression-level: 9
+      continue-on-error: true
+       
+    - name: Generate release tag
+      run: echo "tag=$(date +"%Y.%m.%d-%H.%M_xray")" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Release
+      uses: softprops/action-gh-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.tag }}
+        files: |
+          xray-*.*
+        body_path: ${{ github.workspace }}-nightly_builds_release_notes.txt
+      continue-on-error: true
