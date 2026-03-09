@@ -22,8 +22,12 @@ PKG_BUILD_DEPENDS:=golang/host bpf-headers
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
 
+PATCH_DIR:=patches
+
 ifeq ($(ARCH),arm)
-PATCH_DIR:=patches_arm
+  PATCH_DIR_ARCH:=patches_arm
+else ifeq ($(ARCH),mips)
+  PATCH_DIR_ARCH:=patches_mips
 endif
 
 GO_PKG:=github.com/daeuniverse/dae-wing
@@ -72,6 +76,13 @@ define Download/daed-web
 	URL_FILE:=web.zip
 	FILE:=$(WEB_FILE)
 	HASH:=ffba0f8b5e9411ad0da10349dfaab2336922d47cd5effd81163ce4415b4d84d7
+endef
+
+define Build/Patch
+	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR),)
+ifneq ($(PATCH_DIR_ARCH),)
+	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR_ARCH),)
+endif
 endef
 
 define Build/Prepare
