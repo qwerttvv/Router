@@ -9,7 +9,6 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=vmlinux-btf
 PKG_VERSION:=$(LINUX_VERSION)
-PKG_PATCHVER:=$(word 1,$(subst ., ,$(PKG_VERSION))).$(word 2,$(subst ., ,$(PKG_VERSION)))
 
 PKG_BUILD_PARALLEL:=1
 
@@ -17,12 +16,6 @@ PKG_SOURCE:=$(LINUX_SOURCE)
 PKG_SOURCE_URL:=$(LINUX_SITE)
 PKG_HASH:=$(LINUX_KERNEL_HASH)
 PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/vmlinux-btf/linux-$(PKG_VERSION)
-
-GENERIC_PLATFORM_DIR := $(TOPDIR)/target/linux/generic
-GENERIC_BACKPORT_DIR := $(GENERIC_PLATFORM_DIR)/backport$(if $(wildcard $(GENERIC_PLATFORM_DIR)/backport-$(PKG_PATCHVER)),-$(PKG_PATCHVER))
-GENERIC_PATCH_DIR := $(GENERIC_PLATFORM_DIR)/pending$(if $(wildcard $(GENERIC_PLATFORM_DIR)/pending-$(PKG_PATCHVER)),-$(PKG_PATCHVER))
-GENERIC_HACK_DIR := $(GENERIC_PLATFORM_DIR)/hack$(if $(wildcard $(GENERIC_PLATFORM_DIR)/hack-$(PKG_PATCHVER)),-$(PKG_PATCHVER))
-GENERIC_FILES_DIR := $(foreach dir,$(wildcard $(GENERIC_PLATFORM_DIR)/files $(GENERIC_PLATFORM_DIR)/files-$(PKG_PATCHVER)),"$(dir)")
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -49,22 +42,6 @@ endef
 define Package/vmlinux-btf/prerm
 #!/bin/sh
 [ -d "/usr/lib/debug" ] && rm -rf /usr/lib/debug
-endef
-
-define Build/Prepare
-	$(call Build/Prepare/Default)
-
-	$(foreach dir,$(GENERIC_FILES_DIR),[ -d $(dir) ] && $(CP) $(dir)/* $(PKG_BUILD_DIR)/ || SKIP_GENERIC_PLATFORM_FILES_PATCHES=1;)
-
-	[ -d "$(GENERIC_BACKPORT_DIR)" ] && $(foreach p,$(wildcard $(GENERIC_BACKPORT_DIR)/*.patch),$(PATCH) -p1 -d $(PKG_BUILD_DIR) < $(p);)
-	[ -d "$(GENERIC_PATCH_DIR)" ] && $(foreach p,$(wildcard $(GENERIC_PATCH_DIR)/*.patch), \
-		{ [ -n "$$SKIP_GENERIC_PLATFORM_FILES_PATCHES" ] && grep -Eq "drivers/mtd/Kconfig|drivers/platform/mikrotik/Kconfig" $(p) && echo "Skipping $(p)"; } || \
-		$(PATCH) -p1 -d $(PKG_BUILD_DIR) < $(p); \
-	)
-	[ -d "$(GENERIC_HACK_DIR)" ] && $(foreach p,$(wildcard $(GENERIC_HACK_DIR)/*.patch), \
-		{ [ -n "$$SKIP_GENERIC_PLATFORM_FILES_PATCHES" ] && grep -Eq "drivers/net/phy/b53/Kconfig|drivers/net/phy/rtl8261n/Kconfig|fallback-sprom|mtk_bmt|routerbootpart|myloader" $(p) && echo "Skipping $(p)"; } || \
-		$(PATCH) -p1 -d $(PKG_BUILD_DIR) < $(p); \
-	)
 endef
 
 define Build/Compile
