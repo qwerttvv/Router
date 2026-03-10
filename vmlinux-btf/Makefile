@@ -121,10 +121,10 @@ define Build/Compile
 
 	+$(MAKE) -C $(PKG_BUILD_DIR) $(PKG_JOBS) $(KERNEL_MAKE_FLAGS) olddefconfig
 	+$(MAKE) -C $(PKG_BUILD_DIR) \
-		$(PKG_JOBS) \
-		$(KERNEL_MAKE_FLAGS) \
-		KBUILD_HOSTLDFLAGS="$(KBUILD_HOSTLDFLAGS) -lz" \
-		vmlinux
+	  $(PKG_JOBS) \
+	  $(KERNEL_MAKE_FLAGS) \
+	  KBUILD_HOSTLDFLAGS="-L$(STAGING_DIR_HOST)/lib -lz" \
+	  vmlinux
 	pahole --btf_encode_detached $(PKG_BUILD_DIR)/vmlinux.btf $(PKG_BUILD_DIR)/vmlinux
 endef
 
