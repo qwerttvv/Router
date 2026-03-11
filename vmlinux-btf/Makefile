@@ -60,10 +60,9 @@ define Build/Compile
 		--enable BPF_PRELOAD \
 		--enable BPF_STREAM_PARSER \
 		--enable BPF_SYSCALL \
-		--enable CONFIG_CGROUP_BPF \
-		--enable CONFIG_CGROUP_NET_CLASSID \
-		--enable CONFIG_CGROUP_NET_PRIO \
-		--enable CONFIG_NET_NS \
+		--enable CGROUP_BPF \
+		--enable CGROUP_NET_CLASSID \
+		--enable CGROUP_NET_PRIO \
 		--enable DEBUG_INFO_BTF \
 		--enable DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT \
 		--enable FTRACE \
@@ -79,6 +78,7 @@ define Build/Compile
 		--enable NET_CLS_BPF \
 		--enable NET_CLS_FLOWER \
 		--enable NET_CLS_U32 \
+		--enable NET_NS \
 		--enable NET_SCH_CAKE \
 		--enable NET_SCH_FIFO \
 		--enable NET_SCH_FQ \
