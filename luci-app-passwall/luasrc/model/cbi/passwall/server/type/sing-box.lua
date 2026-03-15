@@ -8,9 +8,6 @@ if not singbox_bin then
 	return
 end
 
-local local_version = api.get_app_version("sing-box")
-local version_ge_1_12_0 = api.compare_versions(local_version:match("[^v]+"), ">=", "1.12.0")
-
 local fs = api.fs
 
 local singbox_tags = luci.sys.exec(singbox_bin .. " version  | grep 'Tags:' | awk '{print $2}'")
@@ -52,9 +49,7 @@ end
 if singbox_tags:find("with_quic") then
 	o:value("hysteria2", "Hysteria2")
 end
-if version_ge_1_12_0 then
-	o:value("anytls", "AnyTLS")
-end
+o:value("anytls", "AnyTLS")
 o:value("direct", "Direct")
 o:depends({ [_n("custom")] = false })
 
@@ -168,7 +163,7 @@ if singbox_tags:find("with_quic") then
 	o:depends({ [_n("protocol")] = "hysteria2" })
 
 	o = s:option(Value, _n("hysteria2_obfs_password"), translate("Obfs Password"))
-	o:depends({ [_n("protocol")] = "hysteria2" })
+	o:depends({ [_n("hysteria2_obfs_type")] = "salamander" })
 
 	o = s:option(Value, _n("hysteria2_auth_password"), translate("Auth Password"))
 	o.password = true
@@ -397,7 +392,8 @@ for k, e in ipairs(api.get_valid_nodes()) do
 	if e.node_type == "normal" and e.type == type_name then
 		nodes_table[#nodes_table + 1] = {
 			id = e[".name"],
-			remarks = e["remark"]
+			remarks = e["remark"],
+			group = e["group"]
 		}
 	end
 end
@@ -407,7 +403,12 @@ o:value("", translate("Close"))
 o:value("_socks", translate("Custom Socks"))
 o:value("_http", translate("Custom HTTP"))
 o:value("_iface", translate("Custom Interface"))
-for k, v in pairs(nodes_table) do o:value(v.id, v.remarks) end
+o.template = api.appname .. "/cbi/nodes_listvalue"
+o.group = {"","","",""}
+for k, v in pairs(nodes_table) do
+	o:value(v.id, v.remarks)
+	o.group[#o.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+end
 o:depends({ [_n("custom")] = false })
 
 o = s:option(Value, _n("outbound_node_address"), translate("Address (Support Domain Name)"))
@@ -440,7 +441,7 @@ o.validate = function(self, value, t)
 	if value and api.jsonc.parse(value) then
 		return value
 	else
-		return nil, translate("Must be JSON text!")
+		return nil, translate("Custom Config") .. " " .. translate("Must be JSON text!")
 	end
 end
 o.custom_cfgvalue = function(self, section, value)
@@ -450,7 +451,7 @@ o.custom_cfgvalue = function(self, section, value)
 	end
 end
 o.custom_write = function(self, section, value)
-	m:set(section, "config_str", api.base64Encode(value))
+	m:set(section, "config_str", api.base64Encode(value) or "")
 end
 
 o = s:option(Flag, _n("log"), translate("Log"))
