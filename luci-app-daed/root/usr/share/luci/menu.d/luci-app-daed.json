@@ -1,6 +1,6 @@
 {
 	"admin/services/daed": {
-		"title": "DAED",
+		"title": "daed",
 		"order": 20,
 		"action": {
 			"type": "firstchild"
