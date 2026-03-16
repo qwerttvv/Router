@@ -1,11 +1,12 @@
-name: Build Packages (incremental)
+name: Build Packages
 
 on:
-  push:
-    branches: v5
   workflow_dispatch:
-  repository_dispatch:
-    types: [build]
+  schedule:
+    - cron: 0 16 * * *
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -52,82 +53,63 @@ jobs:
           - openwrt-24.10
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Detect changed packages
-        id: detect
-        run: |
-          ALL_PKGS="chinadns-ng daed dns2socks dns2socks-rust dns2tcp geoview hysteria ipt2socks lua-neturl luci-app-daed luci-app-homeproxy luci-app-nikki luci-app-openclash luci-app-passwall luci-app-passwall2 luci-app-ssr-plus microsocks naiveproxy nikki pdnsd redsocks2 shadow-tls shadowsocks-libev shadowsocks-rust shadowsocksr-libev simple-obfs sing-box tcping trojan trojan-plus tuic-client v2ray-core v2ray-geodata v2ray-plugin xray-core xray-plugin"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            PKGS="$ALL_PKGS"
-          else
-            CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | awk -F/ '{print $1}' | sort | uniq)
-            PKGS=""
-            for pkg in $ALL_PKGS; do
-              if echo "$CHANGED" | grep -qx "$pkg"; then
-                PKGS="$PKGS $pkg"
-              fi
-            done
-            PKGS=$(echo $PKGS | xargs)
-          fi
-          if echo "$PKGS" | grep -qw "luci-app-passwall"; then
-            if ! echo "$PKGS" | grep -qw "v2ray-geodata"; then
-              PKGS="$PKGS v2ray-geodata"
-            fi
-          fi
-          PKGS=$(echo $PKGS | xargs -n1 | sort -u | xargs)
-          echo "PACKAGES=$PKGS" >> $GITHUB_ENV
-          echo "pkgs=$PKGS" >> $GITHUB_OUTPUT
-
-      - name: Skip if no package changed
-        if: steps.detect.outputs.pkgs == ''
-        run: |
-          echo "No package changed, skipping build."
-          exit 0
-
-      - name: Hack daed packages
-        if: steps.detect.outputs.pkgs != ''
-        run: |
-          sed -i 's/$(BPF_DEPENDS)//g' daed/Makefile || true
-
       - name: Free disk space
-        if: steps.detect.outputs.pkgs != ''
+        uses: sbwml/actions@free-disk
+
+      - name: Clone
         run: |
-          sudo rm -rf /usr/lib/{jvm,llvm} /usr/local /usr/src/* /var/lib/gems /var/lib/mysql /var/lib/snapd /etc/skel /opt/{microsoft,az,hostedtoolcache,cni,mssql-tools,pipx} /usr/share/{az*,dotnet,swift,miniconda,gradle*,java,kotlinc,ri,sbt} /root/{.sbt,.local,.npm} /usr/libexec/gcc/x86_64-linux-gnu/14 /usr/lib/x86_64-linux-gnu/{*clang*,*LLVM*} /home/linuxbrew
+          git clone https://github.com/sbwml/openwrt_helloworld helloworld
+          git clone https://github.com/sbwml/luci-app-mosdns mosdns
+          git clone https://github.com/sbwml/feeds_packages_lang_node-prebuilt node
+
+      - name: Compute ARCH / effective arch
+        run: |
+          echo "SKIP_BUILD=0" >> $GITHUB_ENV
+          if [ "${{ matrix.tag }}" = "openwrt-25.12" ] && [ "${{ matrix.arch }}" = "riscv64_riscv64" ]; then
+            echo "EFFECTIVE_ARCH=riscv64_generic" >> $GITHUB_ENV
+            echo "ARCH=riscv64_generic-${{ matrix.tag }}" >> $GITHUB_ENV
+          elif [ "${{ matrix.tag }}" = "openwrt-25.12" ] && [ "${{ matrix.arch }}" = "mips_4kec" ]; then
+            echo "SKIP_BUILD=1" >> $GITHUB_ENV
+          else
+            echo "EFFECTIVE_ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
+            echo "ARCH=${{ matrix.arch }}-${{ matrix.tag }}" >> $GITHUB_ENV
+          fi
 
       - name: Build Packages
-        if: steps.detect.outputs.pkgs != ''
+        if: ${{ env.SKIP_BUILD == '0' }}
         uses: sbwml/openwrt-gh-action-sdk@helloworld
         env:
-          ARCH: ${{ matrix.arch }}-${{ matrix.tag }}
           FEEDNAME: packages_ci
-          PACKAGES: ${{ env.PACKAGES }}
-          KEY_BUILD: ${{ secrets.sign_key }}
+          PACKAGES: vmlinux-btf chinadns-ng dae daed dns2socks dns2socks-rust dns2tcp geoview hysteria ipt2socks lua-neturl luci-app-dae luci-app-daed luci-app-homeproxy luci-app-mosdns luci-app-nikki luci-app-openclash luci-app-passwall luci-app-passwall2 luci-app-ssr-plus microsocks mosdns naiveproxy node pdnsd redsocks2 shadow-tls shadowsocks-libev shadowsocks-rust shadowsocksr-libev simple-obfs sing-box tcping trojan trojan-plus tuic-client v2ray-core v2ray-geodata v2ray-plugin xray-core xray-plugin
           NO_REFRESH_CHECK: true
           IGNORE_ERRORS: true
 
-      - name: Upload artifacts
-        if: steps.detect.outputs.pkgs != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.tag }}-${{ matrix.arch }}
-          path: bin/packages/${{ matrix.arch }}/packages_ci/*.ipk
+      - name: Create compress files
+        if: ${{ env.SKIP_BUILD == '0' }}
+        continue-on-error: true
+        run: |
+          tar -zcvf ${{ env.ARCH }}.tar.gz -C bin/packages/${{ env.EFFECTIVE_ARCH }}/ packages_ci
+          echo "latest_release=$(TZ='Asia/Shanghai' date +%Y-%m-%d)" >>$GITHUB_ENV
 
       - name: Upload FTP
-        if: steps.detect.outputs.pkgs != ''
+        if: ${{ env.SKIP_BUILD == '0' }}
         uses: sbwml/FTP-Deploy-Action@master
         with:
           server: ${{ secrets.ftp_address }}
           username: ${{ secrets.ftp_username }}
           password: ${{ secrets.ftp_password }}
-          server-dir: ${{ matrix.tag }}/${{ matrix.arch }}/
-          local-dir: bin/packages/${{ matrix.arch }}/packages_ci/
-          dangerous-clean-slate: false
+          server-dir: ${{ matrix.tag }}/${{ env.EFFECTIVE_ARCH }}/
+          local-dir: bin/packages/${{ env.EFFECTIVE_ARCH }}/packages_ci/
+          dangerous-clean-slate: true
 
-      - name: Create metadata
-        if: steps.detect.outputs.pkgs != ''
+      - name: Create metadata (ipk)
+        if: ${{ env.SKIP_BUILD == '0' && matrix.tag == 'openwrt-24.10' }}
         run: |
           sshpass -p ${{ secrets.server_password }} ssh -o StrictHostKeyChecking=no root@${{ secrets.ftp_address }} >/dev/null 2>&1
-          sshpass -p ${{ secrets.server_password }} ssh root@${{ secrets.ftp_address }} "/opt/sbin/opkg-sign ${{ matrix.tag }} ${{ matrix.arch }}"
+          sshpass -p ${{ secrets.server_password }} ssh root@${{ secrets.ftp_address }} "/opt/sbin/opkg-sign ${{ matrix.tag }} ${{ env.EFFECTIVE_ARCH }}"
+
+      - name: Create metadata (apk)
+        if: ${{ env.SKIP_BUILD == '0' && matrix.tag == 'openwrt-25.12' }}
+        run: |
+          sshpass -p ${{ secrets.server_password }} ssh -o StrictHostKeyChecking=no root@${{ secrets.ftp_address }} >/dev/null 2>&1
+          sshpass -p ${{ secrets.server_password }} ssh root@${{ secrets.ftp_address }} "/opt/sbin/apk-sign ${{ matrix.tag }} ${{ env.EFFECTIVE_ARCH }}"
