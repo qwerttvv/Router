@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=xray-plugin
-PKG_VERSION:=25.6.8
+PKG_VERSION:=26.2.6
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/sbwml/xray-plugin/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=6821319c5d15f6d4fed3e4233814ddb93cdc729f6dbc0155ad76585f8617d780
+PKG_HASH:=17b844f5a570c123df34fa7ea8a579e49c6e46085a56c834765e702fe52f95a8
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE
@@ -22,6 +22,8 @@ PKG_USE_MIPS16:=0
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/sbwml/xray-plugin
+GO_PKG_LDFLAGS:=-s -w
+GO_PKG_LDFLAGS_X:=main.VERSION=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
