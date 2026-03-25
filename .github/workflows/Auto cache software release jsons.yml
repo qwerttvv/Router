@@ -121,6 +121,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Wait a sec
+        run: sleep 3
+      
       - name: Upload to release
         if: steps.check_upload.outputs.upload == 'true'
         uses: softprops/action-gh-release@v2
