@@ -292,6 +292,10 @@ function gen_outbound(flag, node, tag, proxy_table)
 								t = tonumber(tostring(t or "30"):match("^%d+"))
 								return (t and t >= 4 and t <= 120) and t or 30
 							end)(node.hysteria2_idle_timeout),
+							keepAlivePeriod = (function(t)
+								t = tonumber(tostring(t or "0"):match("^%d+"))
+								return (t and t >= 2 and t <= 60) and t or nil
+							end)(node.hysteria2_keep_alive_period),
 							disablePathMTUDiscovery = tonumber(node.hysteria2_disable_mtu_discovery) == 1
 						}
 					end
