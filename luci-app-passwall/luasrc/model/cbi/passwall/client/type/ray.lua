@@ -406,7 +406,7 @@ o.validate = function(self, value)
 end
 
 o = s:option(ListValue, _n("ech_ForceQuery"), translate("ECH Query Policy"), translate("Controls the policy used when performing DNS queries for ECH configuration."))
-o.default = "none"
+o.default = "full"
 o:value("none")
 o:value("half")
 o:value("full")
