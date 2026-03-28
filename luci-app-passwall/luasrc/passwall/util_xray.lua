@@ -8,20 +8,6 @@ local fs = api.fs
 
 local xray_version = api.get_app_version("xray")
 
-local function get_noise_packets()
-	local noises = {}
-	uci:foreach(appname, "xray_noise_packets", function(n)
-		local noise = (n.enabled == "1") and {
-			type = n.type,
-			packet = n.packet,
-			delay = string.find(n.delay, "-") and n.delay or tonumber(n.delay)
-		} or nil
-		table.insert(noises, noise)
-	end)
-	if #noises == 0 then noises = nil end
-	return noises
-end
-
 local function get_domain_excluded()
 	local path = string.format("/usr/share/%s/rules/domains_excluded", appname)
 	local content = fs.readfile(path)
@@ -149,8 +135,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 				sockopt = {
 					mark = 255,
 					tcpFastOpen = (node.tcp_fast_open == "1") and true or nil,
-					tcpMptcp = (node.tcpMptcp == "1") and true or nil,
-					dialerProxy = (fragment or noise) and "dialerproxy" or nil
+					tcpMptcp = (node.tcpMptcp == "1") and true or nil
 				},
 				network = node.transport,
 				security = node.stream_security,
@@ -263,7 +248,8 @@ function gen_outbound(flag, node, tag, proxy_table)
 				} or nil,
 				finalmask = (function()
 					local finalmask = {}
-					if node.transport == "mkcp" then
+					local TP = node.transport
+					if TP == "mkcp" then
 						local map = {none = "none", srtp = "header-srtp", utp = "header-utp", ["wechat-video"] = "header-wechat",
 							dtls = "header-dtls", wireguard = "header-wireguard", dns = "header-dns"}
 						local udp = {}
@@ -280,7 +266,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 						end
 						udp[#udp+1] = c
 						finalmask.udp = udp
-					elseif node.transport == "hysteria" then
+					elseif TP == "hysteria" then
 						if node.hysteria2_obfs_type and node.hysteria2_obfs_type ~= "" then
 							finalmask.udp = {{
 								type = node.hysteria2_obfs_type,
@@ -308,6 +294,13 @@ function gen_outbound(flag, node, tag, proxy_table)
 							end)(node.hysteria2_idle_timeout),
 							disablePathMTUDiscovery = tonumber(node.hysteria2_disable_mtu_discovery) == 1
 						}
+					end
+					if fragment and fragment_table and ({raw=1, ws=1, httpupgrade=1, grpc=1, xhttp=1})[TP] then
+						finalmask.tcp = finalmask.tcp or {}
+						finalmask.tcp[#finalmask.tcp+1] = api.clone(fragment_table)
+					end
+					if noise and noise_table and (TP == "mkcp" or (TP == "xhttp" and node.alpn == "h3")) then
+						finalmask.udp[#finalmask.udp+1] = api.clone(noise_table)
 					end
 					if node.finalmask and node.finalmask ~= "" then
 						local ok, fm = pcall(jsonc.parse, api.base64Decode(node.finalmask))
@@ -754,6 +747,38 @@ function gen_config(var)
 	local COMMON = {}
 
 	local xray_settings = uci:get_all(appname, "@global_xray[0]") or {}
+
+	if xray_settings.fragment == "1" then
+		local delay = xray_settings.fragment_delay
+		fragment_table = {
+			type = "fragment",
+			settings = {
+				packets = xray_settings.fragment_packets,
+				length = xray_settings.fragment_length,
+				delay = string.find(delay, "-") and delay or tonumber(delay),
+				maxSplit = xray_settings.fragment_maxSplit
+			}
+		}
+	end
+
+	if xray_settings.noise == "1" then
+		local noises = {}
+		uci:foreach(appname, "xray_noise_packets", function(n)
+			if n.enabled == "1" then
+				local noise = {
+					rand = (n.type == "rand") and (string.find(n.packet, "-") and n.packet or tonumber(n.packet)) or nil,
+					type = (n.type ~= "rand") and n.type or nil,
+					packet = (n.type ~= "rand") and n.packet or nil,
+					delay = string.find(n.delay, "-") and n.delay or tonumber(n.delay)
+				}
+				table.insert(noises, noise)
+			end
+		end)
+		noise_table = #noises > 0 and {
+			type = "noise",
+			settings = { reset = 0, noise = noises }
+		} or nil
+	end
 
 	if node_id then
 		local node = uci:get_all(appname, node_id)
@@ -1662,27 +1687,6 @@ function gen_config(var)
 				-- }
 			}
 		}
-
-		if xray_settings.fragment == "1" or xray_settings.noise == "1" then
-			table.insert(outbounds, {
-				protocol = "freedom",
-				tag = "dialerproxy",
-				settings = {
-					domainStrategy = (direct_dns_query_strategy and direct_dns_query_strategy ~= "") and direct_dns_query_strategy or "UseIP",
-					fragment = (xray_settings.fragment == "1") and {
-						packets = (xray_settings.fragment_packets and xray_settings.fragment_packets ~= "") and xray_settings.fragment_packets,
-						length = (xray_settings.fragment_length and xray_settings.fragment_length ~= "") and xray_settings.fragment_length,
-						interval = (xray_settings.fragment_interval and xray_settings.fragment_interval ~= "") and xray_settings.fragment_interval
-					} or nil,
-					noises = (xray_settings.noise == "1") and get_noise_packets() or nil
-				},
-				streamSettings = {
-					sockopt = {
-						mark = 255
-					}
-				}
-			})
-		end
 
 		local direct_outbound = {
 			protocol = "freedom",
