@@ -1011,7 +1011,8 @@ add_firewall_rule() {
 
 	nft "add chain $NFTABLE_NAME PSW_DIVERT"
 	nft "flush chain $NFTABLE_NAME PSW_DIVERT"
-	nft "add rule $NFTABLE_NAME PSW_DIVERT meta l4proto { tcp, udp } socket transparent 1 mark set ${FWMARK} counter accept"
+	# Only TCP, UDP Invalid.
+	nft "add rule $NFTABLE_NAME PSW_DIVERT meta l4proto tcp socket transparent 1 mark set ${FWMARK} counter accept"
 
 	nft "add chain $NFTABLE_NAME PSW_DNS"
 	nft "flush chain $NFTABLE_NAME PSW_DNS"

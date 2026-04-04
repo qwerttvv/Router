@@ -1019,8 +1019,8 @@ add_firewall_rule() {
 	unset WAN_IP wan_ip
 
 	insert_rule_before "$ipt_m" "PREROUTING" "mwan3" "-j PSW"
+	# Only TCP, UDP Invalid.
 	insert_rule_before "$ipt_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT"
-	insert_rule_before "$ipt_m" "PREROUTING" "PSW" "-p udp -m socket -j PSW_DIVERT"
 
 	$ipt_m -N PSW_OUTPUT
 	$ipt_m -A PSW_OUTPUT $(dst $IPSET_LAN) -j RETURN
@@ -1099,8 +1099,8 @@ add_firewall_rule() {
 	unset WAN6_IP wan6_ip
 
 	insert_rule_before "$ip6t_m" "PREROUTING" "mwan3" "-j PSW"
+	# Only TCP, UDP Invalid.
 	insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT"
-	insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p udp -m socket -j PSW_DIVERT"
 
 	$ip6t_m -N PSW_OUTPUT
 	$ip6t_m -A PSW_OUTPUT -m mark --mark 255 -j RETURN
@@ -1422,7 +1422,6 @@ gen_include() {
 
 			\$(${MY_PATH} insert_rule_before "$ipt_m" "PREROUTING" "mwan3" "-j PSW")
 			\$(${MY_PATH} insert_rule_before "$ipt_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT")
-			\$(${MY_PATH} insert_rule_before "$ipt_m" "PREROUTING" "PSW" "-p udp -m socket -j PSW_DIVERT")
 
 			WAN_IP=\$(get_wan_ips ip4)
 			[ ! -z "\${WAN_IP}" ] && {
@@ -1453,7 +1452,6 @@ gen_include() {
 
 			\$(${MY_PATH} insert_rule_before "$ip6t_m" "PREROUTING" "mwan3" "-j PSW")
 			\$(${MY_PATH} insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT")
-			\$(${MY_PATH} insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p udp -m socket -j PSW_DIVERT")
 
 			WAN6_IP=\$(get_wan_ips ip6)
 			[ ! -z "\${WAN6_IP}" ] && {
