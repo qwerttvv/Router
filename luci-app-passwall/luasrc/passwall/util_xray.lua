@@ -1734,14 +1734,10 @@ function gen_config(var)
 		else
 			table.insert(outbounds, blackhole_outbound)
 		end
-
 		for index, value in ipairs(config.outbounds) do
-			local s = value.settings
-			if not value["_flag_proxy_tag"] and value["_id"] and s and not no_run and
-			((s.vnext and s.vnext[1] and s.vnext[1].address and s.vnext[1].port) or 
-			(s.servers and s.servers[1] and s.servers[1].address and s.servers[1].port) or
-			(s.peers and s.peers[1] and s.peers[1].endpoint) or
-			(s.address and s.port)) then
+			local pt = value.protocol
+			local exclude = { blackhole=1, dns=1, freedom=1, loopback=1 }
+			if not value["_flag_proxy_tag"] and value["_id"] and pt and not exclude[pt] and not no_run then
 				sys.call(string.format("echo '%s' >> %s", value["_id"], api.TMP_PATH .. "/direct_node_list"))
 			end
 			for k, v in pairs(config.outbounds[index]) do
