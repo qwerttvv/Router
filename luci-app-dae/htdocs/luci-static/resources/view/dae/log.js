@@ -7,7 +7,7 @@
 'require view';
 
 return view.extend({
-	render: function() {
+	render() {
 		/* Thanks to luci-app-aria2 */
 		let css = '					\
 			#log_textarea {				\
