@@ -435,7 +435,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 			if not GLOBAL.DNS_SERVER[dns_key] then
 				GLOBAL.DNS_SERVER[dns_key] = {
 					tag = "dns-node-" .. api.gen_short_uuid(),
-					queryStrategy = node.domain_strategy or "UseIP",
+					-- queryStrategy = node.domain_strategy or "UseIP",
 					address = config_address,
 					port = config_port,
 					finalQuery = true,
@@ -1649,8 +1649,7 @@ function gen_config(var)
 				protocol = "dokodemo-door",
 				tag = "dns-in",
 				settings = {
-					address = remote_dns_udp_server or remote_dns_tcp_server,
-					port = tonumber(remote_dns_udp_port) or tonumber(remote_dns_tcp_port),
+					address = "0.0.0.0",
 					network = "tcp,udp"
 				}
 			})
@@ -1797,14 +1796,9 @@ function gen_config(var)
 				table.insert(hostname, line)
 			end
 			table.insert(dns.servers, 2, {
-				tag = "bootstrap",
-				address = "223.5.5.5",
-				queryStrategy = "UseIPv4",
+				tag = "dns-in-bootstrap",
+				address = "localhost",
 				domains = hostname
-			})
-			table.insert(routing.rules, idx, {
-				inboundTag = { "bootstrap" },
-				outboundTag = "direct"
 			})
 		end
 	end
