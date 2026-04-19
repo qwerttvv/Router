@@ -19,32 +19,38 @@
 		compatible = "gpio-leds";
 
 		led_power: power {
-			label = "blue:power";
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_POWER;
 			gpios = <&tlmm 58 GPIO_ACTIVE_HIGH>;
 		};
 
-		mesh {
-			label = "blue:mesh";
+		wps {
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_WPS;
 			gpios = <&tlmm 73 GPIO_ACTIVE_HIGH>;
 		};
 
 		lan {
-			label = "blue:lan";
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_LAN;
 			gpios = <&tlmm 74 GPIO_ACTIVE_HIGH>;
 		};
 
 		wan {
-			label = "blue:wan";
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_WAN;
 			gpios = <&tlmm 37 GPIO_ACTIVE_HIGH>;
 		};
 
 		wlan5g {
-			label = "blue:wlan5g";
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_WLAN_5GHZ;
 			gpios = <&tlmm 35 GPIO_ACTIVE_HIGH>;
 		};
 
 		wlan2g {
-			label = "blue:wlan2g";
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_WLAN_2GHZ;
 			gpios = <&tlmm 70 GPIO_ACTIVE_HIGH>;
 		};
 	};

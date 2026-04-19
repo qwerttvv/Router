@@ -15,8 +15,8 @@ xiaomi,ax1800)
 cmiot,ax18|\
 zn,m2)
 	ucidef_set_led_netdev "wan" "WAN" "blue:wan" "wan"
-	ucidef_set_led_netdev "wlan2g" "WLAN2G" "blue:wlan2g" "phy1-ap0"
-	ucidef_set_led_netdev "wlan5g" "WLAN5G" "blue:wlan5g" "phy0-ap0"
+	ucidef_set_led_netdev "wlan2g" "WLAN2G" "blue:wlan-2ghz" "phy1-ap0"
+	ucidef_set_led_netdev "wlan5g" "WLAN5G" "blue:wlan-5ghz" "phy0-ap0"
 	ucidef_set_led_netdev "lan" "LAN" "blue:lan" "br-lan"
 	;;
 linksys,mr7350)

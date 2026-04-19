@@ -546,7 +546,7 @@ define Device/xiaomi_ax9000
 	PAGESIZE := 2048
 	SOC := ipq8072
 	DEVICE_DTS_CONFIG := config@hk14
-	DEVICE_PACKAGES := ipq-wifi-xiaomi_ax9000 ath11k-firmware-qcn9074-ddwrt ath10k-firmware-qca9887 kmod-ath10k-smallbuffers
+	DEVICE_PACKAGES := ipq-wifi-xiaomi_ax9000 ath11k-firmware-qcn9074-ddwrt ath10k-firmware-qca9887 kmod-ath10k-smallbuffers kmod-hwmon-emc2305
 ifeq ($(IB),)
 ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
 	ARTIFACTS := initramfs-factory.ubi
