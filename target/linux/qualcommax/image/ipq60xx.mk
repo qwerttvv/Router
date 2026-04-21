@@ -109,7 +109,8 @@ define Device/jdcloud_re-cs-07
 	KERNEL_SIZE := 6144k
 	SOC := ipq6010
 	DEVICE_DTS_CONFIG := config@cp03-c4
-	DEVICE_PACKAGES := -ath11k-firmware-ipq6018 -ath11k-firmware-ipq6018-ddwrt -ath11k-firmware-qcn9074 -ath11k-firmware-qcn9074-ddwrt -kmod-ath -kmod-mac80211 -hostapd-common -wpad-openssl
+	DEVICE_PACKAGES := -kmod-ath -kmod-ath11k -kmod-ath11k-ahb -kmod-ath11k-pci \
+		-ath11k-firmware-ipq6018 -ath11k-firmware-ipq6018-ddwrt -ath11k-firmware-qcn9074 -ath11k-firmware-qcn9074-ddwrt
 	IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-rootfs | append-metadata
 endef
 TARGET_DEVICES += jdcloud_re-cs-07

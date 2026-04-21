@@ -12,7 +12,6 @@ ipq807x_setup_interfaces()
 
 	case "$board" in
 	aliyun,ap8220|\
-	cmcc,rm2-6|\
 	edgecore,eap102|\
 	tcl,linkhub-hh500v|\
 	tplink,deco-x80-5g|\
@@ -34,6 +33,9 @@ ipq807x_setup_interfaces()
 	xiaomi,ax9000-stock|\
 	zbtlink,zbt-z800ax)
 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "wan"
+		;;
+	cmcc,rm2-6)
+		ucidef_set_interfaces_lan_wan "lan plc" "wan"
 		;;
 	compex,wpq873|\
 	linksys,homewrk|\
