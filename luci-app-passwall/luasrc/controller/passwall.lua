@@ -1038,9 +1038,9 @@ function fetch_certsha256()
 	local address = (id ~= "") and uci:get(appname, id, "address") or ""
 	local port = (id ~= "") and uci:get(appname, id, "port") or 0
 	if id == "" or address == "" or not api.datatypes.hostname(address) or port == 0 then
-		http_write_json({ code = 1 })
+		http_write_json_error()
 		return
 	end
 	local data = api.fetch_cert_sha256(address, port, 5)
-	http_write_json(data ~= "" and { code = 0, data = data } or { code = 1 })
+	http_write_json(data ~= "" and { code = 1, data = data } or { code = 0 })
 end
