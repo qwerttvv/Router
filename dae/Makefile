@@ -6,12 +6,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dae
 PKG_VERSION:=1.1.0
-PKG_RELEASE:=10
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/olicesx/dae.git
-PKG_SOURCE_VERSION:=44fe30dd4c53d2c212ec3f267713fca06e58d260
-PKG_MIRROR_HASH:=ed420818ce358bf2903d9690eab06042ce6d20f8b496f8f614ce75040931d54c
+PKG_SOURCE_URL:=https://github.com/daeuniverse/dae.git
+PKG_SOURCE_VERSION:=39831d5d24a129ce8c53258e54cfe6cde1502529
+PKG_MIRROR_HASH:=2f4a3541d171dff8477195c1af426155d2de45778e04b5e358aee2f6b3b11132
 
 PKG_LICENSE:=AGPL-3.0-only
 PKG_LICENSE_FILE:=LICENSE
@@ -66,16 +66,7 @@ define Package/dae
   $(call Package/dae/Default)
   TITLE:=A lightweight and high-performance transparent proxy solution
   # You need enable KERNEL_DEBUG_INFO_BTF and KERNEL_BPF_EVENTS
-  DEPENDS:=$(GO_ARCH_DEPENDS) \
-    +ca-bundle +kmod-sched-core +kmod-sched-bpf \
-    +kmod-veth +v2ray-geoip +v2ray-geosite
-
-  ifeq ($(CONFIG_DAE_USE_VMLINUX_BTF),y)
-    DEPENDS+=+vmlinux-btf
-  endif
-  ifeq ($(CONFIG_DAE_USE_BPF_DEPENDS),y)
-    DEPENDS+=$(BPF_DEPENDS) +kmod-xdp-sockets-diag
-  endif
+  DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
 define Package/dae/description
