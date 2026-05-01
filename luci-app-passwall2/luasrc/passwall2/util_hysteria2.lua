@@ -60,17 +60,28 @@ function gen_config(var)
 	local config = {
 		server = server,
 		transport = {
-			type = node.protocol or "udp",
-			udp = {
-				hopInterval = (function()
-							local HopIntervalStr = tostring(node.hysteria2_hop_interval or "30s")
-							local HopInterval = tonumber(HopIntervalStr:match("^%d+"))
-							if HopInterval and HopInterval >= 5 then
-								return tostring(HopInterval) .. "s"
-							end
-							return "30s"
-						end)(),
-			}
+			type = "udp",
+			udp = node.hysteria2_hop and (function()
+				local udp = {}
+				local t = node.hysteria2_hop_interval
+				if not t then return nil end
+				if t:find("-", 1, true) then
+					local min, max = t:match("^(%d+)%-(%d+)$")
+					min = tonumber(min)
+					max = tonumber(max)
+					if min and max then
+						min = (min >= 5) and min or 5
+						max = (max >= min) and max or min
+						udp.minHopInterval = min .. "s"
+						udp.maxHopInterval = max .. "s"
+						return udp
+					end
+				end
+				t = tonumber((t or "30"):match("^%d+"))
+				t = (t and t >= 5) and t or 30
+				udp.hopInterval = t .. "s"
+				return udp
+			end)() or nil
 		},
 		obfs = (node.hysteria2_obfs) and {
 			type = "salamander",
@@ -87,14 +98,14 @@ function gen_config(var)
 		quic = {
 			initStreamReceiveWindow = (node.hysteria2_recv_window) and tonumber(node.hysteria2_recv_window) or nil,
 			initConnReceiveWindow = (node.hysteria2_recv_window_conn) and tonumber(node.hysteria2_recv_window_conn) or nil,
-			maxIdleTimeout = (function()
-						local timeoutStr = tostring(node.hysteria2_idle_timeout or "")
-						local timeout = tonumber(timeoutStr:match("^%d+"))
-						if timeout and timeout >= 4 and timeout <= 120 then
-							return tostring(timeout) .. "s"
-						end
-						return nil
-					end)(),
+			maxIdleTimeout = (function(t)
+				t = tonumber(tostring(t or "30"):match("^%d+"))
+				return (t and t >= 4 and t <= 120) and t .. "s" or "30s"
+			end)(node.hysteria2_idle_timeout),
+			keepAlivePeriod = (function(t)
+				t = tonumber(tostring(t or "0"):match("^%d+"))
+				return (t and t >= 2 and t <= 60) and t .. "s" or nil
+			end)(node.hysteria2_keep_alive_period),
 			disablePathMTUDiscovery = (node.hysteria2_disable_mtu_discovery) and true or false,
 		},
 		bandwidth = (node.hysteria2_up_mbps or node.hysteria2_down_mbps) and {

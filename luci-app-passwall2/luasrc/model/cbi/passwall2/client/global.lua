@@ -95,7 +95,7 @@ current_node = current_node_id and m.uci:get_all(appname, current_node_id) or {}
 
 -- Shunt Start
 if (has_singbox or has_xray) and #nodes_table > 0 then
-	if #normal_list > 0 then
+	if #normal_list > 0 or #iface_list > 0 then
 		if current_node.protocol == "_shunt" then
 			local shunt_lua = loadfile("/usr/lib/lua/luci/model/cbi/passwall2/client/include/shunt_options.lua")
 			setfenv(shunt_lua, getfenv(1))(m, s, {
@@ -112,7 +112,7 @@ if (has_singbox or has_xray) and #nodes_table > 0 then
 			})
 		end
 	else
-		local tips = s:taboption("Main", DummyValue, "tips", " ")
+		local tips = s:taboption("Main", DummyValue, "tips", "　")
 		tips.rawhtml = true
 		tips.cfgvalue = function(t, n)
 			return string.format('<a style="color: red">%s</a>', translate("There are no available nodes, please add or subscribe nodes first."))
@@ -167,6 +167,19 @@ node_socks_bind_local.default = "1"
 node_socks_bind_local:depends({ node = "", ["!reverse"] = true })
 
 s:tab("DNS", translate("DNS"))
+
+o = s:taboption("DNS", TextValue, "direct_dns_shunt", translate("Direct domain DNS routing"))
+o.description = "<br /><ul>"
+.. "<li>" .. translate("Subdomain (recommended): Begining with 'domain:' and the rest is a domain. When the targeting domain is exactly the value, or is a subdomain of the value, this rule takes effect. Example: rule 'domain:v2ray.com' matches 'www.v2ray.com', 'v2ray.com', but not 'xv2ray.com'.") .. "</li>"
+.. "<li>" .. translate("Full domain: Begining with 'full:' and the rest is a domain. When the targeting domain is exactly the value, the rule takes effect. Example: rule 'domain:v2ray.com' matches 'v2ray.com', but not 'www.v2ray.com'.") .. "</li>"
+.. "<li>" .. translate("Such as:") .. "</li>"
+.. "<li>" .. "domain:my-nodes.com tcp://223.5.5.5" .. "</li>"
+.. "<li>" .. "domain:vpn.com udp://119.29.29.29:53" .. "</li>"
+.. "<li>" .. "full:www.dnspod.com https://120.53.53.53/dns-query" .. "</li>"
+.. "<li>" .. '<a style="color:red">' .. translate("Please note that the program will not start if the format is incorrect!") .. '</a>' .. "</li>"
+.. "</ul>"
+o.rows = 3
+o.wrap = "off"
 
 o = s:taboption("DNS", ListValue, "direct_dns_query_strategy", translate("Direct Query Strategy"))
 o.default = "UseIP"
@@ -255,8 +268,8 @@ o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translat
 o.default = "1"
 o.rmempty = false
 
-local use_nft = m:get("@global_forwarding[0]", "use_nft") == "1"
-local set_title = api.i18n.translate(use_nft and "Clear NFTSET" or "Clear IPSET")
+local prefer_nft = m:get("@global_forwarding[0]", "prefer_nft") == "1"
+local set_title = api.i18n.translate(prefer_nft and "Clear NFTSET" or "Clear IPSET")
 o = s:taboption("DNS", DummyValue, "clear_ipset", set_title, translate("Try this feature if the rule modification does not take effect."))
 o.rawhtml = true
 function o.cfgvalue(self, section)
@@ -351,6 +364,9 @@ end
 local o_node = s.fields["node"]
 local o_socks = s2.fields["node"]
 for k, v in pairs(nodes_table) do
+	if #normal_list == 0 and #iface_list == 0 then
+		break
+	end
 	o_node:value(v.id, v["remark"])
 	o_node.group[#o_node.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
 	o_socks:value(v.id, v["remark"])

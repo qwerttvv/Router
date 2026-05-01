@@ -403,17 +403,11 @@ function copy_node()
 	local uuid = api.gen_short_uuid()
 	uci:section(appname, "nodes", uuid)
 	for k, v in pairs(uci:get_all(appname, section)) do
-		local filter = k:find("%.")
-		if filter and filter == 1 then
-		else
-			xpcall(function()
-				uci:set(appname, uuid, k, v)
-			end,
-			function(e)
-			end)
+		if not k:match("^%.") and k ~= "group" then
+			if k == "remarks" then v = (v or "") .. "(1)" end
+			uci:set(appname, uuid, k, v)
 		end
 	end
-	uci:delete(appname, uuid, "group")
 	uci:set(appname, uuid, "add_mode", 1)
 	api.uci_save(uci, appname)
 	http.redirect(api.url("node_config", uuid))
@@ -609,7 +603,11 @@ function save_node_list_opt()
 end
 
 function update_rules()
-	local update = http.formvalue("update")
+	local update = http.formvalue("update") or ""
+	if update == "" then
+		http_write_json_error({ message = "missing update target" })
+		return
+	end
 	luci.sys.call("lua /usr/share/passwall2/rule_update.lua log '" .. update .. "' > /dev/null 2>&1 &")
 	http_write_json()
 end

@@ -118,6 +118,12 @@ msgstr "0为不使用"
 msgid "Current node: %s"
 msgstr "当前节点：%s"
 
+msgid "Direct domain DNS routing"
+msgstr "直连域名 DNS 分流"
+
+msgid "Please note that the program will not start if the format is incorrect!"
+msgstr "请注意，格式不正确将无法启动！"
+
 msgid "IP:Port mode acceptable, multi value split with english comma."
 msgstr "接受 IP:Port 形式的输入，多个以英文逗号分隔。"
 
@@ -559,6 +565,9 @@ msgstr "认证类型"
 msgid "Auth Password"
 msgstr "认证密码"
 
+msgid "Client BBR Flow Control"
+msgstr "客户端 BBR 流控"
+
 msgid "Commands the client to use the BBR flow control algorithm"
 msgstr "命令客户端使用 BBR 流量控制算法"
 
@@ -582,6 +591,9 @@ msgstr "QUIC 连接接收窗口"
 
 msgid "QUIC concurrent bidirectional streams"
 msgstr "QUIC 并发双向流的最大数量"
+
+msgid "QUIC KeepAlive interval"
+msgstr "QUIC KeepAlive 间隔"
 
 msgid "Disable MTU detection"
 msgstr "禁用 MTU 检测"
@@ -732,6 +744,12 @@ msgstr "劫持ICMP (PING)"
 
 msgid "Hijacking ICMPv6 (IPv6 PING)"
 msgstr "劫持ICMPv6 (IPv6 PING)"
+
+msgid "Force Proxy LAN IP"
+msgstr "强制代理内网IP段"
+
+msgid "By default, commonly used internal network IP ranges will be connect directly (not entering the core). If you want a certain network range to go through a proxy, please add it here."
+msgstr "默认情况下，常用内网IP网段将直连（不进入内核），如果你希望某个网段走代理，请在此添加。"
 
 msgid "Sniffing"
 msgstr "流量嗅探"
@@ -1093,6 +1111,21 @@ msgstr "IP 范围"
 msgid "Source Interface"
 msgstr "源接口"
 
+msgid "Bridge"
+msgstr "网桥"
+
+msgid "Wireless Adapter"
+msgstr "无线适配器"
+
+msgid "Ethernet Adapter"
+msgstr "以太网适配器"
+
+msgid "Tunnel Interface"
+msgstr "隧道接口"
+
+msgid "Invalid interface name"
+msgstr "无效的接口名称"
+
 msgid "Use Interface With ACLs"
 msgstr "使用接口控制"
 
@@ -1312,6 +1345,9 @@ msgstr "允许不安全连接"
 msgid "Whether unsafe connections are allowed. When checked, Certificate validation will be skipped."
 msgstr "是否允许不安全连接。当勾选时，将跳过证书验证。"
 
+msgid "Used when the node link does not include this parameter."
+msgstr "当节点链接未包含该参数时，将使用此设置。"
+
 msgid "%s Node Use Type"
 msgstr "%s 节点使用类型"
 
@@ -1329,6 +1365,9 @@ msgstr "用于本地Socks服务器连接的密码"
 
 msgid "UDP relay mode"
 msgstr "UDP中继模式"
+
+msgid "Concurrent Tunnels"
+msgstr "并发隧道连接数"
 
 msgid "Congestion control algorithm"
 msgstr "拥塞控制算法"
@@ -1597,14 +1636,14 @@ msgstr "缓冲区大小"
 msgid "Buffer size for every connection (kB)"
 msgstr "每一个连接的缓冲区大小（kB）"
 
-msgid "Handshake Timeout"
-msgstr "握手超时 "
-
 msgid "Idle Timeout"
-msgstr "空闲超时 "
+msgstr "空闲超时"
 
-msgid "Hop Interval"
-msgstr "端口跳跃时间 "
+msgid "Hop Interval(second)"
+msgstr "端口跳跃间隔（秒）"
+
+msgid "Supports a fixed value or a random range (e.g., 30, 5-30), minimum 5."
+msgstr "支持固定值或随机范围（如 30 或 5-30），最小 5 秒。"
 
 msgid "HeartbeatPeriod(second)"
 msgstr "心跳周期（单位：秒）"
@@ -1651,11 +1690,20 @@ msgstr "ECH 查询策略"
 msgid "Controls the policy used when performing DNS queries for ECH configuration."
 msgstr "控制使用 DNS 查询 ECH 配置时的策略。"
 
+msgid "ECH Query Domain"
+msgstr "ECH 查询域名"
+
+msgid "Overrides the domain name used for ECH HTTPS record queries."
+msgstr "覆盖用于 ECH HTTPS 记录查询的域名。"
+
 msgid "Enable Multipath TCP, need to be enabled in both server and client configuration."
 msgstr "启用 Multipath TCP，需在服务端和客户端配置中同时启用。"
 
 msgid "An FinalMaskObject in JSON format, used for sharing."
 msgstr "JSON 格式的 FinalMaskObject，用来实现分享。"
+
+msgid "Custom finalmask overrides mkcp, hysteria2, fragment, noise, and related settings."
+msgstr "自定义 finalmask 将覆盖 mkcp、hysteria2、fragment、noise 等相关配置。"
 
 msgid "Fragment"
 msgstr "分片"
@@ -1675,8 +1723,8 @@ msgstr "分片包长"
 msgid "Fragmented packet length (byte)"
 msgstr "分片包长 (byte)"
 
-msgid "Fragment Interval"
-msgstr "分片间隔"
+msgid "Fragment Delay"
+msgstr "分片延迟"
 
 msgid "Fragmentation interval (ms)"
 msgstr "分片间隔（ms）"
@@ -1705,17 +1753,23 @@ msgstr "在 Xray 设置中勾选 “噪声” 以发送噪声包。"
 msgid "Xray Noise Packets"
 msgstr "Xray 噪声数据包"
 
-msgid "Packet"
-msgstr "数据包"
+msgid "Packet | Rand Length"
+msgstr "数据包 | Rand 长度"
 
 msgid "Delay (ms)"
 msgstr "延迟（ms）"
 
-msgid "IP Type"
-msgstr "IP 类型"
-
 msgid "If is domain name, The requested domain name will be resolved to IP before connect."
 msgstr "如果是域名，域名将在请求发出之前解析为 IP。"
+
+msgid "Domain DNS Resolve"
+msgstr "域名 DNS 解析"
+
+msgid "If the node address is a domain name, this DNS will be used for resolution."
+msgstr "如果节点地址是域名，则将使用此 DNS 进行解析。"
+
+msgid "Supports only Xray or Sing-box node types."
+msgstr "仅支持 Xray 或 Sing-box 类型节点。"
 
 msgid "Chain Proxy"
 msgstr "链式代理"
@@ -1730,11 +1784,8 @@ msgid ""
 "Chained proxy works only with Xray or Sing-box nodes.<br>"
 "You can only use manual or imported nodes as chained nodes."
 msgstr ""
-"链式代理仅支持 Xray 与 Sing-box 节点。<br>"
+"链式代理仅支持 Xray 或 Sing-box 节点。<br>"
 "仅支持手动添加或导入的节点用作链式节点。"
-
-msgid "Set the default domain resolution strategy for the sing-box node."
-msgstr "为 sing-box 节点设置默认的域名解析策略。"
 
 msgid "Prefer IPv4"
 msgstr "IPv4 优先"
@@ -2252,6 +2303,9 @@ msgstr "插件选项不完整。"
 msgid "shadowsocks-libev unsupport 2022 encryption."
 msgstr "shadowsocks-libev 不支持2022加密。"
 
+msgid "Please replace %s to support %s transmission method."
+msgstr "请更换 %s 以支持 %s 传输方式。"
+
 msgid "Please replace Xray or Sing-Box to support more transmission methods in Shadowsocks."
 msgstr "请更换 Xray 或 Sing-Box 来支持 Shadowsocks 更多的传输方式。"
 
@@ -2338,3 +2392,6 @@ msgstr "发生错误, 正在恢复服务。"
 
 msgid "Subscription complete..."
 msgstr "订阅完毕..."
+
+msgid "Processing, please wait…"
+msgstr "正在处理，请稍候。"
