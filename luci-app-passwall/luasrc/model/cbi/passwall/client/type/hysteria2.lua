@@ -32,9 +32,10 @@ o = s:option(Value, _n("hop"), translate("Port hopping range"))
 o.description = translate("Format as 1000:2000 or 1000-2000 Multiple groups are separated by commas (,).")
 o.rewrite_option = o.option
 
-o = s:option(Value, _n("hop_interval"), translate("Hop Interval"), translate("Example:") .. "30s (≥5s)")
-o.placeholder = "30s"
-o.default = "30s"
+o = s:option(Value, _n("hop_interval"), translate("Hop Interval(second)"), translate("Supports a fixed value or a random range (e.g., 30, 5-30), minimum 5."))
+o.datatype = "or(uinteger,portrange)"
+o.placeholder = "30"
+o.default = "30"
 o.rewrite_option = o.option
 
 o = s:option(Value, _n("obfs"), translate("Obfs Password"))
@@ -53,7 +54,6 @@ o = s:option(Flag, _n("tls_allowInsecure"), translate("allowInsecure"), translat
 o.default = "0"
 
 o = s:option(Value, _n("tls_pinSHA256"), translate("PinSHA256"),translate("Certificate fingerprint"))
-o.rewrite_option = o.option
 
 o = s:option(Value, _n("up_mbps"), translate("Max upload Mbps"))
 o.rewrite_option = o.option
@@ -67,8 +67,10 @@ o.rewrite_option = o.option
 o = s:option(Value, _n("recv_window_conn"), translate("QUIC connection receive window"))
 o.rewrite_option = o.option
 
+o = s:option(Value, _n("idle_timeout"), translate("Idle Timeout"), translate("Example:") .. "30s (4s~120s)")
+o.rewrite_option = o.option
 
-o = s:option(Value, _n("idle_timeout"), translate("Idle Timeout"), translate("Example:") .. "30s (4s-120s)")
+o = s:option(Value, _n("keep_alive_period"), translate("QUIC KeepAlive interval"), translate("Example:") .. "10s (2s~60s)")
 o.rewrite_option = o.option
 
 o = s:option(Flag, _n("disable_mtu_discovery"), translate("Disable MTU detection"))

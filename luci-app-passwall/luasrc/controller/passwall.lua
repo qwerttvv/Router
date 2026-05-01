@@ -115,6 +115,8 @@ function index()
 
 	--[[geoview]]
 	entry({"admin", "services", appname, "geo_view"}, call("geo_view")).leaf = true
+
+	entry({"admin", "services", appname, "fetch_certsha256"}, call("fetch_certsha256")).leaf = true
 end
 
 local function http_write_json(content)
@@ -484,17 +486,11 @@ function copy_node()
 	local uuid = api.gen_short_uuid()
 	uci:section(appname, "nodes", uuid)
 	for k, v in pairs(uci:get_all(appname, section)) do
-		local filter = k:find("%.")
-		if filter and filter == 1 then
-		else
-			xpcall(function()
-				uci:set(appname, uuid, k, v)
-			end,
-			function(e)
-			end)
+		if not k:match("^%.") and k ~= "group" then
+			if k == "remarks" then v = (v or "") .. "(1)" end
+			uci:set(appname, uuid, k, v)
 		end
 	end
-	uci:delete(appname, uuid, "group")
 	uci:set(appname, uuid, "add_mode", 1)
 	api.uci_save(uci, appname)
 	http.redirect(api.url("node_config", uuid))
@@ -702,7 +698,11 @@ function save_node_list_opt()
 end
 
 function update_rules()
-	local update = http.formvalue("update")
+	local update = http.formvalue("update") or ""
+	if update == "" then
+		http_write_json_error({ message = "missing update target" })
+		return
+	end
 	luci.sys.call("lua /usr/share/passwall/rule_update.lua log '" .. update .. "' > /dev/null 2>&1 &")
 	http_write_json()
 end
@@ -1031,4 +1031,16 @@ function flush_set()
 	if redirect == "1" then
 		http.redirect(api.url("log"))
 	end
+end
+
+function fetch_certsha256()
+	local id = http.formvalue("id") or ""
+	local address = (id ~= "") and uci:get(appname, id, "address") or ""
+	local port = (id ~= "") and uci:get(appname, id, "port") or 0
+	if id == "" or address == "" or not api.datatypes.hostname(address) or port == 0 then
+		http_write_json_error()
+		return
+	end
+	local data = api.fetch_cert_sha256(address, port, 5)
+	http_write_json(data ~= "" and { code = 1, data = data } or { code = 0 })
 end

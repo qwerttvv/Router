@@ -25,7 +25,6 @@ local function _n(name)
 	return option_prefix .. name
 end
 
-local formvalue_key = "cbid." .. appname .. "." .. arg[1] .. "."
 local formvalue_proto = luci.http.formvalue(formvalue_key .. _n("protocol"))
 
 if formvalue_proto then s.val["protocol"] = formvalue_proto end
@@ -65,6 +64,9 @@ if singbox_tags:find("with_quic") then
 end
 o:value("anytls", "AnyTLS")
 o:value("ssh", "SSH")
+if singbox_tags:find("with_naive_outbound") then
+	o:value("naive", "NaïveProxy")
+end
 o:value("_urltest", translate("URLTest"))
 o:value("_shunt", translate("Shunt"))
 o:value("_iface", translate("Custom Interface"))
@@ -204,16 +206,6 @@ o = s:option(Value, _n("address"), translate("Address (Support Domain Name)"))
 o = s:option(Value, _n("port"), translate("Port"))
 o.datatype = "port"
 
-local protocols = s.fields[_n("protocol")].keylist
-if #protocols > 0 then
-	for index, value in ipairs(protocols) do
-		if not value:find("^_") then
-			s.fields[_n("address")]:depends({ [_n("protocol")] = value })
-			s.fields[_n("port")]:depends({ [_n("protocol")] = value })
-		end
-	end
-end
-
 o = s:option(Value, _n("uuid"), translate("ID"))
 o.password = true
 o:depends({ [_n("protocol")] = "vmess" })
@@ -224,6 +216,7 @@ o = s:option(Value, _n("username"), translate("Username"))
 o:depends({ [_n("protocol")] = "http" })
 o:depends({ [_n("protocol")] = "socks" })
 o:depends({ [_n("protocol")] = "ssh" })
+o:depends({ [_n("protocol")] = "naive" })
 
 o = s:option(Value, _n("password"), translate("Password"))
 o.password = true
@@ -234,6 +227,7 @@ o:depends({ [_n("protocol")] = "trojan" })
 o:depends({ [_n("protocol")] = "tuic" })
 o:depends({ [_n("protocol")] = "anytls" })
 o:depends({ [_n("protocol")] = "ssh" })
+o:depends({ [_n("protocol")] = "naive" })
 
 o = s:option(ListValue, _n("security"), translate("Encrypt Method"))
 for a, t in ipairs(security_list) do o:value(t) end
@@ -248,6 +242,7 @@ o:depends({ [_n("protocol")] = "shadowsocks" })
 o = s:option(Flag, _n("uot"), translate("UDP over TCP"))
 o:depends({ [_n("protocol")] = "socks" })
 o:depends({ [_n("protocol")] = "shadowsocks" })
+o:depends({ [_n("protocol")] = "naive" })
 
 o = s:option(Value, _n("alter_id"), "Alter ID")
 o.datatype = "uinteger"
@@ -273,9 +268,10 @@ if singbox_tags:find("with_quic") then
 	o.description = translate("Format as 1000:2000 or 1000-2000 Multiple groups are separated by commas (,).")
 	o:depends({ [_n("protocol")] = "hysteria" })
 
-	o = s:option(Value, _n("hysteria_hop_interval"), translate("Hop Interval"), translate("Example:") .. "30s (≥5s)")
-	o.placeholder = "30s"
-	o.default = "30s"
+	o = s:option(Value, _n("hysteria_hop_interval"), translate("Hop Interval(second)"), translate("Example:") .. "30 (≥5)")
+	o.datatype = "uinteger"
+	o.placeholder = "30"
+	o.default = "30"
 	o:depends({ [_n("protocol")] = "hysteria" })
 
 	o = s:option(Value, _n("hysteria_obfs"), translate("Obfs Password"))
@@ -357,9 +353,10 @@ if singbox_tags:find("with_quic") then
 	o.description = translate("Format as 1000:2000 or 1000-2000 Multiple groups are separated by commas (,).")
 	o:depends({ [_n("protocol")] = "hysteria2" })
 
-	o = s:option(Value, _n("hysteria2_hop_interval"), translate("Hop Interval"), translate("Example:") .. "30s (≥5s)")
-	o.placeholder = "30s"
-	o.default = "30s"
+	o = s:option(Value, _n("hysteria2_hop_interval"), translate("Hop Interval(Second)"), translate("Supports a fixed value or a random range (e.g., 30, 5-30), minimum 5."))
+	o.datatype = "or(uinteger,portrange)"
+	o.placeholder = "30"
+	o.default = "30"
 	o:depends({ [_n("protocol")] = "hysteria2" })
 
 	o = s:option(Value, _n("hysteria2_up_mbps"), translate("Max upload Mbps"))
@@ -382,8 +379,14 @@ if singbox_tags:find("with_quic") then
 end
 
 -- [[ SSH config start ]] --
-o = s:option(Value, _n("ssh_priv_key"), translate("Private Key"))
+o = s:option(TextValue, _n("ssh_priv_key"), translate("Private Key"))
+o.rows = 5
+o.wrap = "off"
 o:depends({ [_n("protocol")] = "ssh" })
+o.validate = function(self, value)
+	value = api.trim(value):gsub("\r\n", "\n"):gsub("[ \t]*\n[ \t]*", "\n"):gsub("\n+", "\n")
+	return value
+end
 
 o = s:option(Value, _n("ssh_priv_key_pp"), translate("Private Key Passphrase"))
 o.password = true
@@ -398,6 +401,26 @@ o:depends({ [_n("protocol")] = "ssh" })
 o = s:option(Value, _n("ssh_client_version"), translate("Client Version"), translate("Random version will be used if empty."))
 o:depends({ [_n("protocol")] = "ssh" })
 -- [[ SSH config end ]] --
+
+-- [[ naive start ]] --
+o = s:option(Value, _n("naive_insecure_concurrency"), translate("Concurrent Tunnels"))
+o.datatype = "uinteger"
+o.placeholder = "0"
+o.default = "0"
+o:depends({ [_n("protocol")] = "naive" })
+
+o = s:option(Flag, _n("naive_quic"), translate("QUIC"))
+o.default = 0
+o:depends({ [_n("protocol")] = "naive" })
+
+o = s:option(ListValue, _n("naive_congestion_control"), translate("Congestion control algorithm"))
+o.default = "bbr"
+o:value("bbr", translate("BBR"))
+o:value("bbr2", translate("BBRv2"))
+o:value("cubic", translate("CUBIC"))
+o:value("reno", translate("New Reno"))
+o:depends({ [_n("naive_quic")] = "1" })
+-- [[ naive end ]] --
 
 o = s:option(Flag, _n("tls"), translate("TLS"))
 o.default = 0
@@ -427,11 +450,12 @@ o:depends({ [_n("protocol")] = "hysteria"})
 o:depends({ [_n("protocol")] = "tuic" })
 o:depends({ [_n("protocol")] = "hysteria2" })
 
-o = s:option(Value, _n("tls_serverName"), translate("Domain"))
+o = s:option(Value, _n("tls_serverName"), "SNI " .. translate("Domain"))
 o:depends({ [_n("tls")] = true })
 o:depends({ [_n("protocol")] = "hysteria"})
 o:depends({ [_n("protocol")] = "tuic" })
 o:depends({ [_n("protocol")] = "hysteria2" })
+o:depends({ [_n("protocol")] = "naive" })
 
 o = s:option(Flag, _n("tls_allowInsecure"), translate("allowInsecure"), translate("Whether unsafe connections are allowed. When checked, Certificate validation will be skipped."))
 o.default = "0"
@@ -446,6 +470,7 @@ o:depends({ [_n("tls")] = true, [_n("flow")] = "", [_n("reality")] = false })
 o:depends({ [_n("protocol")] = "tuic" })
 o:depends({ [_n("protocol")] = "hysteria" })
 o:depends({ [_n("protocol")] = "hysteria2" })
+o:depends({ [_n("protocol")] = "naive" })
 
 o = s:option(TextValue, _n("ech_config"), translate("ECH Config"))
 o.default = ""
@@ -453,11 +478,7 @@ o.rows = 5
 o.wrap = "off"
 o:depends({ [_n("ech")] = true })
 o.validate = function(self, value)
-	value = value:gsub("^%s+", ""):gsub("%s+$","\n"):gsub("\r\n","\n"):gsub("[ \t]*\n[ \t]*", "\n")
-	value = value:gsub("^%s*\n", "")
-	if value:sub(-1) == "\n" then  
-		value = value:sub(1, -2)  
-	end
+	value = api.trim(value):gsub("\r\n", "\n"):gsub("[ \t]*\n[ \t]*", "\n"):gsub("\n+", "\n")
 	return value
 end
 
@@ -618,10 +639,19 @@ o:depends({ [_n("grpc_health_check")] = true })
 
 -- [[ User-Agent ]]--
 o = s:option(Value, _n("user_agent"), translate("User-Agent"))
+o.default = ""
+o:value("", translate("default"))
+o:value("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36", "chrome")
+o:value("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0", "firefox")
+o:value("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15", "safari")
+o:value("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.70", "edge")
+o:value("Go-http-client/1.1", "golang")
+o:value("curl/7.68.0", "curl")
 o:depends({ [_n("tcp_guise")] = "http" })
 o:depends({ [_n("transport")] = "http" })
 o:depends({ [_n("transport")] = "ws" })
 o:depends({ [_n("transport")] = "httpupgrade" })
+o:depends({ [_n("protocol")] = "naive" })
 
 -- [[ Mux ]]--
 o = s:option(Flag, _n("mux"), translate("Mux"))
@@ -712,6 +742,28 @@ o:value("v2ray-plugin")
 o = s:option(Value, _n("plugin_opts"), translate("opts"))
 o:depends({ [_n("plugin_enabled")] = true })
 
+o = s:option(ListValue, _n("domain_resolver"), translate("Domain DNS Resolve"))
+o.description = translate("If the node address is a domain name, this DNS will be used for resolution.") .. "<br>" .. string.format('<font color="red">%s</font>',
+		translate("Note: For node-specific DNS only. Keep Auto to avoid extra overhead."))
+o:value("", translate("Auto"))
+o:value("tcp", "TCP")
+o:value("udp", "UDP")
+o:value("https", "DoH")
+
+o = s:option(Value, _n("domain_resolver_dns"), "DNS")
+o.datatype = "or(ipaddr,ipaddrport)"
+o:value("114.114.114.114")
+o:value("223.5.5.5:53")
+o.default = o.keylist[1]
+o:depends({ [_n("domain_resolver")] = "tcp" })
+o:depends({ [_n("domain_resolver")] = "udp" })
+
+o = s:option(Value, _n("domain_resolver_dns_https"), "DNS")
+o:value("https://120.53.53.53/dns-query", "DNSPod")
+o:value("https://223.5.5.5/dns-query", "AliDNS")
+o.default = o.keylist[1]
+o:depends({ [_n("domain_resolver")] = "https" })
+
 o = s:option(ListValue, _n("domain_strategy"), translate("Domain Strategy"), translate("If is domain name, The requested domain name will be resolved to IP before connect."))
 o.default = ""
 o:value("", translate("Auto"))
@@ -719,17 +771,19 @@ o:value("prefer_ipv4", translate("Prefer IPv4"))
 o:value("prefer_ipv6", translate("Prefer IPv6"))
 o:value("ipv4_only", translate("IPv4 Only"))
 o:value("ipv6_only", translate("IPv6 Only"))
-o:depends({ [_n("protocol")] = "socks" })
-o:depends({ [_n("protocol")] = "http" })
-o:depends({ [_n("protocol")] = "shadowsocks" })
-o:depends({ [_n("protocol")] = "vmess" })
-o:depends({ [_n("protocol")] = "trojan" })
-o:depends({ [_n("protocol")] = "wireguard" })
-o:depends({ [_n("protocol")] = "hysteria" })
-o:depends({ [_n("protocol")] = "vless" })
-o:depends({ [_n("protocol")] = "tuic" })
-o:depends({ [_n("protocol")] = "hysteria2" })
-o:depends({ [_n("protocol")] = "anytls" })
+
+
+local protocols = s.fields[_n("protocol")].keylist
+if #protocols > 0 then
+	for i, v in ipairs(protocols) do
+		if not v:find("^_") then
+			s.fields[_n("address")]:depends({ [_n("protocol")] = v })
+			s.fields[_n("port")]:depends({ [_n("protocol")] = v })
+			s.fields[_n("domain_resolver")]:depends({ [_n("protocol")] = v })
+			s.fields[_n("domain_strategy")]:depends({ [_n("protocol")] = v })
+		end
+	end
+end
 end
 -- [[ Normal single node End ]]
 

@@ -142,9 +142,10 @@ get_ip_port_from() {
 
 parse_doh() {
 	local __doh=$1 __url_var=$2 __host_var=$3 __port_var=$4 __bootstrap_var=$5
-	__doh=$(echo -e "$__doh" | tr -d ' \t\n')
+	__doh=$(printf '%s' "$__doh" | tr -d ' \t\n')
 	local __url=${__doh%%,*}
 	local __bootstrap=${__doh#*,}
+	[ "$__bootstrap" = "$__doh" ] && __bootstrap=""
 	local __host_port=$(lua_api "get_domain_from_url(\"${__url}\")")
 	local __host __port
 	if echo "${__host_port}" | grep -q '^\[.*\]:[0-9]\+$'; then
@@ -357,6 +358,7 @@ set_cache_var() {
 	shift 1
 	local val="$@"
 	[ -n "${key}" ] && [ -n "${val}" ] && {
+		[ ! -d $TMP_PATH ] && mkdir -p $TMP_PATH
 		sed -i "/${key}=/d" $TMP_PATH/var >/dev/null 2>&1
 		echo "${key}=\"${val}\"" >> $TMP_PATH/var
 		eval ${key}=\"${val}\"
@@ -395,6 +397,8 @@ add_ip2route() {
 	local gateway device
 	network_get_gateway gateway "$2"
 	network_get_device device "$2"
+	[ -z "${device}" ] && device=$(ubus call "network.interface.$2" status 2>/dev/null | jsonfilter -e '@.device' 2>/dev/null)
+	[ -z "${device}" ] && [ -d "/sys/class/net/$2" ] && device="$2"
 	[ -z "${device}" ] && device="$2"
 
 	if [ -n "${gateway}" ]; then
@@ -453,6 +457,7 @@ ln_run() {
 			${file_func:-echolog " - ${ln_name}"} "$@" 2>&1 | logger -t PASSWALL_${protocol}_${ln_name} &
 		fi
 	fi
+	[ "$NO_REC_PROCESS" = "1" ] && return
 	process_count=$(ls $TMP_SCRIPT_FUNC_PATH | wc -l)
 	process_count=$((process_count + 1))
 	echo "${file_func:-echolog "  - ${ln_name}"} $@ >${output}" > $TMP_SCRIPT_FUNC_PATH/$process_count
@@ -513,4 +518,34 @@ get_wan_ips() {
 		esac
 	done
 	echo "$NET_ADDR"
+}
+
+get_local_ips() {
+	local family="$1"
+	local ALL_IPS WAN_IPS ip NET_ADDR
+	if [ "$family" = "ip6" ]; then
+		ALL_IPS=$(ip -o -6 addr show scope global | awk '{print $4}' | cut -d/ -f1)
+		WAN_IPS=$(get_wan_ips ip6)
+	else
+		ALL_IPS=$(ip -o -4 addr show scope global | awk '{print $4}' | cut -d/ -f1)
+		WAN_IPS=$(get_wan_ips ip4)
+	fi
+	# 补充回环（scope global 不包含）
+	[ "$family" = "ip6" ] && ALL_IPS="$ALL_IPS ::1"
+	[ "$family" != "ip6" ] && ALL_IPS="$ALL_IPS 127.0.0.1"
+	for ip in $ALL_IPS; do
+		case "$ip" in
+			""|0.0.0.0|::) continue ;;
+		esac
+		case " $WAN_IPS " in
+			*" $ip "*) continue ;;
+		esac
+		case " $NET_ADDR " in
+			*" $ip "*) ;;
+			*) NET_ADDR="${NET_ADDR:+$NET_ADDR }$ip" ;;
+		esac
+	done
+	for ip in $NET_ADDR; do
+		echo "$ip"
+	done
 }

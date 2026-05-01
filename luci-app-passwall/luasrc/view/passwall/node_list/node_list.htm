@@ -2,7 +2,7 @@
 local api = require "luci.passwall.api"
 local appname = api.appname
 -%>
-<script src="<%=resource%>/view/<%=appname%>/Sortable.min.js?v=25.11.27"></script>
+<script src="<%=resource%>/view/<%=appname%>/Sortable.min.js?v=1.15.7"></script>
 
 <style>
 table th, .table .th {
@@ -278,10 +278,10 @@ table td, .table .td {
 		ajaxList = [];
 	}
 
-	function to_add_node(protocol) {
+	function to_add_node() {
 		ajaxAbortAll();
 		const dom = document.getElementsByClassName("cbi-tab")[0];
-		const current_group = dom.getAttribute("group_name")
+		const current_group = dom ? (dom.getAttribute("group_name") || "default") : "default";
 		window.location.href = '<%=api.url("add_node")%>?redirect=1&group=' + current_group;
 	}
 
@@ -399,11 +399,16 @@ table td, .table .td {
 				}
 			}
 			if (ids.length > 0) {
-				if (confirm('<%:Are you sure to delete select nodes?%>') == true){
+				const dom = document.getElementById('modal-mask');
+				if (confirm('<%:Are you sure to delete select nodes?%>') == true) {
+					dom.style.display = 'block';
+					dom.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;"><%:Processing, please wait…%></div>';
 					XHR.get('<%=api.url("delete_select_nodes")%>', {
 						ids: ids.join()
 					},
 					function(x, data) {
+						dom.innerHTML = '';
+						dom.style.display = 'none';
 						if (x && x.status == 200) {
 							/*
 							for (var i = 0 ; i < ids.length; i++) {
@@ -413,8 +418,7 @@ table td, .table .td {
 							*/
 							ajaxAbortAll();
 							window.location.href = '<%=api.url("node_list")%>';
-						}
-						else {
+						} else {
 							alert("<%:Error%>");
 						}
 					});
@@ -958,7 +962,11 @@ table td, .table .td {
 						} else {
 							innerHTML = innerHTML.split("{{tcping}}").join('<span class="tcping_value" cbiid="{{id}}"><a href="javascript:void(0)" style="color:inherit">---</a></span>');
 						}
-						innerHTML = innerHTML.split("{{url_test}}").join('<span class="ping"><a href="javascript:void(0)" onclick="javascript:urltest_node(\'{{id}}\', this)" title="<%:TLS handshake test, latency for reference only%>"><%:Test%></a></span>');
+						if (o["protocol"] && o["protocol"] === '_shunt') {
+							innerHTML = innerHTML.split("{{url_test}}").join('<span class="ping" cbiid="{{id}}">---</span>');
+						} else {
+							innerHTML = innerHTML.split("{{url_test}}").join('<span class="ping"><a href="javascript:void(0)" onclick="javascript:urltest_node(\'{{id}}\', this)" title="<%:TLS handshake test, latency for reference only%>"><%:Test%></a></span>');
+						}
 						innerHTML = innerHTML.split("{{id}}").join(o[".name"]);
 						innerHTML = innerHTML.split("{{group}}").join(o["group"] || "");
 						let node_remarks = get_remarks_name(o);

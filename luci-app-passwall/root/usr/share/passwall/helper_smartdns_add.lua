@@ -188,7 +188,7 @@ if not REMOTE_GROUP or REMOTE_GROUP == "nil" then
 	sys.call('sed -i "/passwall/d" /etc/smartdns/custom.conf >/dev/null 2>&1')
 end
 
-local force_https_soa = uci:get(appname, "@global[0]", "force_https_soa") or 1
+local force_https_soa = uci:get(appname, "@global[0]", "force_https_soa") or 0
 local proxy_server_name = "passwall-proxy-server"
 config_lines = {
 	tonumber(LISTEN_PORT) ~= 0 and "bind [::]:" .. LISTEN_PORT .. "@lo" or "",
@@ -333,7 +333,7 @@ if not is_file_nonzero(file_vpslist) then
 	local f_out = io.open(file_vpslist, "w")
 	local written_domains = {}
 	local function process_address(address)
-		if address == "engage.cloudflareclient.com" then return end
+		if api.vps_domain_exclude(address) then return end
 		if datatypes.hostname(address) and not written_domains[address] then
 			f_out:write(address .. "\n")
 			written_domains[address] = true

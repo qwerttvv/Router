@@ -18,6 +18,7 @@ local NO_LOGIC_LOG = var["-NO_LOGIC_LOG"]
 local TCP_NODE = var["-TCP_NODE"]
 local NFTFLAG = var["-NFTFLAG"]
 local REMOTE_FAKEDNS = var["-REMOTE_FAKEDNS"]
+local FILTER_HTTPS = var["-FILTER_HTTPS"]
 local LOG_FILE = var["-LOG_FILE"]
 
 local uci = api.uci
@@ -113,15 +114,13 @@ local setflag = (NFTFLAG == "1") and "inet@passwall@" or ""
 
 local only_global = (DEFAULT_MODE == "proxy" and CHNLIST == "0" and GFWLIST == "0") and 1
 
-local force_https_soa = uci:get(appname, "@global[0]", "force_https_soa") or 1
-
 config_lines = {
 	LOG_FILE ~= "/dev/null" and "verbose" or "",
 	"bind-addr ::",
 	"bind-port " .. LISTEN_PORT,
 	"china-dns " .. DNS_LOCAL,
 	"trust-dns " .. DNS_TRUST,
-	tonumber(force_https_soa) == 1 and "filter-qtype 65" or ""
+	tonumber(FILTER_HTTPS) == 1 and "filter-qtype 65" or ""
 }
 
 for i = 1, 6 do
@@ -174,7 +173,7 @@ if not is_file_nonzero(file_vpslist) then
 	local f_out = io.open(file_vpslist, "w")
 	local written_domains = {}
 	local function process_address(address)
-		if address == "engage.cloudflareclient.com" then return end
+		if api.vps_domain_exclude(address) then return end
 		if datatypes.hostname(address) and not written_domains[address] then
 			f_out:write(address .. "\n")
 			written_domains[address] = true

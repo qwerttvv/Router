@@ -379,7 +379,7 @@ o = s:taboption("DNS", ListValue, "xray_dns_mode", translate("Remote DNS") .. " 
 o.default = "tcp"
 o:value("tcp", "TCP")
 o:value("udp", "UDP")
-o:value("tcp+doh", "TCP + DoH (" .. translate("A/AAAA type") .. ")")
+o:value("doh", "DoH")
 o:depends("dns_mode", "xray")
 o:depends("smartdns_dns_mode", "xray")
 o.cfgvalue = function(self, section)
@@ -433,7 +433,7 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
 o:value("149.112.112.112", "149.112.112.112 (Quad9)")
 o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
 o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
-if nixio.fs.access("/usr/share/mosdns/mosdns.sh") then
+if nixio.fs.access("/usr/share/mosdns/mosdns.uc") then
 	local mosdns_port = string.gsub(luci.sys.exec("uci -q get mosdns.config.listen_port"), "\n", "")
 	if mosdns_port ~= nil and result ~= "" then
 		o:value("127.0.0.1:" .. mosdns_port, "127.0.0.1:" .. mosdns_port .. " (MosDNS)")
@@ -444,13 +444,13 @@ o:depends({dns_mode = "tcp"})
 o:depends({dns_mode = "udp"})
 o:depends({xray_dns_mode = "udp"})
 o:depends({xray_dns_mode = "tcp"})
-o:depends({xray_dns_mode = "tcp+doh"})
 o:depends({singbox_dns_mode = "udp"})
 o:depends({singbox_dns_mode = "tcp"})
 
 ---- DoH
 o = s:taboption("DNS", Value, "remote_dns_doh", translate("Remote DNS DoH"))
-o.default = "https://1.1.1.1/dns-query"
+o.description = translate("Format: URL[,IP] (optional IP to map the domain in the URL)")
+o.default = o.keylist[1]
 o:value("https://1.1.1.1/dns-query", "1.1.1.1 (CloudFlare)")
 o:value("https://1.1.1.2/dns-query", "1.1.1.2 (CloudFlare-Security)")
 o:value("https://8.8.4.4/dns-query", "8.8.4.4 (Google)")
@@ -462,7 +462,7 @@ o:value("https://dns.adguard.com/dns-query,94.140.14.14", "94.140.14.14 (AdGuard
 o:value("https://doh.libredns.gr/dns-query,116.202.176.26", "116.202.176.26 (LibreDNS)")
 o:value("https://doh.libredns.gr/ads,116.202.176.26", "116.202.176.26 (LibreDNS-NoAds)")
 o.validate = doh_validate
-o:depends({xray_dns_mode = "tcp+doh"})
+o:depends({xray_dns_mode = "doh"})
 o:depends({singbox_dns_mode = "doh"})
 o:depends({singbox_dns_mode = "http3"})
 
@@ -529,8 +529,7 @@ if api.is_finded("smartdns") then
 end
 
 o = s:taboption("DNS", Flag, "force_https_soa", translate("Force HTTPS SOA"), translate("Force queries with qtype 65 to respond with an SOA record."))
-o.default = "1"
-o.rmempty = false
+o.default = "0"
 o:depends({dns_shunt = "chinadns-ng"})
 if api.is_finded("smartdns") then
 	o:depends({dns_shunt = "smartdns"})
@@ -540,12 +539,12 @@ o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translat
 o.default = "0"
 o.rmempty = false
 
-local use_nft = m:get("@global_forwarding[0]", "use_nft") == "1"
-local set_title = api.i18n.translate(use_nft and "Clear NFTSET on Reboot" or "Clear IPSET on Reboot")
+local prefer_nft = m:get("@global_forwarding[0]", "prefer_nft") == "1"
+local set_title = api.i18n.translate(prefer_nft and "Clear NFTSET on Reboot" or "Clear IPSET on Reboot")
 o = s:taboption("DNS", Flag, "flush_set_on_reboot", set_title, translate("Clear IPSET/NFTSET on service reboot. This may increase reboot time."))
 o.default = "0"
 
-set_title = api.i18n.translate(use_nft and "Clear NFTSET" or "Clear IPSET")
+set_title = api.i18n.translate(prefer_nft and "Clear NFTSET" or "Clear IPSET")
 o = s:taboption("DNS", DummyValue, "clear_ipset", set_title, translate("Try this feature if the rule modification does not take effect."))
 o.rawhtml = true
 function o.cfgvalue(self, section)

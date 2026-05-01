@@ -25,10 +25,11 @@ IPSET_BLACK6="passwall_black6"
 IPSET_WHITE6="passwall_white6"
 IPSET_BLOCK6="passwall_block6"
 
-FORCE_INDEX=2
-
 USE_SHUNT_TCP=0
 USE_SHUNT_UDP=0
+
+# ASCII code for PSW1.Use whatever,just not the same.
+FWMARK="0x50535731"
 
 ipt=$(command -v iptables-legacy || command -v iptables)
 ip6t=$(command -v ip6tables-legacy || command -v ip6tables)
@@ -165,22 +166,21 @@ RULE_LAST_INDEX() {
 
 REDIRECT() {
 	local s="-j REDIRECT"
-	if [ -n "$1" ]; then
-		s="$s --to-ports $1"
-		if [ "$2" = "MARK" ]; then
-			s="-j MARK --set-mark $1"
-		elif [ "$2" = "TPROXY" ]; then
-			local mark="-m mark --mark 1"
-			s="${mark} -j TPROXY --tproxy-mark 1/1 --on-port $1"
-		fi
-	fi
+	[ -n "$1" ] && {
+		local s="$s --to-ports $1"
+		[ "$2" == "TPROXY" ] && {
+			local mark="-m mark --mark ${FWMARK}"
+			s="${mark} -j TPROXY --on-port $1"
+		}
+	}
 	echo "$s"
 }
 
 get_jump_ipt() {
 	case "$1" in
 	direct)
-		local mark="-m mark ! --mark 1"
+		local s=""
+		local mark="-m mark ! --mark ${FWMARK}"
 		s="${mark} -j RETURN"
 		echo $s
 		;;
@@ -285,6 +285,10 @@ load_acl() {
 					local gateway device
 					network_get_gateway gateway "${interface}"
 					network_get_device device "${interface}"
+					# network_get_device returns empty for non-UP interfaces (e.g. auto='0').
+					# Try ubus directly, then check if the name is a kernel device.
+					[ -z "${device}" ] && device=$(ubus call "network.interface.${interface}" status 2>/dev/null | jsonfilter -e '@.device' 2>/dev/null)
+					[ -z "${device}" ] && [ -d "/sys/class/net/${interface}" ] && device="${interface}"
 					[ -z "${device}" ] && device="${interface}"
 					_ipt_source="-i ${device} "
 					msg="源接口【${device}】，"
@@ -738,47 +742,86 @@ filter_vpsip() {
 }
 
 filter_server_port() {
-	local address=${1}
-	local port=${2}
-	local stream=${3}
-	stream=$(echo ${3} | tr 'A-Z' 'a-z')
-	local _is_tproxy ipt_tmp
-	ipt_tmp=$ipt_n
-	_is_tproxy=${is_tproxy}
-	[ "$stream" == "udp" ] && _is_tproxy="TPROXY"
-	[ -n "${_is_tproxy}" ] && ipt_tmp=$ipt_m
-
-	for _ipt in 4 6; do
-		[ "$_ipt" == "4" ] && _ipt=$ipt_tmp
-		[ "$_ipt" == "6" ] && _ipt=$ip6t_m
-		$_ipt -n -L PSW_OUTPUT | grep -q "${address}:${port}"
-		if [ $? -ne 0 ]; then
-			$_ipt -I PSW_OUTPUT $(comment "${address}:${port}") -p $stream -d $address --dport $port -j RETURN 2>/dev/null
+	local address="$1"
+	local port=$(echo "$2" | tr '-' ':' | tr -d ' ')
+	local stream=$(echo "$3" | tr 'A-Z' 'a-z')
+	local ipt_tmp="$ipt_n" _is_tproxy _ipt_cmd _ver multi_ports p ports
+	[ "$(config_t_get global_forwarding tcp_proxy_way redirect)" = "tproxy" ] && _is_tproxy="TPROXY"
+	[ "$stream" = "udp" ] && _is_tproxy="TPROXY"
+	[ -n "$_is_tproxy" ] && ipt_tmp="$ipt_m"
+	for _ver in 4 6; do
+		[ "$_ver" = "4" ] && _ipt_cmd="$ipt_tmp"
+		[ "$_ver" = "6" ] && _ipt_cmd="$ip6t_m"
+		multi_ports=""
+		for p in $(echo "$port" | tr ',' ' '); do
+			case "$p" in
+				*:* )
+					$_ipt_cmd -n -L PSW_OUTPUT 2>/dev/null | grep -q "${address}:${p}:${stream}" || \
+					$_ipt_cmd -I PSW_OUTPUT $(comment "${address}:${p}:${stream}") -p "$stream" -d "$address" --dport "$p" -j RETURN 2>/dev/null
+					;;
+				* )
+					multi_ports="${multi_ports},$p"
+					;;
+			esac
+		done
+		if [ -n "$multi_ports" ]; then
+			ports=$(printf "%s\n" "${multi_ports#,}" | tr ',' '\n' | sort -n | tr '\n' ',' | sed 's/,$//')
+			$_ipt_cmd -n -L PSW_OUTPUT 2>/dev/null | grep -q "${address}:${ports}:${stream}" || \
+			$_ipt_cmd -I PSW_OUTPUT $(comment "${address}:${ports}:${stream}") -p "$stream" -d "$address" -m multiport --dports "$ports" -j RETURN 2>/dev/null
 		fi
 	done
 }
 
 filter_node() {
-	local node=${1}
-	local stream=${2}
-	if [ -n "$node" ]; then
-		local address=$(config_n_get $node address)
-		local port=$(config_n_get $node port)
-		[ -z "$address" ] && [ -z "$port" ] && {
-			return 1
-		}
-		filter_server_port $address $port $stream
-		filter_server_port $address $port $stream
-	fi
+	local node="$1" stream="$2"
+	[ -z "$node" ] && return 1
+	local address=$(config_n_get "$node" address)
+	local port=$(config_n_get "$node" port)
+	local hop=$(config_n_get "$node" hysteria2_hop)
+	[ -n "$hop" ] && port="${port:+$port,}$hop" 
+	[ -z "$address" -o -z "$port" ] && return 1
+	filter_server_port "$address" "$port" "$stream"
 }
 
 filter_direct_node_list() {
 	[ ! -s "$TMP_PATH/direct_node_list" ] && return
-	for _node_id in $(cat $TMP_PATH/direct_node_list | awk '!seen[$0]++'); do
+	awk '!seen[$0]++' "$TMP_PATH/direct_node_list" | while read -r _node_id; do
 		filter_node "$_node_id" TCP
 		filter_node "$_node_id" UDP
 		unset _node_id
 	done
+}
+
+update_wan_sets() {
+	local log=$1
+
+	local WAN_IP=$(get_wan_ips ip4)
+	[ -n "$WAN_IP" ] && {
+		ipset -F "$IPSET_WAN"
+		for wan_ip in $WAN_IP; do
+			ipset -! add "$IPSET_WAN" "$wan_ip"
+		done
+		[ "$log" = "log" ] && {
+			local wan_ip
+			for wan_ip in $WAN_IP; do
+				echolog "  - [$?]加入WAN IPv4到ipset[$IPSET_WAN]：${wan_ip}"
+			done
+		}
+	}
+
+	local WAN6_IP=$(get_wan_ips ip6)
+	[ -n "$WAN6_IP" ] && {
+		ipset -F "$IPSET_WAN6"
+		for wan6_ip in $WAN6_IP; do
+			ipset -! add "$IPSET_WAN6" "$wan6_ip"
+		done
+		[ "$log" = "log" ] && {
+			local wan6_ip
+			for wan6_ip in $WAN6_IP; do
+				echolog "  - [$?]加入WAN IPv6到ipset[$IPSET_WAN6]：${wan6_ip}"
+			done
+		}
+	}
 }
 
 add_firewall_rule() {
@@ -896,13 +939,8 @@ add_firewall_rule() {
 		fi
 	}
 	
-	ipset -! -R <<-EOF
-		$(ip address show | grep -w "inet" | awk '{print $2}' | awk -F '/' '{print $1}' | sed -e "s/^/add $IPSET_LOCAL /")
-	EOF
-
-	ipset -! -R <<-EOF
-		$(ip address show | grep -w "inet6" | awk '{print $2}' | awk -F '/' '{print $1}' | sed -e "s/^/add $IPSET_LOCAL6 /")
-	EOF
+	get_local_ips ip4 | sed "s/^/add $IPSET_LOCAL /" | ipset -! -R
+	get_local_ips ip6 | sed "s/^/add $IPSET_LOCAL6 /" | ipset -! -R
 
 	#局域网IP列表
 	ipset -! -R <<-EOF
@@ -930,6 +968,8 @@ add_firewall_rule() {
 			$(echo $lan_ip6 | sed -e "s/ /\n/g" | sed -e "s/^/add $IPSET_LAN6 /")
 		EOF
 	}
+
+	update_wan_sets "log"
 
 	[ -n "$ISP_DNS" ] && {
 		#echolog "处理 ISP DNS 例外..."
@@ -964,13 +1004,8 @@ add_firewall_rule() {
 	$ipt_n -A PSW $(dst $IPSET_LAN) -j RETURN
 	$ipt_n -A PSW $(dst $IPSET_VPS) -j RETURN
 
-	WAN_IP=$(get_wan_ips ip4)
-	[ ! -z "${WAN_IP}" ] && {
-		for wan_ip in $WAN_IP; do
-			$ipt_n -A PSW $(comment "WAN_IP_RETURN") -d "${wan_ip}" -j RETURN
-		done
-	}
-	
+	$ipt_n -A PSW $(comment "WAN_IP_RETURN") $(dst $IPSET_WAN) -j RETURN
+
 	[ "$accept_icmp" = "1" ] && insert_rule_after "$ipt_n" "PREROUTING" "prerouting_rule" "-p icmp -j PSW"
 	[ -z "${is_tproxy}" ] && insert_rule_after "$ipt_n" "PREROUTING" "prerouting_rule" "-p tcp -j PSW"
 
@@ -978,48 +1013,41 @@ add_firewall_rule() {
 	$ipt_n -A PSW_OUTPUT $(dst $IPSET_LAN) -j RETURN
 	$ipt_n -A PSW_OUTPUT $(dst $IPSET_VPS) -j RETURN
 	[ "${USE_DIRECT_LIST}" = "1" ] && $ipt_n -A PSW_OUTPUT $(dst $IPSET_WHITE) -j RETURN
-	$ipt_n -A PSW_OUTPUT -m mark --mark 0xff -j RETURN
+	$ipt_n -A PSW_OUTPUT -m mark --mark 255 -j RETURN
 
 	$ipt_n -N PSW_DNS
 	if [ $(config_t_get global dns_redirect "1") = "0" ]; then
 		#Only hijack when dest address is local IP
-		$ipt_n -I PREROUTING $(dst $IPSET_LOCAL) -j PSW_DNS
+		$ipt_n -I PREROUTING -m set --match-set $IPSET_LAN src $(dst $IPSET_LOCAL) -j PSW_DNS
 	else
-		$ipt_n -I PREROUTING 1 -j PSW_DNS
+		$ipt_n -I PREROUTING -m set --match-set $IPSET_LAN src -j PSW_DNS
 	fi
 
 	$ipt_m -N PSW_DIVERT
-	$ipt_m -A PSW_DIVERT -j MARK --set-mark 1
+	$ipt_m -A PSW_DIVERT -j MARK --set-mark ${FWMARK}
 	$ipt_m -A PSW_DIVERT -j ACCEPT
 
 	$ipt_m -N PSW_RULE
 	$ipt_m -A PSW_RULE -j CONNMARK --restore-mark
-	$ipt_m -A PSW_RULE -m mark --mark 1 -j RETURN
-	$ipt_m -A PSW_RULE -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j MARK --set-xmark 1
-	$ipt_m -A PSW_RULE -p udp -m conntrack --ctstate NEW -j MARK --set-xmark 1
+	$ipt_m -A PSW_RULE -m mark --mark ${FWMARK} -j RETURN
+	$ipt_m -A PSW_RULE -p tcp -m tcp --syn -j MARK --set-xmark ${FWMARK}
+	$ipt_m -A PSW_RULE -p udp -m conntrack --ctstate NEW,RELATED -j MARK --set-xmark ${FWMARK}
 	$ipt_m -A PSW_RULE -j CONNMARK --save-mark
 
 	$ipt_m -N PSW
 	$ipt_m -A PSW $(dst $IPSET_LAN) -j RETURN
 	$ipt_m -A PSW $(dst $IPSET_VPS) -j RETURN
-	
-	[ ! -z "${WAN_IP}" ] && {
-		ipset -F $IPSET_WAN
-		for wan_ip in $WAN_IP; do
-			ipset -! add $IPSET_WAN ${wan_ip}
-			echolog "  - [$?]加入WAN IPv4到ipset[$IPSET_WAN]：${wan_ip}"
-		done
-		$ipt_m -A PSW $(comment "WAN_IP_RETURN") $(dst $IPSET_WAN) -j RETURN
-	}
-	unset WAN_IP wan_ip
+	$ipt_m -A PSW -m conntrack --ctdir REPLY -j RETURN
+
+	$ipt_m -A PSW $(comment "WAN_IP_RETURN") $(dst $IPSET_WAN) -j RETURN
 
 	insert_rule_before "$ipt_m" "PREROUTING" "mwan3" "-j PSW"
+	# Only TCP, UDP Invalid.
 	insert_rule_before "$ipt_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT"
 
 	$ipt_m -N PSW_OUTPUT
 	$ipt_m -A PSW_OUTPUT $(dst $IPSET_LAN) -j RETURN
 	$ipt_m -A PSW_OUTPUT $(dst $IPSET_VPS) -j RETURN
-
 	[ -n "$IPT_APPEND_DNS" ] && {
 		local local_dns dns_address dns_port
 		for local_dns in $(echo $IPT_APPEND_DNS | tr ',' ' '); do
@@ -1039,10 +1067,11 @@ add_firewall_rule() {
 
 	[ "${USE_BLOCK_LIST}" = "1" ] && $ipt_m -A PSW_OUTPUT $(dst $IPSET_BLOCK) -j DROP
 	[ "${USE_DIRECT_LIST}" = "1" ] && $ipt_m -A PSW_OUTPUT $(dst $IPSET_WHITE) -j RETURN
-	$ipt_m -A PSW_OUTPUT -m mark --mark 0xff -j RETURN
+	$ipt_m -A PSW_OUTPUT -m conntrack --ctdir REPLY -j RETURN
+	$ipt_m -A PSW_OUTPUT -m mark --mark 255 -j RETURN
 
-	ip rule add fwmark 1 lookup 100
-	ip route add local 0.0.0.0/0 dev lo table 100
+	ip rule add fwmark ${FWMARK} table 999 priority 999
+	ip route add local 0.0.0.0/0 dev lo table 999
 
 	[ "$accept_icmpv6" = "1" ] && {
 		$ip6t_n -N PSW
@@ -1054,56 +1083,50 @@ add_firewall_rule() {
 		$ip6t_n -A PSW_OUTPUT $(dst $IPSET_LAN6) -j RETURN
 		$ip6t_n -A PSW_OUTPUT $(dst $IPSET_VPS6) -j RETURN
 		[ "${USE_DIRECT_LIST}" = "1" ] && $ip6t_n -A PSW_OUTPUT $(dst $IPSET_WHITE6) -j RETURN
-		$ip6t_n -A PSW_OUTPUT -m mark --mark 0xff -j RETURN
+		$ip6t_n -A PSW_OUTPUT -m mark --mark 255 -j RETURN
 	}
 
 	$ip6t_n -N PSW_DNS
 	if [ $(config_t_get global dns_redirect "1") = "0" ]; then
 		#Only hijack when dest address is local IP
-		$ip6t_n -I PREROUTING $(dst $IPSET_LOCAL6) -j PSW_DNS
+		$ip6t_n -I PREROUTING -m set --match-set $IPSET_LAN6 src $(dst $IPSET_LOCAL6) -j PSW_DNS
 	else
-		$ip6t_n -I PREROUTING 1 -j PSW_DNS
+		$ip6t_n -I PREROUTING -m set --match-set $IPSET_LAN6 src -j PSW_DNS
 	fi
 
 	$ip6t_m -N PSW_DIVERT
-	$ip6t_m -A PSW_DIVERT -j MARK --set-mark 1
+	$ip6t_m -A PSW_DIVERT -j MARK --set-mark ${FWMARK}
 	$ip6t_m -A PSW_DIVERT -j ACCEPT
 
 	$ip6t_m -N PSW_RULE
 	$ip6t_m -A PSW_RULE -j CONNMARK --restore-mark
-	$ip6t_m -A PSW_RULE -m mark --mark 1 -j RETURN
-	$ip6t_m -A PSW_RULE -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j MARK --set-xmark 1
-	$ip6t_m -A PSW_RULE -p udp -m conntrack --ctstate NEW -j MARK --set-xmark 1
+	$ip6t_m -A PSW_RULE -m mark --mark ${FWMARK} -j RETURN
+	$ip6t_m -A PSW_RULE -p tcp -m tcp --syn -j MARK --set-xmark ${FWMARK}
+	$ip6t_m -A PSW_RULE -p udp -m conntrack --ctstate NEW,RELATED -j MARK --set-xmark ${FWMARK}
 	$ip6t_m -A PSW_RULE -j CONNMARK --save-mark
 
 	$ip6t_m -N PSW
 	$ip6t_m -A PSW $(dst $IPSET_LAN6) -j RETURN
 	$ip6t_m -A PSW $(dst $IPSET_VPS6) -j RETURN
-	
-	WAN6_IP=$(get_wan_ips ip6)
-	[ ! -z "${WAN6_IP}" ] && {
-		ipset -F $IPSET_WAN6
-		for wan6_ip in $WAN6_IP; do
-			ipset -! add $IPSET_WAN6 ${wan6_ip}
-			echolog "  - [$?]加入WAN IPv6到ipset[$IPSET_WAN6]：${wan6_ip}"
-		done
-		$ip6t_m -A PSW $(comment "WAN6_IP_RETURN") $(dst $IPSET_WAN6) -j RETURN
-	}
-	unset WAN6_IP wan6_ip
+	$ip6t_m -A PSW -m conntrack --ctdir REPLY -j RETURN
+
+	$ip6t_m -A PSW $(comment "WAN6_IP_RETURN") $(dst $IPSET_WAN6) -j RETURN
 
 	insert_rule_before "$ip6t_m" "PREROUTING" "mwan3" "-j PSW"
+	# Only TCP, UDP Invalid.
 	insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT"
 
 	$ip6t_m -N PSW_OUTPUT
-	$ip6t_m -A PSW_OUTPUT -m mark --mark 0xff -j RETURN
+	$ip6t_m -A PSW_OUTPUT -m mark --mark 255 -j RETURN
 	$ip6t_m -A PSW_OUTPUT $(dst $IPSET_LAN6) -j RETURN
 	$ip6t_m -A PSW_OUTPUT $(dst $IPSET_VPS6) -j RETURN
 	[ "${USE_BLOCK_LIST}" = "1" ] && $ip6t_m -A PSW_OUTPUT $(dst $IPSET_BLOCK6) -j DROP
 	[ "${USE_DIRECT_LIST}" = "1" ] && $ip6t_m -A PSW_OUTPUT $(dst $IPSET_WHITE6) -j RETURN
+	$ip6t_m -A PSW_OUTPUT -m conntrack --ctdir REPLY -j RETURN
 
-	ip -6 rule add fwmark 1 table 100
-	ip -6 route add local ::/0 dev lo table 100
-	
+	ip -6 rule add fwmark ${FWMARK} table 999 priority 999
+	ip -6 route add local ::/0 dev lo table 999
+
 	[ "$TCP_UDP" = "1" ] && [ -z "$UDP_NODE" ] && UDP_NODE=$TCP_NODE
 
 	[ "$ENABLED_DEFAULT_ACL" == 1 ] && {
@@ -1302,10 +1325,10 @@ add_firewall_rule() {
 		fi
 
 		$ipt_m -I OUTPUT $(comment "mangle-OUTPUT-PSW") -o lo -j RETURN
-		insert_rule_before "$ipt_m" "OUTPUT" "mwan3" "$(comment mangle-OUTPUT-PSW) -m mark --mark 1 -j RETURN"
+		insert_rule_before "$ipt_m" "OUTPUT" "mwan3" "$(comment mangle-OUTPUT-PSW) -m mark --mark ${FWMARK} -j RETURN"
 		
 		$ip6t_m -I OUTPUT $(comment "mangle-OUTPUT-PSW") -o lo -j RETURN
-		insert_rule_before "$ip6t_m" "OUTPUT" "mwan3" "$(comment mangle-OUTPUT-PSW) -m mark --mark 1 -j RETURN"
+		insert_rule_before "$ip6t_m" "OUTPUT" "mwan3" "$(comment mangle-OUTPUT-PSW) -m mark --mark ${FWMARK} -j RETURN"
 	}
 
 	#  加载ACLS
@@ -1318,8 +1341,8 @@ add_firewall_rule() {
 		done
 	}
 
-	$ipt_n -I PREROUTING $(comment "PSW") -m mark --mark 1 -j RETURN
-	$ip6t_n -I PREROUTING $(comment "PSW") -m mark --mark 1 -j RETURN
+	$ipt_n -I PREROUTING $(comment "PSW") -m mark --mark ${FWMARK} -j RETURN
+	$ip6t_n -I PREROUTING $(comment "PSW") -m mark --mark ${FWMARK} -j RETURN
 
 	filter_direct_node_list > /dev/null 2>&1 &
 
@@ -1340,11 +1363,11 @@ del_firewall_rule() {
 		done
 	done
 
-	ip rule del fwmark 1 lookup 100 2>/dev/null
-	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
+	ip rule del fwmark ${FWMARK} 2>/dev/null
+	ip route del local 0.0.0.0/0 dev lo table 999 2>/dev/null
 
-	ip -6 rule del fwmark 1 table 100 2>/dev/null
-	ip -6 route del local ::/0 dev lo table 100 2>/dev/null
+	ip -6 rule del fwmark ${FWMARK} 2>/dev/null
+	ip -6 route del local ::/0 dev lo table 999 2>/dev/null
 
 	destroy_ipset $IPSET_LOCAL
 	destroy_ipset $IPSET_WAN
@@ -1396,7 +1419,9 @@ gen_include() {
 	local __ipt=""
 	[ -n "${ipt}" ] && {
 		__ipt=$(cat <<- EOF
-			. $UTILS_PATH
+
+			${MY_PATH} update_wan_sets
+
 			mangle_output_psw=\$(${ipt}-save -t mangle | grep "PSW" | grep "mangle\-OUTPUT\-PSW" | sed "s#-A OUTPUT ##g")
 			$ipt-save -c | grep -v "PSW" | $ipt-restore -c
 			$ipt-restore -n <<-EOT
@@ -1413,21 +1438,12 @@ gen_include() {
 
 			\$(${MY_PATH} insert_rule_before "$ipt_m" "PREROUTING" "mwan3" "-j PSW")
 			\$(${MY_PATH} insert_rule_before "$ipt_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT")
-
-			WAN_IP=\$(get_wan_ips ip4)
-			[ ! -z "\${WAN_IP}" ] && {
-				ipset -F $IPSET_WAN
-				for wan_ip in \$WAN_IP; do
-					ipset -! add $IPSET_WAN \${wan_ip}
-				done
-			}
 		EOF
 		)
 	}
 	local __ip6t=""
 	[ -n "${ip6t}" ] && {
 		__ip6t=$(cat <<- EOF
-			. $UTILS_PATH
 			mangle_output_psw=\$(${ip6t}-save -t mangle | grep "PSW" | grep "mangle\-OUTPUT\-PSW" | sed "s#-A OUTPUT ##g")
 			$ip6t-save -c | grep -v "PSW" | $ip6t-restore -c
 			$ip6t-restore -n <<-EOT
@@ -1443,20 +1459,12 @@ gen_include() {
 
 			\$(${MY_PATH} insert_rule_before "$ip6t_m" "PREROUTING" "mwan3" "-j PSW")
 			\$(${MY_PATH} insert_rule_before "$ip6t_m" "PREROUTING" "PSW" "-p tcp -m socket -j PSW_DIVERT")
-
-			WAN6_IP=\$(get_wan_ips ip6)
-			[ ! -z "\${WAN6_IP}" ] && {
-				ipset -F $IPSET_WAN6
-				for wan6_ip in \$WAN6_IP; do
-					ipset -! add $IPSET_WAN6 \${wan6_ip}
-				done
-			}
 		EOF
 		)
 	}
 	cat <<-EOF >> $FWI
 		${__ipt}
-		
+
 		${__ip6t}
 
 		return 0
@@ -1512,6 +1520,9 @@ get_ip6t_bin)
 	;;
 filter_direct_node_list)
 	filter_direct_node_list
+	;;
+update_wan_sets)
+	update_wan_sets "$@"
 	;;
 stop)
 	stop

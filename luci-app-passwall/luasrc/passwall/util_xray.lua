@@ -6,21 +6,13 @@ local jsonc = api.jsonc
 local appname = "passwall"
 local fs = api.fs
 
-local xray_version = api.get_app_version("xray")
+local GLOBAL = {
+	DNS_SERVER = {},
+	DNS_HOSTNAME = {},
+	VPS_EXCLUDE = {}
+}
 
-local function get_noise_packets()
-	local noises = {}
-	uci:foreach(appname, "xray_noise_packets", function(n)
-		local noise = (n.enabled == "1") and {
-			type = n.type,
-			packet = n.packet,
-			delay = string.find(n.delay, "-") and n.delay or tonumber(n.delay)
-		} or nil
-		table.insert(noises, noise)
-	end)
-	if #noises == 0 then noises = nil end
-	return noises
-end
+local xray_version = api.get_app_version("xray")
 
 local function get_domain_excluded()
 	local path = string.format("/usr/share/%s/rules/domains_excluded", appname)
@@ -148,31 +140,30 @@ function gen_outbound(flag, node, tag, proxy_table)
 			streamSettings = (node.streamSettings or node.protocol == "vmess" or node.protocol == "vless" or node.protocol == "socks" or node.protocol == "shadowsocks" or node.protocol == "trojan" or node.protocol == "hysteria") and {
 				sockopt = {
 					mark = 255,
+					domainStrategy = node.domain_strategy or "UseIP",
 					tcpFastOpen = (node.tcp_fast_open == "1") and true or nil,
-					tcpMptcp = (node.tcpMptcp == "1") and true or nil,
-					dialerProxy = (fragment or noise) and "dialerproxy" or nil
+					tcpMptcp = (node.tcpMptcp == "1") and true or nil
 				},
 				network = node.transport,
 				security = node.stream_security,
 				tlsSettings = (node.stream_security == "tls") and {
 					serverName = node.tls_serverName,
 					allowInsecure = (function()
-								if node.tls_CertSha and node.tls_CertSha ~= "" then return nil end
+								if node.tls_pinSHA256 and node.tls_pinSHA256 ~= "" then return nil end
 								if api.compare_versions(os.date("%Y.%m.%d"), "<", "2026.6.1") and node.tls_allowInsecure == "1" then return true end
 							end)(),
 					fingerprint = (node.type == "Xray" and node.utls == "1" and node.fingerprint and node.fingerprint ~= "") and node.fingerprint or nil,
 					pinnedPeerCertSha256 = (function()
 								if api.compare_versions(xray_version, "<", "26.1.31") then return nil end
-								if not node.tls_CertSha then return "" end
-								return node.tls_CertSha
+								if not node.tls_pinSHA256 then return "" end
+								return node.tls_pinSHA256
 							end)(),
 					verifyPeerCertByName = (function()
 								if api.compare_versions(xray_version, "<", "26.1.31") then return nil end
 								if not node.tls_CertByName then return "" end
 								return node.tls_CertByName
 							end)(),
-					echConfigList = (node.ech == "1") and node.ech_config or nil,
-					echForceQuery = (node.ech == "1") and (node.ech_ForceQuery or "none") or nil
+					echConfigList = (node.ech == "1") and node.ech_config or nil
 				} or nil,
 				realitySettings = (node.stream_security == "reality") and {
 					serverName = node.tls_serverName,
@@ -201,13 +192,12 @@ function gen_outbound(flag, node, tag, proxy_table)
 					}
 				} or nil,
 				kcpSettings = (node.transport == "mkcp") and {
-					mtu = tonumber(node.mkcp_mtu),
-					tti = tonumber(node.mkcp_tti),
-					uplinkCapacity = tonumber(node.mkcp_uplinkCapacity),
-					downlinkCapacity = tonumber(node.mkcp_downlinkCapacity),
-					congestion = (node.mkcp_congestion == "1") and true or false,
-					readBufferSize = tonumber(node.mkcp_readBufferSize),
-					writeBufferSize = tonumber(node.mkcp_writeBufferSize)
+					mtu = (node.mkcp_mtu and node.mkcp_mtu ~= "") and tonumber(node.mkcp_mtu) or 1350,
+					tti = 50,
+					uplinkCapacity = 12,
+					downlinkCapacity = 100,
+					CwndMultiplier = 1,
+					MaxSendingWindow = 2 * 1024 * 1024
 				} or nil,
 				wsSettings = (node.transport == "ws") and {
 					path = node.ws_path or "/",
@@ -259,29 +249,12 @@ function gen_outbound(flag, node, tag, proxy_table)
 				} or nil,
 				hysteriaSettings = (node.transport == "hysteria") and {
 					version = 2,
-					auth = node.hysteria2_auth_password,
-					up = (node.hysteria2_up_mbps and tonumber(node.hysteria2_up_mbps)) and tonumber(node.hysteria2_up_mbps) .. "mbps" or nil,
-					down = (node.hysteria2_down_mbps and tonumber(node.hysteria2_down_mbps)) and tonumber(node.hysteria2_down_mbps) .. "mbps" or nil,
-					udphop = (node.hysteria2_hop) and {
-						port = string.gsub(node.hysteria2_hop, ":", "-"),
-						interval = (function()
-								local v = tonumber((node.hysteria2_hop_interval or "30s"):match("^%d+"))
-								return (v and v >= 5) and v or 30
-							    end)()
-					} or nil,
-					maxIdleTimeout = (function()
-						local timeoutStr = tostring(node.hysteria2_idle_timeout or "")
-						local timeout = tonumber(timeoutStr:match("^%d+"))
-						if timeout and timeout >= 4 and timeout <= 120 then
-							return timeout
-						end
-						return 30
-					end)(),
-					disablePathMTUDiscovery = (node.hysteria2_disable_mtu_discovery) and true or false
+					auth = node.hysteria2_auth_password
 				} or nil,
 				finalmask = (function()
-					local finalmask
-					if node.transport == "mkcp" then
+					local finalmask = {}
+					local TP = node.transport
+					if TP == "mkcp" then
 						local map = {none = "none", srtp = "header-srtp", utp = "header-utp", ["wechat-video"] = "header-wechat",
 							dtls = "header-dtls", wireguard = "header-wireguard", dns = "header-dns"}
 						local udp = {}
@@ -297,16 +270,59 @@ function gen_outbound(flag, node, tag, proxy_table)
 							c.settings = { password = node.mkcp_seed }
 						end
 						udp[#udp+1] = c
-						finalmask = { udp = udp }
-					elseif node.transport == "hysteria" and node.hysteria2_obfs_type and node.hysteria2_obfs_type ~= "" then
-						finalmask = {
-							udp = {{
+						finalmask.udp = udp
+					elseif TP == "hysteria" then
+						if node.hysteria2_obfs_type and node.hysteria2_obfs_type ~= "" then
+							finalmask.udp = {{
 								type = node.hysteria2_obfs_type,
 								settings = node.hysteria2_obfs_password and {
 									password = node.hysteria2_obfs_password
 								} or nil
 							}}
+						end
+						local up = tonumber(node.hysteria2_up_mbps) or 0
+						local down = tonumber(node.hysteria2_down_mbps) or 0
+						finalmask.quicParams = {
+							congestion = (up <= 0 and down <= 0) and "bbr" or "brutal",
+							brutalUp = up > 0 and (up .. "mbps") or nil,
+							brutalDown = down > 0 and (down .. "mbps") or nil,
+							udpHop = (node.hysteria2_hop) and {
+								ports = string.gsub(node.hysteria2_hop, ":", "-"),
+								interval = (function(v)
+									if not v then return 30 end
+									if v:find("-", 1, true) then
+										local min, max = v:match("^(%d+)%-(%d+)$")
+										min = tonumber(min)
+										max = tonumber(max)
+										if min and max then
+											min = (min >= 5) and min or 5
+											max = (max >= min) and max or min
+											return min .. "-" .. max
+										end
+										return 30
+									end
+									v = tonumber((v or "30"):match("^%d+"))
+									return (v and v >= 5) and v or 30
+								end)(node.hysteria2_hop_interval)
+							} or nil,
+							maxIdleTimeout = (function(t)
+								t = tonumber(tostring(t or "30"):match("^%d+"))
+								return (t and t >= 4 and t <= 120) and t or 30
+							end)(node.hysteria2_idle_timeout),
+							keepAlivePeriod = (function(t)
+								t = tonumber(tostring(t or "0"):match("^%d+"))
+								return (t and t >= 2 and t <= 60) and t or nil
+							end)(node.hysteria2_keep_alive_period),
+							disablePathMTUDiscovery = tonumber(node.hysteria2_disable_mtu_discovery) == 1
 						}
+					end
+					if fragment and fragment_table and ({raw=1, ws=1, httpupgrade=1, grpc=1, xhttp=1})[TP] then
+						finalmask.tcp = finalmask.tcp or {}
+						finalmask.tcp[#finalmask.tcp+1] = api.clone(fragment_table)
+					end
+					if noise and noise_table and (TP == "mkcp" or (TP == "xhttp" and node.alpn == "h3")) then
+						finalmask.udp = finalmask.udp or {}
+						finalmask.udp[#finalmask.udp+1] = api.clone(noise_table)
 					end
 					if node.finalmask and node.finalmask ~= "" then
 						local ok, fm = pcall(jsonc.parse, api.base64Decode(node.finalmask))
@@ -386,6 +402,54 @@ function gen_outbound(flag, node, tag, proxy_table)
 				result.streamSettings.tlsSettings.alpn = alpn
 			end
 		end
+
+		if api.datatypes.hostname(node.address) and node.domain_resolver and (node.domain_resolver_dns or node.domain_resolver_dns_https) then
+			local dns_proto = node.domain_resolver
+			local config_address
+			local config_port
+			if dns_proto == "https" then
+				local _a = api.parseURL(node.domain_resolver_dns_https)
+				if _a then
+					config_address = node.domain_resolver_dns_https
+					config_port = _a.port or 443
+					if _a.hostname and api.datatypes.hostname(_a.hostname) then
+						GLOBAL.DNS_HOSTNAME[_a.hostname] = true
+					end
+				end
+			else
+				local server_address = node.domain_resolver_dns
+				config_port = 53
+				local split = api.split(server_address, ":")
+				if #split > 1 then
+					server_address = split[1]
+					config_port = tonumber(split[#split])
+				end
+				config_address = server_address
+				if dns_proto == "tcp" then
+					config_address = dns_proto .. "://" .. server_address .. ":" .. config_port
+				end
+			end
+			local dns_key = dns_proto .. "|" .. config_address .. "|" .. tostring(config_port)
+			if not GLOBAL.DNS_SERVER[dns_key] then
+				GLOBAL.DNS_SERVER[dns_key] = {
+					tag = "dns-node-" .. api.gen_short_uuid(),
+					-- queryStrategy = node.domain_strategy or "UseIP",
+					address = config_address,
+					port = config_port,
+					finalQuery = true,
+					disableCache = false,
+					serveStale = true,
+					domains = {}
+				}
+			end
+			local exists
+			local domain = "full:" .. node.address
+			for _, d in ipairs(GLOBAL.DNS_SERVER[dns_key].domains) do
+				if d == domain then exists = true; break end
+			end
+			if not exists then table.insert(GLOBAL.DNS_SERVER[dns_key].domains, domain) end
+			GLOBAL.VPS_EXCLUDE[node.address] = true
+		end
 	end
 	return result
 end
@@ -455,6 +519,13 @@ function gen_config_server(node)
 				clients = clients
 			}
 		end
+	elseif node.protocol == "hysteria2" then
+		settings = {
+			version = 2,
+			clients = node.hysteria2_auth_password and {
+				{ auth = node.hysteria2_auth_password }
+			}
+		}
 	elseif node.protocol == "dokodemo-door" then
 		settings = {
 			network = node.d_protocol,
@@ -532,6 +603,12 @@ function gen_config_server(node)
 		end
 	end
 
+	if node.protocol == "hysteria2" then
+		node.protocol = "hysteria"
+		node.transport = "hysteria"
+		node.tls = "1"
+	end
+
 	local config = {
 		log = {
 			-- error = "/tmp/etc/passwall_server/log/" .. user[".name"] .. ".log",
@@ -575,13 +652,12 @@ function gen_config_server(node)
 						}
 					} or nil,
 					kcpSettings = (node.transport == "mkcp") and {
-						mtu = tonumber(node.mkcp_mtu),
-						tti = tonumber(node.mkcp_tti),
-						uplinkCapacity = tonumber(node.mkcp_uplinkCapacity),
-						downlinkCapacity = tonumber(node.mkcp_downlinkCapacity),
-						congestion = (node.mkcp_congestion == "1") and true or false,
-						readBufferSize = tonumber(node.mkcp_readBufferSize),
-						writeBufferSize = tonumber(node.mkcp_writeBufferSize)
+						mtu = (node.mkcp_mtu and node.mkcp_mtu ~= "") and tonumber(node.mkcp_mtu) or 1350,
+						tti = 50,
+						uplinkCapacity = 12,
+						downlinkCapacity = 100,
+						CwndMultiplier = 1,
+						MaxSendingWindow = 2 * 1024 * 1024
 					} or nil,
 					wsSettings = (node.transport == "ws") and {
 						host = node.ws_host or nil,
@@ -600,8 +676,11 @@ function gen_config_server(node)
 						maxUploadSize = node.xhttp_maxuploadsize,
 						maxConcurrentUploads = node.xhttp_maxconcurrentuploads
 					} or nil,
+					hysteriaSettings = (node.transport == "hysteria") and {
+						version = 2
+					} or nil,
 					finalmask = (function()
-						local finalmask
+						local finalmask = {}
 						if node.transport == "mkcp" then
 							local map = {none = "none", srtp = "header-srtp", utp = "header-utp", ["wechat-video"] = "header-wechat",
 								dtls = "header-dtls", wireguard = "header-wireguard", dns = "header-dns"}
@@ -618,7 +697,24 @@ function gen_config_server(node)
 								c.settings = { password = node.mkcp_seed }
 							end
 							udp[#udp+1] = c
-							finalmask = { udp = udp }
+							finalmask.udp = udp
+						elseif node.transport == "hysteria" then
+							if node.hysteria2_obfs_type and node.hysteria2_obfs_type ~= "" then
+								finalmask.udp = {{
+									type = node.hysteria2_obfs_type,
+									settings = node.hysteria2_obfs_password and {
+										password = node.hysteria2_obfs_password
+									} or nil
+								}}
+							end
+							local ignore = tonumber(node.hysteria2_ignore_client_bandwidth) == 1
+							local up = (not ignore) and tonumber(node.hysteria2_up_mbps) or 0
+							local down = (not ignore) and tonumber(node.hysteria2_down_mbps) or 0
+							finalmask.quicParams = {
+								congestion = (up <= 0 and down <= 0) and "bbr" or "brutal",
+								brutalUp = up > 0 and (up .. "mbps") or nil,
+								brutalDown = down > 0 and (down .. "mbps") or nil
+							}
 						end
 						if node.finalmask and node.finalmask ~= "" then
 							local ok, fm = pcall(jsonc.parse, api.base64Decode(node.finalmask))
@@ -668,6 +764,14 @@ function gen_config_server(node)
 		end
 	end
 
+	for index, value in ipairs(config.outbounds) do
+		for k, v in pairs(config.outbounds[index]) do
+			if k and k:find("_") == 1 then
+				config.outbounds[index][k] = nil
+			end
+		end
+	end
+
 	return config
 end
 
@@ -714,12 +818,45 @@ function gen_config(var)
 	local fakedns = nil
 	local routing = nil
 	local observatory = nil
+	local burstObservatory = nil
 	local strategy = nil
 	local inbounds = {}
 	local outbounds = {}
 	local COMMON = {}
 
 	local xray_settings = uci:get_all(appname, "@global_xray[0]") or {}
+
+	if xray_settings.fragment == "1" then
+		local delay = xray_settings.fragment_delay
+		fragment_table = {
+			type = "fragment",
+			settings = {
+				packets = xray_settings.fragment_packets,
+				length = xray_settings.fragment_length,
+				delay = delay and (delay:find("-", 1, true) and delay or tonumber(delay)) or nil,
+				maxSplit = xray_settings.fragment_maxSplit
+			}
+		}
+	end
+
+	if xray_settings.noise == "1" then
+		local noises = {}
+		uci:foreach(appname, "xray_noise_packets", function(n)
+			if n.enabled == "1" then
+				local noise = {
+					rand = (n.type == "rand" and n.packet) and (n.packet:find("-", 1, true) and n.packet or tonumber(n.packet)) or nil,
+					type = (n.type ~= "rand") and n.type or nil,
+					packet = (n.type ~= "rand") and n.packet or nil,
+					delay = n.delay and (n.delay:find("-", 1, true) and n.delay or tonumber(n.delay)) or nil
+				}
+				table.insert(noises, noise)
+			end
+		end)
+		noise_table = #noises > 0 and {
+			type = "noise",
+			settings = { reset = 0, noise = noises }
+		} or nil
+	end
 
 	if node_id then
 		local node = uci:get_all(appname, node_id)
@@ -739,7 +876,7 @@ function gen_config(var)
 				protocol = "socks",
 				settings = {auth = "noauth", udp = true},
 				sniffing = {
-					enabled = xray_settings.sniffing_override_dest == "1" or node.protocol == "_shunt"
+					enabled = (xray_settings.sniffing_override_dest == "1") or (node and node.protocol == "_shunt") or false
 				}
 			}
 			if inbound.sniffing.enabled == true then
@@ -939,19 +1076,31 @@ function gen_config(var)
 				fallbackTag = fallback_node_tag,
 				strategy = strategy
 			})
-			if not observatory and (_node.balancingStrategy == "leastPing" or _node.balancingStrategy == "leastLoad" or fallback_node_tag) then
+			if _node.balancingStrategy == "leastPing" or _node.balancingStrategy == "leastLoad" or fallback_node_tag then
 				local t = api.format_go_time(_node.probeInterval)
 				if t == "0s" then
 					t = "60s"
 				elseif not t:find("[hm]") and tonumber(t:match("%d+")) < 10 then
 					t = "10s"
 				end
-				observatory = {
-					subjectSelector = { "blc-" },
-					probeUrl = _node.useCustomProbeUrl and _node.probeUrl or "https://www.google.com/generate_204",
-					probeInterval = t,
-					enableConcurrency = true
-				}
+				if _node.balancingStrategy == "leastLoad" then
+					burstObservatory = burstObservatory or {
+						subjectSelector = { "blc-" },
+						pingConfig = {
+							destination = _node.useCustomProbeUrl and _node.probeUrl or nil,
+							interval = t,
+							sampling = 3,
+							timeout = "5s"
+						}
+					}
+				else
+					observatory = observatory or {
+						subjectSelector = { "blc-" },
+						probeUrl = _node.useCustomProbeUrl and _node.probeUrl or nil,
+						probeInterval = t,
+						enableConcurrency = true
+					}
+				end
 			end
 			local loopback_outbound = gen_loopback(loopback_tag, loopback_dst)
 			local inbound_tag = loopback_outbound.settings.inboundTag
@@ -970,14 +1119,25 @@ function gen_config(var)
 				else
 					local preproxy_node = get_node_by_id(node.preproxy_node)
 					if preproxy_node then
-						local preproxy_outbound = gen_outbound(node[".name"], preproxy_node)
+						local preproxy_outbound, exist
+						if preproxy_node.protocol == "_balancing" then
+							local balancer_tag, loopback_outbound = gen_balancer(preproxy_node)
+							if loopback_outbound then
+								preproxy_outbound = loopback_outbound
+								exist = true
+							end
+						else
+							preproxy_outbound = gen_outbound(node[".name"], preproxy_node)
+						end
 						if preproxy_outbound then
 							outbound.tag = preproxy_outbound.tag .. " -> " .. outbound.tag
 							outbound.proxySettings = {
 								tag = preproxy_outbound.tag,
 								transportLayer = true
 							}
-							last_insert_outbound = preproxy_outbound
+							if not exist then
+								last_insert_outbound = preproxy_outbound
+							end
 							default_outTag = outbound.tag
 						end
 					end
@@ -987,17 +1147,17 @@ function gen_config(var)
 				local to_node = get_node_by_id(node.to_node)
 				if to_node then
 					-- Landing Node not support use special node.
-					if to_node.protocol:find("^_") then
+					if to_node.protocol and to_node.protocol:find("^_") then
 						to_node = nil
 					end
 				end
 				if to_node then
 					local to_outbound
 					if to_node.type ~= "Xray" then
-						local tag = to_node[".name"]
+						local in_tag = "inbound_" .. to_node[".name"] .. "_" .. tostring(outbound.tag)
 						local new_port = api.get_new_port()
 						table.insert(inbounds, {
-							tag = tag,
+							tag = in_tag,
 							listen = "127.0.0.1",
 							port = new_port,
 							protocol = "dokodemo-door",
@@ -1009,11 +1169,11 @@ function gen_config(var)
 						to_node.address = "127.0.0.1"
 						to_node.port = new_port
 						table.insert(rules, 1, {
-							inboundTag = {tag},
+							inboundTag = {in_tag},
 							outboundTag = outbound.tag
 						})
-						to_outbound = gen_outbound(node[".name"], to_node, tag, {
-							tag = tag,
+						to_outbound = gen_outbound(node[".name"], to_node, to_node[".name"], {
+							tag = to_node[".name"],
 							run_socks_instance = not no_run
 						})
 					else
@@ -1104,7 +1264,7 @@ function gen_config(var)
 			end
 		end
 
-		if node.protocol == "_shunt" then
+		if node and node.protocol == "_shunt" then
 			inner_fakedns = node.fakedns or "0"
 
 			local function gen_shunt_node(rule_name, _node_id)
@@ -1264,7 +1424,8 @@ function gen_config(var)
 				rules = rules
 			}
 		else
-			COMMON.default_outbound_tag = gen_outbound_get_tag(flag, node, nil, {
+			local _node = node or node_id
+			COMMON.default_outbound_tag = gen_outbound_get_tag(flag, _node, nil, {
 				fragment = xray_settings.fragment == "1" or nil,
 				noise = xray_settings.noise == "1" or nil,
 				run_socks_instance = not no_run
@@ -1290,7 +1451,7 @@ function gen_config(var)
 				settings = {network = "tcp,udp", followRedirect = true},
 				streamSettings = {sockopt = {tproxy = "tproxy"}},
 				sniffing = {
-					enabled = xray_settings.sniffing_override_dest == "1" or node.protocol == "_shunt"
+					enabled = (xray_settings.sniffing_override_dest == "1") or (node and node.protocol == "_shunt") or false
 				}
 			}
 			if inbound.sniffing.enabled == true then
@@ -1329,7 +1490,15 @@ function gen_config(var)
 		end
 	end
 
-	if (remote_dns_udp_server and remote_dns_udp_port) or (remote_dns_tcp_server and remote_dns_tcp_port) then
+	local node_dns = {}
+	for i, v in pairs(GLOBAL.DNS_SERVER) do
+		table.insert(node_dns, {
+			server = v,
+			outboundTag = "direct"
+		})
+	end
+
+	if (remote_dns_udp_server and remote_dns_udp_port) or (remote_dns_tcp_server and remote_dns_tcp_port) or remote_dns_doh_url or #node_dns > 0 then
 		if not routing then
 			routing = {
 				domainStrategy = "IPOnDemand",
@@ -1345,27 +1514,17 @@ function gen_config(var)
 			disableFallbackIfMatch = true,
 			servers = {},
 			clientIp = (remote_dns_client_ip and remote_dns_client_ip ~= "") and remote_dns_client_ip or nil,
-			queryStrategy = "UseIP"
+			queryStrategy = "UseIP",
+			useSystemHosts = true
 		}
 
-		local _direct_dns = {
-			tag = "dns-global-direct",
-			queryStrategy = (direct_dns_query_strategy and direct_dns_query_strategy ~= "") and direct_dns_query_strategy or "UseIP"
-		}
+		local _direct_dns = {}
+
+		direct_dns_udp_server = (direct_dns_udp_server and direct_dns_udp_server ~= "") and direct_dns_udp_server or nil
 
 		if direct_dns_udp_server or direct_dns_tcp_server then
-			local domain = {}
-			local nodes_domain_text = sys.exec('uci show passwall | grep ".address=" | cut -d "\'" -f 2 | grep "[a-zA-Z]$" | sort -u')
-			string.gsub(nodes_domain_text, '[^' .. "\r\n" .. ']+', function(w)
-				table.insert(domain, w)
-			end)
-			if #domain > 0 then
-				table.insert(dns_domain_rules, 1, {
-					shunt_rule_name = "logic-vpslist",
-					outboundTag = "direct",
-					domain = domain
-				})
-			end
+			_direct_dns.tag = "dns-global-direct"
+			_direct_dns.queryStrategy = (direct_dns_query_strategy and direct_dns_query_strategy ~= "") and direct_dns_query_strategy or "UseIP"
 
 			if direct_dns_udp_server then
 				local port = tonumber(direct_dns_port) or 53
@@ -1380,29 +1539,51 @@ function gen_config(var)
 				table.insert(dns.servers, _direct_dns)
 			end
 		end
+		if dns_listen_port and next(_direct_dns) then
+			local domain = {}
+			local nodes_domain_text = sys.exec([[uci show passwall | sed -n "s/.*\.\(address\|download_address\)='\([^']*\)'/\2/p" | sort -u]])
+			string.gsub(nodes_domain_text, '[^' .. "\r\n" .. ']+', function(w)
+				if not api.vps_domain_exclude(w) and api.datatypes.hostname(w) and not GLOBAL.VPS_EXCLUDE[w] then
+					table.insert(domain, "full:" .. w)
+				end
+			end)
+			if #domain > 0 then
+				table.insert(dns_domain_rules, 1, {
+					shunt_rule_name = "logic-vpslist",
+					outboundTag = "direct",
+					domain = domain
+				})
+			end
+		end
 
-		local _remote_dns = {
-			--tag = "dns-global-remote",
-			queryStrategy = (remote_dns_query_strategy and remote_dns_query_strategy ~= "") and remote_dns_query_strategy or "UseIPv4",
-		}
+		local _remote_dns = {}
+
 		if remote_dns_udp_server then
 			_remote_dns.address = remote_dns_udp_server
 			_remote_dns.port = tonumber(remote_dns_udp_port) or 53
-		else
+		elseif remote_dns_tcp_server then
 			_remote_dns.address = "tcp://" .. remote_dns_tcp_server .. ":" .. tonumber(remote_dns_tcp_port) or 53
 		end
 
 		local _remote_dns_host
 		if remote_dns_doh_url and remote_dns_doh_host then
-			if remote_dns_doh_ip and remote_dns_doh_host ~= remote_dns_doh_ip and not api.is_ip(remote_dns_doh_host) then
-				dns.hosts[remote_dns_doh_host] = remote_dns_doh_ip
-				_remote_dns_host = remote_dns_doh_host
+			if api.datatypes.hostname(remote_dns_doh_host) then
+				if remote_dns_doh_ip and remote_dns_doh_host ~= remote_dns_doh_ip and api.is_ip(remote_dns_doh_ip) then
+					dns.hosts[remote_dns_doh_host] = remote_dns_doh_ip
+					_remote_dns_host = remote_dns_doh_host
+				else
+					GLOBAL.DNS_HOSTNAME[remote_dns_doh_host] = true
+				end
 			end
 			_remote_dns.address = remote_dns_doh_url
 			_remote_dns.port = tonumber(remote_dns_doh_port)
 		end
 
-		table.insert(dns.servers, _remote_dns)
+		if next(_remote_dns) then
+			-- _remote_dns.tag = "dns-global-remote"
+			_remote_dns.queryStrategy = (remote_dns_query_strategy and remote_dns_query_strategy ~= "") and remote_dns_query_strategy or "UseIPv4"
+			table.insert(dns.servers, _remote_dns)
+		end
 
 		local _remote_fakedns = {
 			--tag = "dns-global-remote-fakedns",
@@ -1427,7 +1608,7 @@ function gen_config(var)
 			elseif remote_dns_query_strategy == "UseIPv6" then
 				table.insert(fakedns, fakedns6)
 			end
-			if remote_dns_fake and inner_fakedns == "0" then
+			if remote_dns_fake and inner_fakedns ~= "1" then
 				table.insert(dns.servers, 1, _remote_fakedns)
 			end
 		end
@@ -1470,8 +1651,7 @@ function gen_config(var)
 				protocol = "dokodemo-door",
 				tag = "dns-in",
 				settings = {
-					address = remote_dns_udp_server or remote_dns_tcp_server,
-					port = tonumber(remote_dns_udp_port) or tonumber(remote_dns_tcp_port),
+					address = "0.0.0.0",
 					network = "tcp,udp"
 				}
 			})
@@ -1479,14 +1659,9 @@ function gen_config(var)
 			table.insert(outbounds, {
 				tag = "dns-out",
 				protocol = "dns",
-				proxySettings = dns_outbound_tag and {
-					tag = dns_outbound_tag
-				} or nil,
 				settings = {
-					address = remote_dns_udp_server or remote_dns_tcp_server,
-					port = tonumber(remote_dns_udp_port) or tonumber(remote_dns_tcp_port),
-					network = remote_dns_udp_server and "udp" or "tcp",
-					nonIPQuery = "reject"
+					nonIPQuery = (api.compare_versions(xray_version, "<", "26.4.25")) and "reject" or nil, -- Todo is to remove it
+					rules = (api.compare_versions(xray_version, ">", "26.4.17")) and {{ action = "hijack" }} or nil
 				}
 			})
 
@@ -1533,6 +1708,7 @@ function gen_config(var)
 							outboundTag = "direct" --dns为本地ip，走直连
 						end
 					end
+					--[[
 					local dns_block_mode = "host"
 					if dns_block_mode == "host" and outboundTag == "blackhole" then
 						for d_i, d_k in ipairs(value.domain) do
@@ -1540,11 +1716,18 @@ function gen_config(var)
 						end
 						dns_server = nil
 					end
+					]]--
 					if dns_server then
-						dns_server.finalQuery = true
+						--dns_server.finalQuery = true
 						dns_server.domains = value.domain
 						if value.shunt_rule_name then
 							dns_server.tag = "dns-in-" .. value.shunt_rule_name
+							if value.shunt_rule_name == "logic-vpslist" then
+								dns_server.finalQuery = true
+								dns_server.disableCache = false
+								dns_server.serveStale = true
+								dns_server.serveExpiredTTL = 30
+							end
 						end
 						table.insert(dns.servers, dns_server)
 						table.insert(routing.rules, dns_rule_position, {
@@ -1558,7 +1741,7 @@ function gen_config(var)
 		end
 
 		local _outboundTag
-		if not api.is_local_ip(_remote_dns.address) or dns_outbound_tag == "blackhole" then --dns为本地ip，不走代理
+		if _remote_dns.address and not api.is_local_ip(_remote_dns.address) or dns_outbound_tag == "blackhole" then --dns为本地ip，不走代理
 			_outboundTag = dns_outbound_tag
 		else
 			_outboundTag = "direct"
@@ -1590,6 +1773,36 @@ function gen_config(var)
 		if dns_hosts_len == 0 then
 			dns.hosts = nil
 		end
+
+		-- 自定义节点 DNS
+		if #node_dns > 0 and #dns.servers < 1 then
+			dns.servers = { "localhost" }
+		end
+		local idx = dns_listen_port and 2 or 1
+		for i = #node_dns, 1, -1 do
+			local value = node_dns[i]
+			table.insert(routing.rules, idx, {
+				inboundTag = {
+					value.server.tag
+				},
+				outboundTag = value.outboundTag,
+			})
+			table.insert(dns.servers, 2, value.server)
+		end
+		if next(GLOBAL.DNS_HOSTNAME) then
+			local hostname = {}
+			for line, _ in pairs(GLOBAL.DNS_HOSTNAME) do
+				table.insert(hostname, line)
+			end
+			local new_dns_server = next(_direct_dns) and api.clone(_direct_dns) or { address = "localhost" }
+			new_dns_server.tag = "dns-in-bootstrap"
+			new_dns_server.domains = hostname
+			table.insert(dns.servers, 2, new_dns_server)
+			table.insert(routing.rules, idx, {
+				inboundTag = { "dns-in-bootstrap" },
+				outboundTag = "direct"
+			})
+		end
 	end
 
 	if inbounds or outbounds then
@@ -1606,7 +1819,8 @@ function gen_config(var)
 			-- 传出连接
 			outbounds = outbounds,
 			-- 连接观测
-			observatory = observatory,
+			observatory = (not burstObservatory) and observatory or nil,
+			burstObservatory = burstObservatory,
 			-- 路由
 			routing = routing,
 			-- 本地策略
@@ -1628,27 +1842,6 @@ function gen_config(var)
 				-- }
 			}
 		}
-
-		if xray_settings.fragment == "1" or xray_settings.noise == "1" then
-			table.insert(outbounds, {
-				protocol = "freedom",
-				tag = "dialerproxy",
-				settings = {
-					domainStrategy = (direct_dns_query_strategy and direct_dns_query_strategy ~= "") and direct_dns_query_strategy or "UseIP",
-					fragment = (xray_settings.fragment == "1") and {
-						packets = (xray_settings.fragment_packets and xray_settings.fragment_packets ~= "") and xray_settings.fragment_packets,
-						length = (xray_settings.fragment_length and xray_settings.fragment_length ~= "") and xray_settings.fragment_length,
-						interval = (xray_settings.fragment_interval and xray_settings.fragment_interval ~= "") and xray_settings.fragment_interval
-					} or nil,
-					noises = (xray_settings.noise == "1") and get_noise_packets() or nil
-				},
-				streamSettings = {
-					sockopt = {
-						mark = 255
-					}
-				}
-			})
-		end
 
 		local direct_outbound = {
 			protocol = "freedom",
@@ -1677,14 +1870,10 @@ function gen_config(var)
 		else
 			table.insert(outbounds, blackhole_outbound)
 		end
-
 		for index, value in ipairs(config.outbounds) do
-			local s = value.settings
-			if not value["_flag_proxy_tag"] and value["_id"] and s and not no_run and
-			((s.vnext and s.vnext[1] and s.vnext[1].address and s.vnext[1].port) or 
-			(s.servers and s.servers[1] and s.servers[1].address and s.servers[1].port) or
-			(s.peers and s.peers[1] and s.peers[1].endpoint) or
-			(s.address and s.port)) then
+			local pt = value.protocol
+			local exclude = { blackhole=1, dns=1, freedom=1, loopback=1 }
+			if not value["_flag_proxy_tag"] and value["_id"] and pt and not exclude[pt] and not no_run then
 				sys.call(string.format("echo '%s' >> %s", value["_id"], api.TMP_PATH .. "/direct_node_list"))
 			end
 			for k, v in pairs(config.outbounds[index]) do

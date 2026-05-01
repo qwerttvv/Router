@@ -1,11 +1,13 @@
 <%
 local api = require "luci.passwall.api"
 -%>
-<script src="<%=resource%>/view/<%=api.appname%>/Sortable.min.js?v=26.1.11"></script>
+<script src="<%=resource%>/view/<%=api.appname%>/Sortable.min.js?v=1.15.7"></script>
 
 <style>
 table .cbi-button-up,
-table .cbi-button-down {
+table .cbi-button-down,
+.td.cbi-section-actions .cbi-button-up,
+.td.cbi-section-actions .cbi-button-down {
 	display: none !important;
 }
 
@@ -31,6 +33,12 @@ table .cbi-button-down {
 .dragging-row {
 	background-color: rgba(131, 191, 255, 0.7) !important;
 	box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+@media screen and (max-width: 1152px) {
+	#cbi-<%=api.appname%>-subscribe_list .cbi-section-table-titles {
+		display: none !important;
+	}
 }
 </style>
 
