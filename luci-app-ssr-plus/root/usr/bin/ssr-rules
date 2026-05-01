@@ -45,7 +45,9 @@ FORCE_UPDATE=0
 CHECK_STATUS=0
 RESTORE_RULES=0
 FLUSH_RULES=0
-CLEANUP_PERSISTENCE=0 
+CLEANUP_PERSISTENCE=0
+# ASCII code for SSRP.Use whatever,just not the same.
+FWMARK="0x53535250"
 
 if [ "$USE_NFT" = "1" ]; then
 	# NFTables persistence directory
@@ -263,11 +265,11 @@ flush_nftables() {
 	fi
 
 	# Delete policy routing mark rules
-	if ip rule show | grep -Eq "fwmark 0x0*1.*lookup 100"; then
-		ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
+	if ip rule show | grep -Eq "fwmark ${FWMARK}.*lookup 999"; then
+		ip rule del fwmark ${FWMARK} table 999 2>/dev/null
 	fi
-	if ip route show table 100 | grep -Eq "^local.*dev lo"; then
-		ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
+	if ip route show table 999 | grep -Eq "^local.*dev lo"; then
+		ip route del local 0.0.0.0/0 dev lo table 999 2>/dev/null
 	fi
 
 	# Optional: force delete all ss_spec related sets (even if table was accidentally deleted)
@@ -301,11 +303,11 @@ flush_iptables_legacy() {
 	}
 	flush_iptables nat
 	flush_iptables mangle
-	if ip rule show | grep -Eq "fwmark 0x0*1.*lookup 100"; then
-		ip rule del fwmark 0x01/0x01 table 100 2>/dev/null
+	if ip rule show | grep -Eq "fwmark ${FWMARK}.*lookup 999"; then
+		ip rule del fwmark ${FWMARK} table 999 2>/dev/null
 	fi
-	if ip route show table 100 | grep -Eq "^local.*dev lo"; then
-		ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
+	if ip route show table 999 | grep -Eq "^local.*dev lo"; then
+		ip route del local 0.0.0.0/0 dev lo table 999 2>/dev/null
 	fi
 	for setname in ss_spec_lan_ac ss_spec_wan_ac ssr_gen_router \
 			china fplan bplan gmlan oversea whitelist blacklist netflix gfwlist music; do
@@ -793,25 +795,43 @@ ac_rule_iptables() {
 	if [ -z "$TPROXY" ]; then
 		# Add UDP 443 block rule
 		if [ -z "$Interface" ]; then
-			$ipt -I PREROUTING 1 -p udp $EXT_ARGS $MATCH_SET --dport 443 -j DROP -m comment --comment "$TAG"
+			# Global rules
+			if [ -n "$MATCH_SET" ]; then
+				$ipt -I PREROUTING 1 -p udp $EXT_ARGS $MATCH_SET --dport 443 -j DROP -m comment --comment "$TAG"
+			else
+				$ipt -I PREROUTING 1 -p udp $EXT_ARGS --dport 443 -j DROP -m comment --comment "$TAG"
+			fi
 		else
 			for name in $Interface; do
 				local IFNAME=$(uci -P /var/state get network."$name".ifname 2>/dev/null)
 				[ -z "$IFNAME" ] && IFNAME=$(uci -P /var/state get network."$name".device 2>/dev/null)
 				if [ -n "$IFNAME" ]; then
-					$ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS $MATCH_SET --dport 443 -j DROP -m comment --comment "$TAG"
+					if [ -n "$MATCH_SET" ]; then
+						$ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS $MATCH_SET --dport 443 -j DROP -m comment --comment "$TAG"
+					else
+						$ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS --dport 443 -j DROP -m comment --comment "$TAG"
+					fi
 				fi
 			done
 		fi
 	fi
 	if [ -z "$Interface" ]; then
-		$IPT -I PREROUTING 1 -p tcp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
+		# Global rules
+		if [ -n "$MATCH_SET" ]; then
+			$IPT -I PREROUTING 1 -p tcp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
+		else
+			$IPT -I PREROUTING 1 -p tcp $EXT_ARGS -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
+		fi
 	else
 		for name in $Interface; do
 			local IFNAME=$(uci -P /var/state get network."$name".ifname 2>/dev/null)
 			[ -z "$IFNAME" ] && IFNAME=$(uci -P /var/state get network."$name".device 2>/dev/null)
 			if [ -n "$IFNAME" ]; then
-				$IPT -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p tcp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
+				if [ -n "$MATCH_SET" ]; then
+					$IPT -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p tcp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
+				else
+					$IPT -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p tcp $EXT_ARGS -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
+				fi
 			fi
 		done
 	fi
@@ -847,12 +867,12 @@ tp_rule() {
 
 tp_rule_nft() {
 	# set up routing table for tproxy
-	if ! ip rule show | grep -Eq "fwmark 0x0*1.*lookup 100"; then
-		ip rule add fwmark 0x01/0x01 table 100 2>/dev/null
+	if ! ip rule show | grep -Eq "fwmark ${FWMARK}.*lookup 999"; then
+		ip rule add fwmark ${FWMARK} table 999 priority 999 2>/dev/null
 	fi
 
-	if ! ip route show table 100 | grep -Eq "^local.*dev lo"; then
-		ip route add local 0.0.0.0/0 dev lo table 100 2>/dev/null
+	if ! ip route show table 999 | grep -Eq "^local.*dev lo"; then
+		ip route add local 0.0.0.0/0 dev lo table 999 2>/dev/null
 	fi
 
 	# create mangle table and tproxy chain
@@ -954,7 +974,7 @@ tp_rule_nft() {
 
 	# access control and tproxy rules
 	$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @bplan return 2>/dev/null
-	$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip saddr @fplan counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
+	$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip saddr @fplan counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
 
 	# Handle different run modes for nftables
 	case "$RUNMODE" in
@@ -973,8 +993,8 @@ tp_rule_nft() {
 		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip daddr @china return 2>/dev/null
 		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp udp dport 80 counter drop comment "\"$TAG\"" 2>/dev/null
 		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp udp dport 443 counter drop comment "\"$TAG\"" 2>/dev/null
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @gmlan ip daddr != @china counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip daddr != @ss_spec_wan_ac counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @gmlan ip daddr != @china counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip daddr != @ss_spec_wan_ac counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
 		;;
 	gfw)
 		if ! $NFT list set ip ss_spec_mangle gfwlist >/dev/null 2>&1; then
@@ -983,19 +1003,19 @@ tp_rule_nft() {
 		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip daddr @china return 2>/dev/null
 		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp udp dport 80 counter drop comment "\"$TAG\"" 2>/dev/null
 		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp udp dport 443 counter drop comment "\"$TAG\"" 2>/dev/null
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip daddr @gfwlist counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @gmlan ip daddr != @china counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip daddr @gfwlist counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @gmlan ip daddr != @china counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
 		;;
 	oversea)
 		if ! $NFT list set ip ss_spec_mangle oversea >/dev/null 2>&1; then
 			$NFT add set ip ss_spec_mangle oversea '{ type ipv4_addr; flags interval; auto-merge; }' 2>/dev/null
 		fi
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip saddr @oversea counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip daddr @china counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @gmlan counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip saddr @oversea counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS ip daddr @china counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp ip saddr @gmlan counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
 		;;
 	all)
-		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS counter tproxy ip to :"$LOCAL_PORT" meta mark set 0x01 2>/dev/null
+		$NFT add rule ip ss_spec_mangle ss_spec_tproxy meta l4proto udp $EXT_ARGS counter tproxy ip to :"$LOCAL_PORT" meta mark set ${FWMARK} 2>/dev/null
 		;;
 	esac
 
@@ -1032,12 +1052,12 @@ tp_rule_nft() {
 
 tp_rule_iptables() {
 	# set up routing table for tproxy
-	if ! ip rule show | grep -Eq "fwmark 0x0*1.*lookup 100"; then
-		ip rule add fwmark 0x01/0x01 table 100 2>/dev/null
+	if ! ip rule show | grep -Eq "fwmark ${FWMARK}.*lookup 999"; then
+		ip rule add fwmark ${FWMARK} table 999 priority 999 2>/dev/null
 	fi
 
-	if ! ip route show table 100 | grep -Eq "^local.*dev lo"; then
-		ip route add local 0.0.0.0/0 dev lo table 100 2>/dev/null
+	if ! ip route show table 999 | grep -Eq "^local.*dev lo"; then
+		ip route add local 0.0.0.0/0 dev lo table 999 2>/dev/null
 	fi
 	$ipt -N SS_SPEC_TPROXY 2>/dev/null
 	$ipt -F SS_SPEC_TPROXY
@@ -1048,10 +1068,10 @@ tp_rule_iptables() {
 	if [ -n "$LAN_AC_IP" ]; then
 		case "${LAN_AC_IP%${LAN_AC_IP#?}}" in
 		w | W)
-			MATCH_SET_UDP="-m set --match-set ss_spec_lan_ac src"
+			MATCH_SET="-m set --match-set ss_spec_lan_ac src"
 			;;
 		b | B)
-			MATCH_SET_UDP="-m set ! --match-set ss_spec_lan_ac src"
+			MATCH_SET="-m set ! --match-set ss_spec_lan_ac src"
 			;;
 		*)
 			loger 3 "Bad argument \`-a $LAN_AC_IP\`."
@@ -1078,7 +1098,7 @@ tp_rule_iptables() {
 		done < "$xhttp_ip"
 	fi
 	$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set bplan src -j RETURN
-	$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set fplan src -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+	$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set fplan src -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
 	case "$RUNMODE" in
 	router)
 		ipset -! -R <<-EOF || return 1
@@ -1089,32 +1109,43 @@ tp_rule_iptables() {
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set china dst -j RETURN
 		$ipt -A SS_SPEC_TPROXY -p udp --dport 80 -j DROP
 		$ipt -A SS_SPEC_TPROXY -p udp --dport 443 -j DROP 
-		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set ! --match-set ss_spec_wan_ac dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
+		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set ! --match-set ss_spec_wan_ac dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
 		;;
 	gfw)
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set china dst -j RETURN
 		$ipt -A SS_SPEC_TPROXY -p udp --dport 80 -j DROP
 		$ipt -A SS_SPEC_TPROXY -p udp --dport 443 -j DROP 
-		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set gfwlist dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set gfwlist dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
+		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
 		;;
 	oversea)
-		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set oversea src -m dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
-		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set oversea src -m dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
+		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
+		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
 		;;
 	all)
-		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark ${FWMARK}
 		;;
 	esac
 	if [ -z "$Interface" ]; then
-		$ipt -I PREROUTING 1 -p udp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_TPROXY
+		# Global rules
+		if [ -n "$MATCH_SET" ]; then
+			$ipt -I PREROUTING 1 -p udp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_TPROXY
+		else
+			$ipt -I PREROUTING 1 -p udp $EXT_ARGS -m comment --comment "$TAG" -j SS_SPEC_TPROXY
+		fi
 	else
 		for name in $Interface; do
 			local IFNAME=$(uci -P /var/state get network."$name".ifname 2>/dev/null)
 			[ -z "$IFNAME" ] && IFNAME=$(uci -P /var/state get network."$name".device 2>/dev/null)
-			[ -n "$IFNAME" ] && $ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_TPROXY
+			if [ -n "$IFNAME" ]; then
+				if [ -n "$MATCH_SET" ]; then
+					$ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_TPROXY
+				else
+					$ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS -m comment --comment "$TAG" -j SS_SPEC_TPROXY
+				fi
+			fi
 		done
 	fi
 	return $?
@@ -1241,7 +1272,6 @@ compare_rules() {
 	fi
 
 	# Generate temporary file for current rules
-	local temp_file=$(mktemp)
 	local rules_file=$(mktemp)
 	loger 7 "DEBUG: Temporary file path: $rules_file"
 
@@ -1255,18 +1285,18 @@ compare_rules() {
 	# Check if current rules were exported successfully
 	if [ ! -s "$rules_file" ] || ! grep -q "table" "$rules_file" 2>/dev/null; then
 		loger 4 "Failed to export current rules"
-		rm -f "$temp_file" "$rules_file"
+		rm -f "$rules_file"
 		return 1  # Export failed, need update
 	fi
 
 	# Compare current rules with rules in persistence file
 	if ! cmp -s "$rules_file" "$NFTABLES_RULES_FILE"; then
 		loger 6 "Rules differ, update needed"
-		rm -f "$temp_file" "$rules_file"
+		rm -f "$rules_file"
 		return 1  # Need update
 	fi
 
-	rm -f "$temp_file" "$rules_file"
+	rm -f "$rules_file"
 	loger 6 "Rules unchanged, no update needed"
 	return 0  # No update needed
 }
@@ -1277,21 +1307,17 @@ persist_nftables_rules() {
 		return 0
 	fi
 
-	# If mode unchanged and persistence file exists, skip update
-	if [ "$MODE_CHANGED" = "0" ] && [ -f "$NFTABLES_RULES_FILE" ]; then
-		loger 6 "Mode unchanged and persistence file exists, skipping update"
-		return 0
-	fi
-
 	# Force update: skip comparison check and delete old file
 	if [ "$FORCE_UPDATE" = "1" ]; then
 		loger 6 "Force update requested, removing old persistence file"
 		rm -f "$NFTABLES_RULES_FILE" 2>/dev/null
-	# Non-force update: compare rules
+	# Otherwise, if persistence file exists, compare rules
 	elif [ -f "$NFTABLES_RULES_FILE" ]; then
 		if compare_rules; then
 			loger 6 "Rules unchanged, skipping persistence update"
 			return 0
+		else
+			loger 6 "Rules changed, updating persistence"
 		fi
 	fi
 
@@ -1299,7 +1325,7 @@ persist_nftables_rules() {
 	mkdir -p "$NFTABLES_RULES_DIR" 2>/dev/null
 
 	# Generate nftables rule file
-	cat <<-'EOF' >>$NFTABLES_RULES_FILE
+	cat <<-'EOF' > "$NFTABLES_RULES_FILE"
 		#!/usr/sbin/nft -f
 
 		# ShadowsocksR nftables rules
@@ -1374,17 +1400,18 @@ start_auto_update_daemon() {
 		echo $$ > "/var/run/ssr-rules-daemon.pid"
 
 		while true; do
-			sleep 300
+			sleep "$AUTO_UPDATE_INTERVAL"
 			if [ -x "/usr/bin/ssr-rules" ]; then
+				# -C returns 0 if rules are OK, non-zero if need update
 				if /usr/bin/ssr-rules -C >/dev/null 2>&1; then
+					logger -t ssr-rules[daemon] "Rules status OK, no update needed"
+				else
 					logger -t ssr-rules[daemon] "Rules changed or missing, updating persistence"
 					if /usr/bin/ssr-rules -P >/dev/null 2>&1; then
 						logger -t ssr-rules[daemon] "Persistence rules updated successfully"
 					else
 						logger -t ssr-rules[daemon] "Failed to update persistence"
 					fi
-				else
-					logger -t ssr-rules[daemon] "Rules status OK, no update needed"
 				fi
 			else
 				logger -t ssr-rules[daemon] "Script not found, exiting daemon"

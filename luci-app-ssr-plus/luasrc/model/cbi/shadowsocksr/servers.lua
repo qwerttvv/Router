@@ -15,31 +15,84 @@ local function is_finded(e)
 	return luci.sys.exec(string.format('type -t -p "%s" 2>/dev/null', e)) ~= ""
 end
 
-local has_xray = is_finded("xray")
-local has_hysteria2 = is_finded("hysteria")
-
-local hy2_type_list = {}
-
-if has_xray then
-	table.insert(hy2_type_list, { id = "xray", name = translate("Xray") })
-end
-if has_hysteria2 then
-	table.insert(hy2_type_list, { id = "hysteria2", name = translate("Hysteria2") })
+local function is_js_luci()
+	return luci.sys.call('[ -f "/www/luci-static/resources/uci.js" ]') == 0
 end
 
--- 如果用户没有手动设置，则自动选择
-if not xray_hy2_type or xray_hy2_type == "" then
-	if has_hysteria2 then
-		xray_hy2_type = "hysteria2"
-	elseif has_xray then
-		xray_hy2_type = "xray"
+local function url(...)
+	local url = string.format("admin/services/%s", "shadowsocksr")
+	local args = { ... }
+	for i, v in ipairs(args) do
+		if v and v ~= "" then
+			url = url .. "/" .. v
+		end
+	end
+	return require "luci.dispatcher".build_url(url)
+end
+
+-- 默认的保存并应用行为
+local function apply_redirect(m)
+	local tmp_uci_file = "/etc/config/" .. "shadowsocksr" .. "_redirect"
+	if m.redirect and m.redirect ~= "" then
+		if nixio.fs.access(tmp_uci_file) then
+			local redirect
+			for line in io.lines(tmp_uci_file) do
+				redirect = line:match("option%s+url%s+['\"]([^'\"]+)['\"]")
+				if redirect and redirect ~= "" then break end
+			end
+			if redirect and redirect ~= "" then
+				luci.sys.call("/bin/rm -f " .. tmp_uci_file)
+				luci.http.redirect(redirect)
+			end
+		else
+			nixio.fs.writefile(tmp_uci_file, "config redirect\n")
+		end
+		m.on_after_save = function(self)
+			local redirect = self.redirect
+			if redirect and redirect ~= "" then
+				m.uci:set("shadowsocksr" .. "_redirect", "@redirect[0]", "url", redirect)
+			end
+		end
+	else
+		luci.sys.call("/bin/rm -f " .. tmp_uci_file)
+	end
+end
+
+local function set_apply_on_parse(map)
+	if not map then return end
+	if is_js_luci() then
+		apply_redirect(map)
+		local old = map.on_after_save
+		map.on_after_save = function(self)
+			if old then old(self) end
+			map:set("@global[0]", "timestamp", os.time())
+		end
 	end
 end
 
 local has_ss_rust = is_finded("sslocal") or is_finded("ssserver")
 local has_ss_libev = is_finded("ss-redir") or is_finded("ss-local")
+local has_trojan = is_finded("trojan")
+local has_xray = is_finded("xray")
+local has_hysteria2 = is_finded("hysteria")
 
 local ss_type_list = {}
+local tj_type_list = {}
+local hy2_type_list = {}
+
+if has_hysteria2 then
+	table.insert(hy2_type_list, { id = "hysteria2", name = translate("Hysteria2") })
+end
+if has_xray then
+	table.insert(hy2_type_list, { id = "v2ray", name = translate("Xray (Hysteria2)") })
+end
+
+if has_trojan then
+	table.insert(tj_type_list, { id = "trojan", name = translate("Trojan") })
+end
+if has_xray then
+	table.insert(tj_type_list, { id = "v2ray", name = translate("Xray (Trojan)") })
+end
 
 if has_ss_rust then
 	table.insert(ss_type_list, { id = "ss-rust", name = translate("ShadowSocks-rust Version") })
@@ -47,14 +100,8 @@ end
 if has_ss_libev then
 	table.insert(ss_type_list, { id = "ss-libev", name = translate("ShadowSocks-libev Version") })
 end
-
--- 如果用户没有手动设置，则自动选择
-if not ss_type or ss_type == "" then
-	if has_ss_rust then
-		ss_type = "ss-rust"
-	elseif has_ss_libev then
-		ss_type = "ss-libev"
-	end
+if has_xray then
+	table.insert(ss_type_list, { id = "v2ray", name = translate("Xray (ShadowSocks)") })
 end
 
 uci:foreach("shadowsocksr", "servers", function(s)
@@ -102,54 +149,133 @@ o:depends("auto_update", "1")
 
 -- 确保 hy2_type_list 不为空
 if #hy2_type_list > 0 then
+	local sid = uci:get_first("shadowsocksr", "server_subscribe")
+	if not sid then
+		uci:foreach("shadowsocksr", "server_subscribe", function(section)
+			sid = section[".name"]
+			return false
+		end)
+	end
+	if sid then
+		local old_val = uci:get("shadowsocksr", sid, "xray_hy2_type")
+		if old_val and old_val ~= "" then
+			if (old_val == "hysteria2" and not has_hysteria2) or
+			   (old_val == "v2ray" and not has_xray) then
+				-- 核心不可用，设置为空（删除配置）
+				uci:set("shadowsocksr", sid, "xray_hy2_type", "")
+				uci:commit("shadowsocksr")
+			end
+		end
+	end
 	o = s:option(ListValue, "xray_hy2_type", string.format("<b><span style='color:red;'>%s</span></b>", translatef("%s Node Use Type", "Hysteria2")))
 	o.description = translate("The configured type also applies to the core specified when manually importing nodes.")
+	o:value("", translate("Auto"))
 	for _, v in ipairs(hy2_type_list) do
 		o:value(v.id, v.name) -- 存储 "Xray" / "Hysteria2"，但 UI 显示完整名称
 	end
-	o.default = xray_hy2_type  -- 设置默认值
-	o.write = function(self, section, value)
-		-- 更新 Hysteria 节点的 xray_hy2_type
-		uci:foreach("shadowsocksr", "servers", function(s)
-			local node_type = uci:get("shadowsocksr", s[".name"], "type")  -- 获取节点类型
-			if node_type == "hysteria2" then  -- 仅修改 Hysteria 节点
-				local old_value = uci:get("shadowsocksr", s[".name"], "xray_hy2_type")
-				if old_value ~= value then
-					uci:set("shadowsocksr", s[".name"], "xray_hy2_type", value)
-				end
-			end
+end
+
+-- 确保 tj_type_list 不为空
+if #tj_type_list > 0 then
+	local sid = uci:get_first("shadowsocksr", "server_subscribe")
+	if not sid then
+		uci:foreach("shadowsocksr", "server_subscribe", function(section)
+			sid = section[".name"]
+			return false
 		end)
-		-- 更新当前 section 的 xray_hy2_type
-		ListValue.write(self, section, value)
+	end
+	if sid then
+		local old_val = uci:get("shadowsocksr", sid, "xray_tj_type")
+		if old_val and old_val ~= "" then
+			if (old_val == "trojan" and not has_trojan) or
+			   (old_val == "v2ray" and not has_xray) then
+				-- 核心不可用，设置为空（删除配置）
+				uci:set("shadowsocksr", sid, "xray_tj_type", "")
+				uci:commit("shadowsocksr")
+			end
+		end
+	end
+	o = s:option(ListValue, "xray_tj_type", string.format("<b><span style='color:red;'>%s</span></b>", translatef("%s Node Use Type", "Trojan")))
+	o.description = translate("The configured type also applies to the core specified when manually importing nodes.")
+	o:value("", translate("Auto"))
+	for _, v in ipairs(tj_type_list) do
+		o:value(v.id, v.name) -- 存储 "Xray" / "Trojan"，但 UI 显示完整名称
 	end
 end
 
 -- 确保 ss_type_list 不为空
 if #ss_type_list > 0 then
+	local sid = uci:get_first("shadowsocksr", "server_subscribe")
+	if not sid then
+		uci:foreach("shadowsocksr", "server_subscribe", function(section)
+			sid = section[".name"]
+			return false
+		end)
+	end
+	if sid then
+		local old_val = uci:get("shadowsocksr", sid, "ss_type")
+		if old_val and old_val ~= "" then
+			if (old_val == "ss-rust" and not has_ss_rust) or
+			   (old_val == "ss-libev" and not has_ss_libev) or
+			   (old_val == "v2ray" and not has_xray) then
+				-- 核心不可用，设置为空（删除配置）
+				uci:set("shadowsocksr", sid, "ss_type", "")
+				uci:commit("shadowsocksr")
+			end
+		end
+	end
 	o = s:option(ListValue, "ss_type", string.format("<b><span style='color:red;'>%s</span></b>", translatef("%s Node Use Version", "ShadowSocks")))
 	o.description = translate("Selection ShadowSocks Node Use Version.")
+	o:value("", translate("Auto"))
 	for _, v in ipairs(ss_type_list) do
 		o:value(v.id, v.name) -- 存储 "ss-libev" / "ss-rust"，但 UI 显示完整名称
-	end
-	o.default = ss_type  -- 设置默认值
-	o.write = function(self, section, value)
-		-- 更新 Shadowsocks 节点的 has_ss_type
-		uci:foreach("shadowsocksr", "servers", function(s)
-			local node_type = uci:get("shadowsocksr", s[".name"], "type")  -- 获取节点类型
-			if node_type == "ss" then  -- 仅修改 Shadowsocks 节点
-				local old_value = uci:get("shadowsocksr", s[".name"], "has_ss_type")
-				if old_value ~= value then
-					uci:set("shadowsocksr", s[".name"], "has_ss_type", value)
-				end
-			end
-		end)
-		-- 更新当前 section 的 ss_type
-		ListValue.write(self, section, value)
 	end
 end
 
 o = s:option(DynamicList, "subscribe_url", translate("Subscribe URL"))
 o.rmempty = true
+
+o = s:option(ListValue, "domain_resolver", translate("Domain DNS Resolve"))
+o.description = translate(
+	"<ul>" ..
+	"<li>" .. translate("If the node address is a domain name, this DNS will be used for resolution.") .. "</li>" .. 
+	"<li>" .. string.format('<font style=\'color:red;\'>%s</font>', translate("Supports only Xray node types.")) .. "</li>" ..
+	"<li>" .. string.format('<font style=\'color:red;\'>%s</font>', translate("Note: For node-specific DNS only. Keep Auto to avoid extra overhead.")) .. "</li>" ..
+	"</ul>"
+)
+o:value("", translate("Auto"))
+o:value("tcp", translate("TCP"))
+o:value("udp", translate("UDP"))
+o:value("https", translate("DoH"))
+
+o = s:option(Value, "domain_resolver_dns", translate("DNS"))
+o.datatype = "or(ipaddr,ipaddrport)"
+o:value("114.114.114.114")
+o:value("223.5.5.5:53")
+o.default = "114.114.114.114"
+o:depends("domain_resolver", "tcp")
+o:depends("domain_resolver", "udp") 
+
+o = s:option(Value, "domain_resolver_dns_https", translate("DNS"))
+o:value("https://120.53.53.53/dns-query", "DNSPod")
+o:value("https://223.5.5.5/dns-query", "AliDNS")
+o.default = o.keylist[1]
+o:depends("domain_resolver", "https")
+
+o = s:option(ListValue, "domain_strategy", translate("Domain Strategy"))
+o.description = translate(
+	"<ul>" ..
+	"<li>" .. translate("If is domain name, The requested domain name will be resolved to IP before connect.") .. "</li>" .. 
+	"<li>" .. string.format('<font style=\'color:red;\'>%s</font>', translate("Supports only Xray node types.")) .. "</li>" ..
+	"<li>" .. string.format('<font style=\'color:red;\'>%s</font>', translate("Note: For node-specific DNS only. Keep Auto to avoid extra overhead.")) .. "</li>" ..
+	"</ul>"
+)
+o.default = ""
+o:value("", translate("Auto"))
+o:value("UseIPv4v6", translate("Prefer IPv4"))
+o:value("UseIPv6v4", translate("Prefer IPv6"))
+o:value("UseIPv4", translate("IPv4 Only"))
+o:value("UseIPv6", translate("IPv6 Only"))
 
 o = s:option(Value, "filter_words", translate("Subscribe Filter Words"))
 o.rmempty = true
@@ -190,21 +316,18 @@ o = s:option(Button, "delete", translate("Delete All Subscribe Servers"))
 o.inputstyle = "reset"
 o.description = string.format(translate("Server Count") .. ": %d", server_count)
 o.write = function()
-	uci:delete_all("shadowsocksr", "servers", function(s)
-		if s.hashkey or s.isSubscribe then
-			return true
-		else
-			return false
-		end
-	end)
-	uci:save("shadowsocksr")
-	uci:commit("shadowsocksr")
-	for file in nixio.fs.glob("/tmp/sub_md5_*") do
-		nixio.fs.remove(file)
-	end
-	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "delete"))
-	return
+	luci.http.redirect(url("delete"))
 end
+
+o = s:option(Value, "url_test_url", translate("URL Test Address"))
+o:value("https://cp.cloudflare.com/", "Cloudflare")
+o:value("https://www.gstatic.com/generate_204", "Gstatic")
+o:value("https://www.google.com/generate_204", "Google")
+o:value("https://www.youtube.com/generate_204", "YouTube")
+o:value("https://connect.rom.miui.com/generate_204", "MIUI (CN)")
+o:value("https://connectivitycheck.platform.hicloud.com/generate_204", "HiCloud (CN)")
+o.default = o.keylist[3]
+
 
 o = s:option(Value, "user_agent", translate("User-Agent"))
 o.default = "v2rayN/9.99"
@@ -218,16 +341,23 @@ s = m:section(TypedSection, "servers")
 s.anonymous = true
 s.addremove = true
 s.template = "cbi/tblsection"
-s:append(cbi.Template("shadowsocksr" .. "/optimize_cbi_ui"))
+set_apply_on_parse(m)
 s.sortable = true
-s.extedit = luci.dispatcher.build_url("admin", "services", "shadowsocksr", "servers", "%s")
-function s.create(...)
-	local sid = TypedSection.create(...)
-	if sid then
-		luci.http.redirect(s.extedit % sid)
-		return
-	end
+--[[
+s.extedit = url("servers", "%s")
+function s.create(self, ...)
+    local sid = TypedSection.create(self, ...)
+    if sid then
+        local newsid = "cfg" .. sid:sub(-6)
+		-- 删除匿名
+		self.map.uci:delete(self.config, sid)
+        -- 重命名 section
+        self.map.uci:section(self.config, self.sectiontype, newsid)
+        luci.http.redirect(self.extedit % newsid)
+        return
+    end
 end
+]]--
 
 o = s:option(DummyValue, "type", translate("Type"))
 function o.cfgvalue(self, section)
@@ -248,10 +378,14 @@ o = s:option(DummyValue, "server_port", translate("Socket Connected"))
 o.template = "shadowsocksr/socket"
 o.width = "10%"
 o.render = function(self, section, scope)
-	self.transport = s:cfgvalue(section).transport
+	local cfg = s:cfgvalue(section) or {}
+	self.transport = cfg.transport
+	self.type = cfg.type
+	self.v2ray_protocol = cfg.v2ray_protocol
 	if self.transport == 'ws' then
-		self.ws_path = s:cfgvalue(section).ws_path
-		self.tls = s:cfgvalue(section).tls
+		self.ws_path = cfg.ws_path
+		self.tls = cfg.tls
+		self.tls_host = cfg.tls_host
 	end
 	DummyValue.render(self, section, scope)
 end
@@ -276,7 +410,8 @@ node.write = function(self, section)
 	uci:set("shadowsocksr", '@global[0]', 'global_server', section)
 	uci:save("shadowsocksr")
 	uci:commit("shadowsocksr")
-	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "restart"))
+	luci.sys.call("/etc/init.d/shadowsocksr restart >/dev/null 2>&1 &")
+	luci.http.redirect(url("restart"))
 end
 
 o = s:option(Flag, "switch_enable", translate("Auto Switch"))
@@ -285,6 +420,6 @@ function o.cfgvalue(...)
 	return Value.cfgvalue(...) or 1
 end
 
-m:append(Template("shadowsocksr/server_list"))
+m:append(cbi.Template("shadowsocksr/server_list"))
 
 return m

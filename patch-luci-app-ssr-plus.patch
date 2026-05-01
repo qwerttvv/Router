@@ -59,10 +59,10 @@ index 41a65ca..e114a47 100644
  	bool "Include ShadowsocksR Libev Client"
  	default y
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index a4285f6..33fa924 100644
+index d5e3b63..b81de0c 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-@@ -7,7 +7,7 @@ function index()
+@@ -50,7 +50,7 @@ function index()
  		call("act_reset")
  	end
  	local page
@@ -72,7 +72,7 @@ index a4285f6..33fa924 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-index bb19eb7..95d7298 100644
+index 1404134..dbcaf0e 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 @@ -35,7 +35,7 @@ local function is_finded(e)
@@ -84,90 +84,3 @@ index bb19eb7..95d7298 100644
  m:section(SimpleSection).template = "shadowsocksr/status"
  
  local server_table = {}
-diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/check.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/check.htm
-index 4a16adc..5f6a673 100644
---- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/check.htm
-+++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/check.htm
-@@ -13,9 +13,9 @@
- 			if (s)
- 			{
- 				if (rv.ret=="0")
--				s.innerHTML ="<font style=\'color:green\'>"+"<%:Connect OK%>"+"</font>";
-+				s.innerHTML ="<font color='green'>"+"<%:Connect OK%>"+"</font>";
- 				else
--				s.innerHTML ="<font style=\'color:red\'>"+"<%:Connect Error%>"+"</font>";
-+				s.innerHTML ="<font color='red'>"+"<%:Connect Error%>"+"</font>";
- 			}
- 				btn.disabled = false;
- 				btn.value    = '<%:Check Connect%>';
-diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/refresh.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/refresh.htm
-index ea4113d..da89fd5 100644
---- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/refresh.htm
-+++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/refresh.htm
-@@ -15,13 +15,13 @@
- 				switch (rv.ret)
- 				{
- 					case 0:
--						s.innerHTML ="<font style=\'color:green\'>"+"<%:Refresh OK!%> "+"<%:Total Records:%>"+rv.retcount+"</font>";
-+						s.innerHTML ="<font color='green'>"+"<%:Refresh OK!%> "+"<%:Total Records:%>"+rv.retcount+"</font>";
- 						break;
- 					case 1:
--						s.innerHTML ="<font style=\'color:green\'>"+"<%:No new data!%> "+"</font>";
-+						s.innerHTML ="<font color='green'>"+"<%:No new data!%> "+"</font>";
- 						break;
- 					default:
--						s.innerHTML ="<font style=\'color:red\'>"+"<%:Refresh Error!%> "+"</font>";
-+						s.innerHTML ="<font color='red'>"+"<%:Refresh Error!%> "+"</font>";
- 						break;
- 				}
- 			}
-diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/reset.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/reset.htm
-index ff0c486..1882ac5 100644
---- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/reset.htm
-+++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/reset.htm
-@@ -7,7 +7,7 @@
- 			return false;
- 		}
- 		if (reset != "reset") {
--			s.innerHTML = "<font style=\'color:red\'><%:The content entered is incorrect!%></font>";
-+			s.innerHTML = "<font color='red'><%:The content entered is incorrect!%></font>";
- 			return false;
- 		}
- 		btn.disabled = true;
-@@ -15,7 +15,7 @@
- 		murl=dataname;
- 		XHR.get('<%=luci.dispatcher.build_url("admin", "services", "shadowsocksr","reset")%>', { set:murl }, function(x,rv) {
- 			btn.value    = '<%:Reset complete%>';
--			s.innerHTML = "<font style=\'color:green\'><%:Reset complete%></font>";
-+			s.innerHTML = "<font color='green'><%:Reset complete%></font>";
- 		});
- 		return false;
- 	}
-diff --git a/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm b/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
-index d40da9c..5dc5dc3 100644
---- a/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
-+++ b/luci-app-ssr-plus/luasrc/view/shadowsocksr/server_list.htm
-@@ -73,7 +73,7 @@ end
- 				const wsPath = wsPaths[index];
- 				const tls = tlss[index];
- 				if (!dom) res();
--				port.innerHTML = '<font style=\"color:#0072c3\">connect</font>';
-+				port.innerHTML = '<font color="#0072c3">connect</font>';
- 				XHR.get('<%=luci.dispatcher.build_url("admin/services/shadowsocksr/ping")%>', {
- 					index,
- 					domain: dom.getAttribute("hint"),
-@@ -89,11 +89,11 @@ end
- 						if (result.ping < 200) col = '#ff7700';
- 						if (result.ping < 100) col = '#249400';
- 					}
--					dom.innerHTML = `<font style=\"color:${col}\">${(result.ping ? result.ping : "--") + " ms"}</font>`;
-+					dom.innerHTML = `<font color="${col}">${(result.ping ? result.ping : "--") + " ms"}</font>`;
- 					if (result.socket) {
--						port.innerHTML = '<font style=\"color:#249400\">ok</font>';
-+						port.innerHTML = '<font color="#249400">ok</font>';
- 					} else {
--						port.innerHTML = '<font style=\"color:#ff0000\">fail</font>';
-+						port.innerHTML = '<font color="#ff0000">fail</font>';
- 					}
- 					res();
- 				});
