@@ -5,13 +5,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dae
-PKG_VERSION:=2026.04.29
+PKG_VERSION:=2026.05.04
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/daeuniverse/dae.git
-PKG_SOURCE_VERSION:=ddee3308c8c869fd2c5a98fccce6cada51b3ddba
-PKG_MIRROR_HASH:=2640676874e24148876c0974986b87e64dbb9d7ab764cf81ce74711cbdd631cb
+PKG_SOURCE_VERSION:=320a9e5216aea94075027ed50bec01ae5e7056d2
+PKG_MIRROR_HASH:=c1bbe7a4104b900672a3dd3b038633ee95987d453dca24d62cb6dc0811dbabc6
 
 PKG_LICENSE:=AGPL-3.0-only
 PKG_LICENSE_FILE:=LICENSE
@@ -20,6 +20,8 @@ PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_BUILD_DEPENDS:=golang/host bpf-headers
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
+
+PATCH_DIR:=patches
 
 ifeq ($(ARCH),arm)
 PATCH_DIR:=patches_arm
@@ -94,6 +96,13 @@ endef
 define Package/dae/conffiles
 /etc/dae/config.dae
 /etc/config/dae
+endef
+
+define Build/Patch
+	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR),)
+ifneq ($(PATCH_DIR_ARCH),)
+	$(call PatchDir,$(PKG_BUILD_DIR),$(PATCH_DIR_ARCH),)
+endif
 endef
 
 DAE_CFLAGS:= \
