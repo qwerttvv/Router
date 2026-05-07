@@ -1,68 +1,21 @@
 diff --git a/luci-app-ssr-plus/Makefile b/luci-app-ssr-plus/Makefile
-index 41a65ca..e114a47 100644
+index b5914d4..a46b34d 100644
 --- a/luci-app-ssr-plus/Makefile
 +++ b/luci-app-ssr-plus/Makefile
-@@ -33,6 +33,7 @@ PKG_CONFIG_DEPENDS:= \
- 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server \
- 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs \
- 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin \
-+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Xray_Plugin \
- 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client \
- 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server \
- 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
-@@ -66,6 +67,7 @@ LUCI_DEPENDS:= \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server:shadowsocks-rust-ssserver \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs:simple-obfs-client \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin:v2ray-plugin \
-+	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Xray_Plugin:xray-plugin \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-local \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-redir \
- 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server:shadowsocksr-libev-ssr-server \
-@@ -103,7 +105,7 @@ endchoice
- 
- choice
- 	prompt "Shadowsocks Client Selection"
--	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client if aarch64 || x86_64
-+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client if aarch64||arm||i386||mips||mipsel||x86_64
- 	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
- 
- 	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Client
-@@ -120,8 +122,8 @@ endchoice
- 
- choice
- 	prompt "Shadowsocks Server Selection"
--	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server if aarch64
--	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server if i386||x86_64||arm
-+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server if aarch64||arm||i386||mips||mipsel||x86_64
-+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server
- 	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
- 
- 	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
-@@ -169,7 +171,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_DNSPROXY
+@@ -116,7 +116,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_ChinaDNS_NG
  
  config PACKAGE_$(PKG_NAME)_INCLUDE_MosDNS
  	bool "Include MosDNS"
 -	default y if aarch64||arm||i386||x86_64
 +	default n
  
- config PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria
- 	bool "Include Hysteria"
-@@ -217,6 +219,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin
- 	bool "Include Shadowsocks V2ray Plugin"
- 	default n
- 
-+config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Xray_Plugin
-+	bool "Include Shadowsocks Xray Plugin"
-+	default n
-+
- config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client
- 	bool "Include ShadowsocksR Libev Client"
- 	default y
+ config PACKAGE_$(PKG_NAME)_INCLUDE_Http_Proxy
+ 	bool "Include HTTP(S) Proxy Server"
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index d5e3b63..b81de0c 100644
+index 440c880..652c585 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-@@ -50,7 +50,7 @@ function index()
+@@ -609,7 +609,7 @@ function index()
  		call("act_reset")
  	end
  	local page
@@ -72,14 +25,14 @@ index d5e3b63..b81de0c 100644
  	page.acl_depends = { "luci-app-ssr-plus" }
  	entry({"admin", "services", "shadowsocksr", "client"}, cbi("shadowsocksr/client"), _("SSR Client"), 10).leaf = true
 diff --git a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-index 1404134..dbcaf0e 100644
+index aec79eb..df49d8c 100644
 --- a/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
 +++ b/luci-app-ssr-plus/luasrc/model/cbi/shadowsocksr/client.lua
-@@ -35,7 +35,7 @@ local function is_finded(e)
- 	return luci.sys.exec(string.format('type -t -p "%s" 2>/dev/null', e)) ~= ""
+@@ -48,7 +48,7 @@ local function clash_display_name(s)
+ 	return "[CLASH]"
  end
  
--m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"), translate("<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/TUIC/HYSTERIA2/NAIVEPROXY/SOCKS5/TUN etc.</h3>"))
+-m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"), translate("<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/TUIC/HYSTERIA2/NAIVEPROXY/SOCKS5/CLASH etc.</h3>"))
 +m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"))
  m:section(SimpleSection).template = "shadowsocksr/status"
  
