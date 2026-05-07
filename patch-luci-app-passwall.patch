@@ -1,5 +1,5 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 573ea67..1207309 100644
+index d8d7c9c..8f6cf0e 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
 @@ -70,7 +70,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
@@ -12,7 +12,7 @@ index 573ea67..1207309 100644
  config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy
  	bool "Include Haproxy"
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 07e4562..59e2c3f 100644
+index 54f41df..8e649c8 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -433,6 +433,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
