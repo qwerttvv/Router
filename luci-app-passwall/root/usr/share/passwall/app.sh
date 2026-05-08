@@ -15,7 +15,6 @@ UTIL_SS=$LUA_UTIL_PATH/util_shadowsocks.lua
 UTIL_XRAY=$LUA_UTIL_PATH/util_xray.lua
 UTIL_NAIVE=$LUA_UTIL_PATH/util_naiveproxy.lua
 UTIL_HYSTERIA2=$LUA_UTIL_PATH/util_hysteria2.lua
-UTIL_TUIC=$LUA_UTIL_PATH/util_tuic.lua
 SINGBOX_BIN=$(first_type $(config_t_get global_app sing_box_file) sing-box)
 XRAY_BIN=$(first_type $(config_t_get global_app xray_file) xray)
 
@@ -499,12 +498,6 @@ run_socks() {
 		lua $UTIL_HYSTERIA2 gen_config "$(json_dump)" > $config_file
 		[ -n "$no_run" ] || ln_run "$(first_type $(config_t_get global_app hysteria_file))" "hysteria" $log_file -c "$config_file" client
 	;;
-	tuic)
-		json_add_string "local_addr" "$bind"
-		json_add_string "local_port" "$socks_port"
-		lua $UTIL_TUIC gen_config "$(json_dump)" > $config_file
-		[ -n "$no_run" ] || ln_run "$(first_type tuic-client)" "tuic-client" $log_file -c "$config_file"
-	;;
 	esac
 
 	set_cache_var "node_${node}_socks_port" "${socks_port}"
@@ -655,9 +648,6 @@ run_redir() {
 			json_add_string "local_udp_redir_port" "$local_port"
 			lua $UTIL_HYSTERIA2 gen_config "$(json_dump)" > $config_file
 			ln_run "$(first_type $(config_t_get global_app hysteria_file))" "hysteria" $log_file -c "$config_file" client
-		;;
-		tuic)
-			echolog "TUIC不支持UDP转发！"
 		;;
 		esac
 	;;
