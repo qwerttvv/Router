@@ -1,25 +1,28 @@
-<script type="text/javascript">//<![CDATA[
-XHR.poll(3, '<%=url([[admin]], [[system]], [[athena_led]], [[status]])%>', null,
-    function (x, data) {
-        var tb = document.getElementById('athena_led_status');
-        if (data && tb) {
-            if (data.running) {
-                var links = '<em><b><font color=green>led <%:RUNNING%></font></b></em>';
-                tb.innerHTML = links;
-            } else {
-                tb.innerHTML = '<em><b><font color=red>led <%:NOT RUNNING%></font></b></em>';
-            }
-        }
-    }
-);
-//]]>
-</script>
-<style>.mar-10 {
-    margin-left: 50px;
-    margin-right: 10px;
-}</style>
 <fieldset class="cbi-section">
-    <p id="athena_led_status">
-        <em><%:Collecting data...%></em>
-    </p>
+	<legend><%:Running Status%></legend>
+	<div class="cbi-section-descr">
+		<div id="athena_status_text">
+			<em><%:Collecting data...%></em>
+		</div>
+	</div>
 </fieldset>
+
+<script type="text/javascript">//<![CDATA[
+	var statusText = document.getElementById('athena_status_text');
+
+	// 使用 LuCI 内置的 XHR.poll 每 3 秒轮询一次状态
+	XHR.poll(3, '<%=luci.dispatcher.build_url("admin", "services", "athena_led", "status")%>', null,
+		function(x, info) {
+			if (x && x.status == 200 && info) {
+				// info.running 对应 controller 中返回的 JSON e.running
+				if (info.running) {
+					statusText.innerHTML = '<span style="color:green; font-weight:bold;"><%:RUNNING%></span> | PID: ' + (info.pid || '?');
+				} else {
+					statusText.innerHTML = '<span style="color:red; font-weight:bold;"><%:NOT RUNNING%></span>';
+				}
+			} else {
+				statusText.innerHTML = '<span style="color:gray;"><em><%:Unknown Error%></em></span>';
+			}
+		}
+	);
+//]]></script>
