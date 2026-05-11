@@ -13,7 +13,7 @@
 
 / {
 	model = "TP-Link EAP660 HD v1";
-	compatible = "tplink,eap660hd-v1", "qcom,ipq8074";
+	compatible = "tplink,eap660-hd-v1", "qcom,ipq8074";
 
 	aliases {
 		serial0 = &blsp1_uart5;

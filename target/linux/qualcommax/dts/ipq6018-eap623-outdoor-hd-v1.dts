@@ -3,11 +3,11 @@
 
 /dts-v1/;
 
-#include "ipq6018-tplink-eap6xx.dtsi"
+#include "ipq6018-tplink-eap6xx-outdoor.dtsi"
 
 / {
 	model = "TP-Link EAP623-Outdoor HD v1";
-	compatible = "tplink,eap623od-hd-v1", "qcom,ipq6018";
+	compatible = "tplink,eap623-outdoor-hd-v1", "qcom,ipq6018";
 };
 
 &led_sys_yellow {

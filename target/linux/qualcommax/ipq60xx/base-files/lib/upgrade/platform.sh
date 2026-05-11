@@ -89,10 +89,10 @@ platform_do_upgrade() {
 		remove_oem_ubi_volume squashfs
 		nand_do_upgrade "$1"
 		;;
-	tplink,eap610od|\
-	tplink,eap620hd-v3|\
-	tplink,eap623od-hd-v1|\
-	tplink,eap625od-hd-v1)
+	tplink,eap610-outdoor|\
+	tplink,eap620-hd-v3|\
+	tplink,eap623-outdoor-hd-v1|\
+	tplink,eap625-outdoor-hd-v1)
 		remove_oem_ubi_volume ubi_rootfs
 		tplink_do_upgrade "$1"
 		;;

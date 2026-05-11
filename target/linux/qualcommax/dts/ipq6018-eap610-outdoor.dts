@@ -2,11 +2,11 @@
 
 /dts-v1/;
 
-#include "ipq6018-tplink-eap6xx.dtsi"
+#include "ipq6018-tplink-eap6xx-outdoor.dtsi"
 
 / {
 	model = "TP-Link EAP610-Outdoor";
-	compatible = "tplink,eap610od", "qcom,ipq6018";
+	compatible = "tplink,eap610-outdoor", "qcom,ipq6018";
 };
 
 &wifi {

@@ -176,8 +176,8 @@ platform_do_upgrade() {
 		nand_do_upgrade "$1"
 		;;
 	tplink,deco-x80-5g|\
-	tplink,eap620hd-v1|\
-	tplink,eap660hd-v1)
+	tplink,eap620-hd-v1|\
+	tplink,eap660-hd-v1)
 		remove_oem_ubi_volume ubi_rootfs
 		tplink_do_upgrade "$1"
 		;;

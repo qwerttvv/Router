@@ -21,12 +21,12 @@ preinit_mount_factory_partitions() {
 		preinit_mount_factory_data "factory_data"
 		preinit_mount_factory_data "runtime_data"
 		;;
-	tplink,eap610od|\
-	tplink,eap620hd-v1|\
-	tplink,eap620hd-v3|\
-	tplink,eap623od-hd-v1|\
-	tplink,eap625od-hd-v1|\
-	tplink,eap660hd-v1)
+	tplink,eap610-outdoor|\
+	tplink,eap620-hd-v1|\
+	tplink,eap620-hd-v3|\
+	tplink,eap623-outdoor-hd-v1|\
+	tplink,eap625-outdoor-hd-v1|\
+	tplink,eap660-hd-v1)
 		preinit_mount_factory_data "factory_data"
 		;;
 	esac

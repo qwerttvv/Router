@@ -54,8 +54,8 @@ ipq807x_setup_interfaces()
 	edimax,cax1800|\
 	netgear,wax218|\
 	netgear,wax620|\
-	tplink,eap620hd-v1|\
-	tplink,eap660hd-v1)
+	tplink,eap620-hd-v1|\
+	tplink,eap660-hd-v1)
 		ucidef_set_interface_lan "lan" "dhcp"
 		;;
 	netgear,rax120v2)
@@ -109,8 +109,8 @@ ipq807x_setup_macs()
 		lan_mac=$(macaddr_add $label_mac 1)
 		wan_mac=$label_mac
 		;;
-	tplink,eap620hd-v1|\
-	tplink,eap660hd-v1)
+	tplink,eap620-hd-v1|\
+	tplink,eap660-hd-v1)
 		lan_mac=$(get_mac_binary /tmp/factory_data/default-mac 0)
 		label_mac=$lan_mac
 		;;

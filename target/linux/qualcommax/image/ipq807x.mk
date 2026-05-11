@@ -471,7 +471,7 @@ define Device/tplink_deco-x80-5g
 endef
 TARGET_DEVICES += tplink_deco-x80-5g
 
-define Device/tplink_eap620hd-v1
+define Device/tplink_eap620-hd-v1
 	$(call Device/FitImage)
 	$(call Device/UbiFit)
 	DEVICE_VENDOR := TP-Link
@@ -480,14 +480,14 @@ define Device/tplink_eap620hd-v1
 	BLOCKSIZE := 128k
 	PAGESIZE := 2048
 	SOC := ipq8072
-	DEVICE_PACKAGES := ipq-wifi-tplink_eap620hd-v1
+	DEVICE_PACKAGES := ipq-wifi-tplink_eap620-hd-v1
 	IMAGES += web-ui-factory.bin
 	IMAGE/web-ui-factory.bin := append-ubi | tplink-image-2022
 	TPLINK_SUPPORT_STRING := SupportList:\r\nEAP620 HD(TP-Link|UN|AX1800-D):1.0\r\n
 endef
-TARGET_DEVICES += tplink_eap620hd-v1
+TARGET_DEVICES += tplink_eap620-hd-v1
 
-define Device/tplink_eap660hd-v1
+define Device/tplink_eap660-hd-v1
 	$(call Device/FitImage)
 	$(call Device/UbiFit)
 	DEVICE_VENDOR := TP-Link
@@ -496,12 +496,12 @@ define Device/tplink_eap660hd-v1
 	BLOCKSIZE := 128k
 	PAGESIZE := 2048
 	SOC := ipq8072
-	DEVICE_PACKAGES := ipq-wifi-tplink_eap660hd-v1
+	DEVICE_PACKAGES := ipq-wifi-tplink_eap660-hd-v1
 	IMAGES += web-ui-factory.bin
 	IMAGE/web-ui-factory.bin := append-ubi | tplink-image-2022
 	TPLINK_SUPPORT_STRING := SupportList:\r\nEAP660 HD(TP-Link|UN|AX3600-D):1.0\r\n
 endef
-TARGET_DEVICES += tplink_eap660hd-v1
+TARGET_DEVICES += tplink_eap660-hd-v1
 
 define Device/xiaomi_ax3600
 	$(call Device/FitImage)
