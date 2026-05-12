@@ -1,0 +1,26 @@
+--- a/include/common/sw.h
++++ b/include/common/sw.h
+@@ -26,6 +26,23 @@ extern "C" {
+ #include "sw_error.h"
+ #include "shared_func.h"
+ 
++#ifdef __KERNEL__
++#include <linux/string.h>
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0)) && !defined(strlcpy)
++static inline size_t strlcpy(char *dest, const char *src, size_t size)
++{
++	size_t len = strlen(src);
++
++	if (size)
++		strscpy(dest, src, size);
++
++	return len;
++}
++#endif
++#endif
++
+ #ifdef __cplusplus
+ }
+ #endif                          /* __cplusplus */

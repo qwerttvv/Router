@@ -1,11 +1,14 @@
 --- a/src/hsl/phy/hsl_phy.c
 +++ b/src/hsl/phy/hsl_phy.c
-@@ -1880,7 +1880,7 @@ hsl_phydev_eee_update(a_uint32_t dev_id,
+@@ -1776,7 +1776,11 @@ hsl_phydev_eee_update(a_uint32_t dev_id,
  	rv = hsl_phy_phydev_get(dev_id, phy_addr, &phydev);
  	SW_RTN_ON_ERROR(rv);
  
--	phydev->eee_enabled = (adv == 0 ? A_FALSE : A_TRUE);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0)
 +	phydev->eee_cfg.eee_enabled = (adv == 0 ? A_FALSE : A_TRUE);
++#else
+ 	phydev->eee_enabled = (adv == 0 ? A_FALSE : A_TRUE);
++#endif
  
  	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Full_BIT,
  		phydev->advertising_eee, adv & FAL_PHY_EEE_100BASE_T);

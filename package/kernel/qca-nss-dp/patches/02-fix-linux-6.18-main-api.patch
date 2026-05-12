@@ -1,0 +1,72 @@
+--- a/nss_dp_main.c
++++ b/nss_dp_main.c
+@@ -42,6 +42,7 @@
+ #include <init/ssdk_init.h>
+ #endif
+ #include "nss_dp_hal.h"
++#include "nss_dp_ppeds.h"
+ 
+ #define JUMBO_MRU_3K 3072
+ 
+@@ -510,7 +511,7 @@
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_RFS_ACCEL
++#if defined(CONFIG_RFS_ACCEL) && (LINUX_VERSION_CODE < KERNEL_VERSION(6,18,0))
+ /*
+  * nss_dp_rx_flow_steer()
+  *	Steer the flow rule to NSS
+@@ -679,7 +680,7 @@
+ 	.ndo_select_queue = nss_dp_select_queue,
+ #endif
+ 
+-#ifdef CONFIG_RFS_ACCEL
++#if defined(CONFIG_RFS_ACCEL) && (LINUX_VERSION_CODE < KERNEL_VERSION(6,18,0))
+ 	.ndo_rx_flow_steer = nss_dp_rx_flow_steer,
+ #endif
+ };
+@@ -911,7 +912,7 @@
+ /*
+  * nss_dp_adjust_link()
+  */
+-void nss_dp_adjust_link(struct net_device *netdev)
++static void nss_dp_adjust_link(struct net_device *netdev)
+ {
+ 	struct nss_dp_dev *dp_priv = netdev_priv(netdev);
+ 	int current_state = dp_priv->link_state;
+@@ -1130,7 +1131,7 @@
+  * Note: We only remove the physical ports here. Virtual
+  * port devices are removed explicitly by the VP module.
+  */
+-static int nss_dp_remove(struct platform_device *pdev)
++static void nss_dp_remove(struct platform_device *pdev)
+ {
+ 	uint32_t i;
+ 	struct nss_dp_dev *dp_priv;
+@@ -1177,7 +1178,6 @@
+ 		dp_global_ctx.nss_dp[i] = NULL;
+ 	}
+ 
+-	return 0;
+ }
+ 
+ static struct of_device_id nss_dp_dt_ids[] = {
+@@ -1260,7 +1260,7 @@
+ /*
+  * nss_dp_init()
+  */
+-int __init nss_dp_init(void)
++static int __init nss_dp_init(void)
+ {
+ 	int ret, i;
+ 
+@@ -1348,7 +1348,7 @@
+ /*
+  * nss_dp_exit()
+  */
+-void __exit nss_dp_exit(void)
++static void __exit nss_dp_exit(void)
+ {
+ 	/*
+ 	 * Ensure netdev remove is done before HAL cleanup.

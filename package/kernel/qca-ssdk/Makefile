@@ -3,15 +3,16 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=qca-ssdk
 PKG_RELEASE:=1
 
-PKG_SOURCE_URL:=https://github.com/openwrt/qca-ssdk.git
+PKG_SOURCE_URL:=https://git.codelinaro.org/clo/qsdk/oss/lklm/qca-ssdk.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2025-05-30
-PKG_SOURCE_VERSION:=446db12b1fd3bca2e61e45cb01c4ad52cfddd95b
-PKG_MIRROR_HASH:=d7bf3b83b08c61801e3ee3fe6d18da19c8c774e87f94c494c01f80b52d279589
+PKG_SOURCE_DATE:=2025-11-14
+PKG_SOURCE_VERSION:=d9a196497ecee2530722d906e0efe1b7408b6ef6
+PKG_MIRROR_HASH:=4f7126ee44f5793081845137d8699c8b548d9833169f19487eceb6c4e3ef6d1e
 
 PKG_FLAGS:=nonshared
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-lto
+PKG_EXTMOD_SUBDIRS:=mk
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_TARGET_qualcommax_ipq807x \
@@ -26,8 +27,8 @@ define KernelPackage/qca-ssdk
   CATEGORY:=Kernel modules
   SUBMENU:=Network Devices
   TITLE:=Qualcom SSDK switch driver
-  DEPENDS:=@(TARGET_qualcommax)
-  FILES:=$(PKG_BUILD_DIR)/qca-ssdk.ko
+  DEPENDS:=@(TARGET_qualcommax) +kmod-dsa
+  FILES:=$(PKG_BUILD_DIR)/build/bin/qca-ssdk.ko
   AUTOLOAD:=$(call AutoLoad,30,qca-ssdk)
 endef
 
@@ -37,16 +38,18 @@ endef
 
 GCC_VERSION=$(shell echo "$(CONFIG_GCC_VERSION)" | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
 
-LNX_CONFIG_OPTS = LNX_MAKEOPTS='$(KERNEL_MAKEOPTS)' PRJ_PATH=$(PKG_BUILD_DIR) MODULE_TYPE=KSLIB modules
+LNX_CONFIG_OPTS = LNX_MAKEOPTS='$(KERNEL_MAKEOPTS) KCFLAGS="$(EXTRA_CFLAGS)"' PRJ_PATH=$(PKG_BUILD_DIR) MODULE_TYPE=KSLIB modules
+
+QCA_SSDK_SYMVERS:=$(PKG_BUILD_DIR)/mk/Module.symvers
 
 EXTRA_CFLAGS:= \
-	-fno-stack-protector \
 	-Wno-missing-prototypes \
 	-Wno-missing-declarations \
 	-I$(STAGING_DIR)/usr/include
 
 MAKE_FLAGS+= \
 	TARGET_NAME=$(CONFIG_TARGET_NAME) \
+	MK_PATH=$(PKG_BUILD_DIR)/mk \
 	TOOL_PATH=$(firstword $(TOOLCHAIN_BIN_DIRS)) \
 	SYS_PATH=$(LINUX_DIR) \
 	TOOLPREFIX=$(TARGET_CROSS) \
@@ -58,7 +61,7 @@ MAKE_FLAGS+= \
 	SoC=$(CONFIG_TARGET_SUBTARGET) \
 	SHELL="$(BASH)" \
 	PTP_FEATURE=disable SWCONFIG_FEATURE=disable \
-	ISISC_ENABLE=disable MHT_ENABLE=disable \
+	ISISC_ENABLE=disable \
 	IN_QCA803X_PHY=FALSE IN_QCA808X_PHY=FALSE \
 	IN_MALIBU_PHY=FALSE IN_MP_PHY=FALSE \
 	$(LNX_CONFIG_OPTS)
@@ -76,7 +79,9 @@ ifeq ($(CONFIG_TARGET_SUBTARGET), "ipq50xx")
 endif
 
 define Build/Compile
-	+$(MAKE) $(PKG_JOBS) $(MAKE_FLAGS) -C $(PKG_BUILD_DIR) $(LNX_CONFIG_OPTS)
+	+$(MAKE) $(PKG_JOBS) $(MAKE_FLAGS) -C $(PKG_BUILD_DIR)/mk $(LNX_CONFIG_OPTS)
+	$(INSTALL_DIR) $(PKG_SYMVERS_DIR)
+	$(CP) $(QCA_SSDK_SYMVERS) $(PKG_SYMVERS_DIR)/$(PKG_NAME).symvers
 endef
 
 define Build/InstallDev

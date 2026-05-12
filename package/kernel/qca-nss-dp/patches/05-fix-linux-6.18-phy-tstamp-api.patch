@@ -1,0 +1,34 @@
+--- a/hal/dp_ops/edma_dp/edma_v1/edma_tx_rx.c
++++ b/hal/dp_ops/edma_dp/edma_v1/edma_tx_rx.c
+@@ -227,10 +227,16 @@
+ 	 * set to the correct PTP class value by calling ptp_classify_raw
+ 	 * in drv->rxtstamp function.
+ 	 */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++	if (ndev && ndev->phydev && phy_has_rxtstamp(ndev->phydev))
++		if (phy_rxtstamp(ndev->phydev, skb, 0))
++			return;
++#else
+ 	if (ndev && ndev->phydev && ndev->phydev->drv &&
+ 			ndev->phydev->drv->rxtstamp)
+ 		if(ndev->phydev->drv->rxtstamp(ndev->phydev, skb, 0))
+ 			return;
++#endif
+ 
+ 	netif_receive_skb(skb);
+ }
+@@ -248,9 +254,14 @@
+ 	 * set to the correct PTP class value by calling ptp_classify_raw
+ 	 * in the drv->txtstamp function.
+ 	 */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++	if (ndev && ndev->phydev && phy_has_txtstamp(ndev->phydev))
++		phy_txtstamp(ndev->phydev, skb, 0);
++#else
+ 	if (ndev && ndev->phydev && ndev->phydev->drv &&
+ 			ndev->phydev->drv->txtstamp)
+ 		ndev->phydev->drv->txtstamp(ndev->phydev, skb, 0);
++#endif
+ }
+ EXPORT_SYMBOL(nss_phy_tstamp_tx_buf);
+ 

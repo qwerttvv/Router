@@ -1,0 +1,12 @@
+--- a/src/ref/ref_acl.c
++++ b/src/ref/ref_acl.c
+@@ -229,7 +229,9 @@ _ref_acl_mac_entry_add_rule(a_uint32_t d
+ 		eth_dev = dev_get_by_name(&init_net, entry->ifname);
+ 		if (eth_dev)
+ 		{
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0)
+ 			br_fdb_delete_by_netdev(eth_dev, entry->src_mac.uc, 0);
++#endif
+ 			dev_put(eth_dev);
+ 		}
+ 	}

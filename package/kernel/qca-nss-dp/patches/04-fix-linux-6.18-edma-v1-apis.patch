@@ -1,0 +1,29 @@
+--- a/hal/dp_ops/edma_dp/edma_v1/edma_data_plane.c
++++ b/hal/dp_ops/edma_dp/edma_v1/edma_data_plane.c
+@@ -279,8 +279,13 @@ int edma_init(bool is_dp_override)
+ 	/*
+ 	 * Remap register resource
+ 	 */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++	edma_hw.reg_base = ioremap((edma_hw.reg_resource)->start,
++				resource_size(edma_hw.reg_resource));
++#else
+ 	edma_hw.reg_base = ioremap_nocache((edma_hw.reg_resource)->start,
+ 				resource_size(edma_hw.reg_resource));
++#endif
+ 	if (!edma_hw.reg_base) {
+ 		pr_warn("Unable to remap EDMA register memory.\n");
+ 		ret = -EFAULT;
+@@ -844,8 +849,12 @@ static int edma_register_netdevice(struc
+ 	 * NAPI add
+ 	 */
+ 	if (!edma_hw.napi_added) {
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++		netif_napi_add(netdev, &edma_hw.napi, edma_napi);
++#else
+ 		netif_napi_add(netdev, &edma_hw.napi, edma_napi,
+ 				EDMA_NAPI_WORK);
++#endif
+ 		/*
+ 		 * Register the interrupt handlers and enable interrupts
+ 		 */

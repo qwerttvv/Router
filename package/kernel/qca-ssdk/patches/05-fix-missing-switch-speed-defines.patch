@@ -1,0 +1,20 @@
+--- a/src/ref/ref_port_ctrl.c
++++ b/src/ref/ref_port_ctrl.c
+@@ -50,6 +50,16 @@
+ #include "ref_vlan.h"
+ #include <linux/time.h>
+ #include "ref_port_ctrl.h"
+
++#ifndef SWITCH_PORT_SPEED_2500
++#define SWITCH_PORT_SPEED_2500 SWITCH_PORT_SPEED_UNKNOWN
++#endif
++#ifndef SWITCH_PORT_SPEED_5000
++#define SWITCH_PORT_SPEED_5000 SWITCH_PORT_SPEED_UNKNOWN
++#endif
++#ifndef SWITCH_PORT_SPEED_10000
++#define SWITCH_PORT_SPEED_10000 SWITCH_PORT_SPEED_UNKNOWN
++#endif
++
+ #if defined(CONFIG_OF) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0))
+ #ifdef DESS
+ extern struct reset_control *ess_mac_clock_disable[5];

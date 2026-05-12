@@ -1,0 +1,11 @@
+--- a/src/init/ssdk_init.c
++++ b/src/init/ssdk_init.c
+@@ -1469,7 +1469,7 @@
+ 	unregister_switch(&qca_phy_priv_global[dev_id]->sw_dev);
+ #endif
+ 
+-#if IS_ENABLED(CONFIG_NET_DSA)
++#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
+ 	if (priv->version == QCA_VER_MHT ||
+ 		priv->version == QCA_VER_AR8337 ||
+ 		priv->version == QCA_VER_AR8327)

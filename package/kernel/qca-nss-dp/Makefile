@@ -3,11 +3,11 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=qca-nss-dp
 PKG_RELEASE:=1
 
-PKG_SOURCE_URL:=https://github.com/openwrt/qca-nss-dp.git
+PKG_SOURCE_URL:=https://git.codelinaro.org/clo/qsdk/oss/lklm/nss-dp.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2026-03-13
-PKG_SOURCE_VERSION:=6a5c4716ca258d67202fc7964c9294dfefa3ccfa
-PKG_MIRROR_HASH:=5f9a9a44f91842492d8c9038670379011b90e68fda7af291b2bdd81889a9ea1a
+PKG_SOURCE_DATE:=2026-01-19
+PKG_SOURCE_VERSION:=d8f802f08fd8ff31057ba58edb20bbe448e7b505
+PKG_MIRROR_HASH:=e990afc68ac816c9e373fc05196360c5c3315f0e71ddb841b075142c45823c97
 
 PKG_BUILD_PARALLEL:=1
 PKG_FLAGS:=nonshared
@@ -19,6 +19,8 @@ PKG_CONFIG_DEPENDS:= \
 
 include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
+
+QCA_SSDK_SYMVERS:=$(PKG_SYMVERS_DIR)/qca-ssdk.symvers
 
 define KernelPackage/qca-nss-dp
   SECTION:=kernel
@@ -52,6 +54,8 @@ define Build/Compile
 	+$(KERNEL_MAKE) $(PKG_JOBS) \
 		-C "$(LINUX_DIR)" \
 		M="$(PKG_BUILD_DIR)" \
+		KBUILD_EXTRA_SYMBOLS="$(QCA_SSDK_SYMVERS)" \
+		NSS_DP_INCLUDE="-I$(PKG_BUILD_DIR)/include -I$(PKG_BUILD_DIR)/exports -I$(PKG_BUILD_DIR)/hal/include -I$(PKG_BUILD_DIR)/hal/dp_ops/include -I$(PKG_BUILD_DIR)/hal/dp_ops/edma_dp/edma_v1/include -I$(STAGING_DIR)/usr/include/qca-ssdk" \
 		EXTRA_CFLAGS="$(EXTRA_CFLAGS)" SoC="$(CONFIG_TARGET_SUBTARGET)" \
 		modules
 endef

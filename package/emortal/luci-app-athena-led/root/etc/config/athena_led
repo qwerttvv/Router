@@ -1,5 +1,5 @@
 config settings 'general'
-    option enabled '0'
+    option enabled '1'
     option profile_mode 'multi'
     option light_level '5'
     option net_interface 'br-lan'

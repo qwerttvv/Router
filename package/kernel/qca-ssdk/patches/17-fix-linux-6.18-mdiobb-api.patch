@@ -1,0 +1,55 @@
+--- a/src/init/ssdk_plat.c
++++ b/src/init/ssdk_plat.c
+@@ -307,8 +307,13 @@
+ 	if (strncmp(bus->id, "gpio", strlen("gpio")))
+ 		return SW_NOT_FOUND;
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++	if (gpio_priv) {
++		*val = mdiobb_read_c22(bus, reg >> 5, reg & 0x1f);
++#else
+ 	if (gpio_priv && gpio_priv->sw_read) {
+ 		*val = gpio_priv->sw_read(bus, reg);
++#endif
+ 		return SW_OK;
+ 	}
+ 
+@@ -323,8 +328,12 @@
+ 	if (strncmp(bus->id, "gpio", strlen("gpio")))
+ 		return SW_NOT_FOUND;
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++	if (gpio_priv && !mdiobb_write_c22(bus, reg >> 5, reg & 0x1f, val)) {
++#else
+ 	if (gpio_priv && gpio_priv->sw_write) {
+ 		gpio_priv->sw_write(bus, reg, val);
++#endif
+ 		return SW_OK;
+ 	}
+ 
+@@ -339,13 +348,25 @@
+ 	if (strncmp(bus->id, "gpio", strlen("gpio")))
+ 		return SW_NOT_FOUND;
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++	if (gpio_priv) {
++#else
+ 	if (gpio_priv && gpio_priv->sw_read && gpio_priv->sw_write) {
++#endif
+ 		a_uint32_t val;
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++		val = mdiobb_read_c22(bus, reg >> 5, reg & 0x1f);
++#else
+ 		val = gpio_priv->sw_read(bus, reg);
++#endif
+ 		val &= ~clear;
+ 		val |= set;
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
++		mdiobb_write_c22(bus, reg >> 5, reg & 0x1f, val);
++#else
+ 		gpio_priv->sw_write(bus, reg, val);
++#endif
+ 
+ 		return SW_OK;
+ 	}

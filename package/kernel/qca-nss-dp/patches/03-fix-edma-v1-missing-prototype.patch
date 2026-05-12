@@ -1,0 +1,11 @@
+--- a/hal/dp_ops/edma_dp/edma_v1/edma_cfg.c
++++ b/hal/dp_ops/edma_dp/edma_v1/edma_cfg.c
+@@ -714,7 +714,7 @@ void edma_hw_configure(struct edma_hw *e
+  * edma_hw_reset()
+  *	Reset EDMA Hardware during initialization
+  */
+-int edma_hw_reset(struct edma_hw *ehw)
++static int edma_hw_reset(struct edma_hw *ehw)
+ {
+ 	struct reset_control *rst;
+ 	struct platform_device *pdev = ehw->pdev;

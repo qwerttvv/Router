@@ -1,0 +1,13 @@
+--- a/src/hsl/phy/hsl_phy.c
++++ b/src/hsl/phy/hsl_phy.c
+@@ -249,8 +249,10 @@ int ssdk_phy_driver_init(a_uint32_t dev_
+ 			}
+ /*qca808x_start*/
+ 			phy_id = hsl_phyid_get(dev_id, i);
++#ifdef MHT
+ 			if (phy_id == QCA8084_PHY)
+ 				mht_interface_ops_init(dev_id, i);
++#endif
+ 			phytype = hsl_phytype_get_by_phyid(dev_id, phy_id);
+ 			if (MAX_PHY_CHIP != phytype) {
+ 				phy_info[dev_id]->phy_type[i] = phytype;

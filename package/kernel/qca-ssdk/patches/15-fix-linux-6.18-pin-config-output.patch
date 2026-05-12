@@ -1,0 +1,16 @@
+--- a/src/init/ssdk_mht_pinctrl.c
++++ b/src/init/ssdk_mht_pinctrl.c
+@@ -286,12 +286,14 @@
+             case PIN_CONFIG_DRIVE_STRENGTH:
+                 rv = mht_gpio_pin_cfg_set_drvs(dev_id, pin, arg);
+                 break;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,18,0))
+             case PIN_CONFIG_OUTPUT:
+                 rv = mht_gpio_pin_cfg_set_oe(dev_id, pin, A_TRUE);
+                 rv = mht_gpio_set_bit(dev_id, pin, arg);
+                 break;
++#endif
+ 
+             case PIN_CONFIG_INPUT_ENABLE:
+                 rv = mht_gpio_pin_cfg_set_oe(dev_id, pin, A_FALSE);

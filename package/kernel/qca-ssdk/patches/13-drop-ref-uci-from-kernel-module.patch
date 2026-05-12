@@ -1,0 +1,11 @@
+--- a/mk/obj.mk
++++ b/mk/obj.mk
+@@ -439,7 +439,7 @@
+ #                                 COMMON
+ ###############################################################################
+ OBJ-COMMON  += src/fal/fal_init.o src/fal/fal_reg_access.o src/adpt/adpt.o \
+-               src/ref/ref_uci.o src/hsl/hsl_dev.o src/hsl/hsl_api.o \
++               src/hsl/hsl_dev.o src/hsl/hsl_api.o \
+                src/hsl/hsl_port_prop.o src/util/util.o src/sal/sd/sd.o \
+                src/sal/sd/linux/uk_interface/sw_api_ks_ioctl.o \
+                src/api/api_access.o

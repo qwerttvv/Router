@@ -1,0 +1,22 @@
+--- a/src/init/ssdk_init.c
++++ b/src/init/ssdk_init.c
+@@ -62,6 +62,10 @@
+ #include <linux/of_net.h>
+ #include <linux/of_address.h>
+ #include <linux/reset.h>
++#ifndef SWITCH_TYPE_EXT
++#define SWITCH_TYPE_EXT SWITCH_TYPE_STRING
++#endif
++
+ #include "ssdk_plat.h"
+ /*qca808x_end*/
+ #include "ssdk_clk.h"
+@@ -1269,7 +1273,7 @@
+ }
+ #endif
+ 
+-#if IS_ENABLED(CONFIG_NET_DSA)
++#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
+ static int ssdk_dsa_event_link_change(struct net_device *dev, bool link)
+ {
+ 	struct dsa_port *dp = NULL;

@@ -1,0 +1,10 @@
+--- a/mk/cflags.mk
++++ b/mk/cflags.mk
+@@ -337,6 +337,7 @@ MODULE_INC += -I$(PRJ_PATH)/include \
+                    -I$(PRJ_PATH)/include/ref \
+                    -I$(PRJ_PATH)/include/adpt \
+                    -I$(PRJ_PATH)/include/hsl \
++                   -I$(PRJ_PATH)/include/hsl/mht \
+                    -I$(PRJ_PATH)/include/hsl/phy \
+                    -I$(PRJ_PATH)/include/sal/os \
+                    -I$(PRJ_PATH)/include/sal/os/linux \
