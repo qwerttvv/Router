@@ -12,7 +12,7 @@ index f2a5795..d74407b 100644
  config PACKAGE_$(PKG_NAME)_INCLUDE_Http_Proxy
  	bool "Include HTTP(S) Proxy Server"
 diff --git a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-index 6e44721..f35f5d6 100644
+index 4ee7df1..237ba11 100644
 --- a/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 +++ b/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 @@ -619,7 +619,7 @@ function index()
