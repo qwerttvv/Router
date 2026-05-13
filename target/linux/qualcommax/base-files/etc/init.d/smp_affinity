@@ -74,9 +74,9 @@ set_affinity() {
 
 enable_affinity() {
 	# assign 4 lan/wan
-	set_affinity 'edma_txcmpl' 1
-	set_affinity 'edma_rxfill' 1
-	set_affinity 'edma_rxdesc' 1
+	set_affinity 'edma_txcmpl' 3
+	set_affinity 'edma_rxfill' 3
+	set_affinity 'edma_rxdesc' 3
 	set_affinity 'edma_misc'   3
 }
 
