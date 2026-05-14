@@ -41,7 +41,7 @@
  	if (!netdev_switch)
  		return NOTIFY_DONE;
  
-@@ -1293,11 +1305,15 @@
+@@ -1293,12 +1305,15 @@
  	if (!priv)
  		return NOTIFY_DONE;
  
@@ -52,12 +52,12 @@
  	return NOTIFY_OK;
  }
 +#endif
-+
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
  
++#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
  static int ssdk_dsa_event_nb(struct notifier_block *unused,
  		unsigned long event, void *ptr)
-@@ -1307,7 +1323,7 @@
+ {
+@@ -1307,7 +1322,7 @@
  			struct dsa_notifier_link *info = (struct dsa_notifier_link *)ptr;
  
  			SSDK_DEBUG("%s, link: %d.\n", info->info.dev->name, info->link);
@@ -66,41 +66,39 @@
  
  		default:
  			SSDK_INFO("DSA event %lu is not supported\n", event);
-@@ -1755,8 +1771,26 @@
+@@ -1755,8 +1770,16 @@
  				}
  			}
  			break;
+-#ifdef MP
 +		case NETDEV_UP:
 +#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+			if (ssdk_dsa_link_change_refresh(dev) == NOTIFY_OK)
-+				break;
++			ssdk_dsa_link_change_refresh(dev);
 +#endif
 +			break;
-+#if !defined(MP)
-+		case NETDEV_CHANGE:
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+			if (ssdk_dsa_link_change_refresh(dev) == NOTIFY_OK)
-+				break;
-+#endif
-+			break;
-+#endif
- #ifdef MP
  		case NETDEV_CHANGE:
 +#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+			if (ssdk_dsa_link_change_refresh(dev) == NOTIFY_OK)
-+				break;
++			ssdk_dsa_link_change_refresh(dev);
 +#endif
++#ifdef MP
  			if ((cfg.chip_type == CHIP_SCOMPHY) &&
  				(cfg.phy_id == MP_GEPHY)) {
  				if ((p_api == NULL) || (p_api->adpt_port_netdev_notify_set == NULL)
-@@ -1777,6 +1811,10 @@
- 			break;
+@@ -1773,12 +1796,15 @@
+ 						return NOTIFY_DONE;
+ 					}
+ 				}
+-			}
+-			break;
++			}
  #endif
++			break;
  		case NETDEV_REGISTER:
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+			if (ssdk_dsa_link_change_refresh(dev) == NOTIFY_OK)
-+				break;
-+#endif
  			if (strstr(dev->name, "eth") && !(dev->priv_flags & IFF_802_1Q_VLAN))
  				ssdk_netdev_switch_init(dev);
++#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
++				ssdk_dsa_link_change_refresh(dev);
++#endif
  			break;
+ 	}
+ 
