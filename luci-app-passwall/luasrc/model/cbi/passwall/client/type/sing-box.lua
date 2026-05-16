@@ -359,11 +359,9 @@ if singbox_tags:find("with_quic") then
 	o.default = "30"
 	o:depends({ [_n("protocol")] = "hysteria2" })
 
-	o = s:option(Value, _n("hysteria2_up_mbps"), translate("Max upload Mbps"))
-	o:depends({ [_n("protocol")] = "hysteria2" })
-
-	o = s:option(Value, _n("hysteria2_down_mbps"), translate("Max download Mbps"))
-	o:depends({ [_n("protocol")] = "hysteria2" })
+	o = s:option(Value, _n("hysteria2_auth_password"), translate("Auth Password"))
+	o.password = true
+	o:depends({ [_n("protocol")] = "hysteria2"})
 
 	o = s:option(ListValue, _n("hysteria2_obfs_type"), translate("Obfs Type"))
 	o:value("", translate("Disable"))
@@ -373,9 +371,11 @@ if singbox_tags:find("with_quic") then
 	o = s:option(Value, _n("hysteria2_obfs_password"), translate("Obfs Password"))
 	o:depends({ [_n("hysteria2_obfs_type")] = "salamander" })
 
-	o = s:option(Value, _n("hysteria2_auth_password"), translate("Auth Password"))
-	o.password = true
-	o:depends({ [_n("protocol")] = "hysteria2"})
+	o = s:option(Value, _n("hysteria2_up_mbps"), translate("Max upload Mbps"))
+	o:depends({ [_n("protocol")] = "hysteria2" })
+
+	o = s:option(Value, _n("hysteria2_down_mbps"), translate("Max download Mbps"))
+	o:depends({ [_n("protocol")] = "hysteria2" })
 
 	o = s:option(Value, _n("hysteria2_idle_timeout"), translate("Idle Timeout"), translate("Example:") .. "30s (4s~120s)")
 	o:depends({ [_n("protocol")] = "hysteria2"})
