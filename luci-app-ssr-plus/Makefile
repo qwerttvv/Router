@@ -4,7 +4,7 @@ LUCI_TITLE:=luci-app-ssr-plus
 LUCI_PKGARCH:=all
 PKG_NAME:=luci-app-ssr-plus
 PKG_VERSION:=193
-PKG_RELEASE:=22
+PKG_RELEASE:=23
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_Iptables_Transparent_Proxy \
@@ -48,6 +48,7 @@ LUCI_DEPENDS:= \
 
 
 define Package/$(PKG_NAME)/config
+if PACKAGE_$(PKG_NAME)
 
 choice
 	prompt "Transparent Proxy Backend"
@@ -112,7 +113,7 @@ endchoice
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ChinaDNS_NG
 	bool "Include ChinaDNS-NG"
-	default n
+	default y if aarch64||arm||i386||x86_64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_MosDNS
 	bool "Include MosDNS"
@@ -168,6 +169,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server
 	bool "Include ShadowsocksR Libev Server"
 	default n
 
+endif
 endef
 
 
