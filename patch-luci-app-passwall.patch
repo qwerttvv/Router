@@ -1,8 +1,8 @@
 diff --git a/luci-app-passwall/Makefile b/luci-app-passwall/Makefile
-index 01f2515..87fea1c 100644
+index 35d2a9e..77335d7 100644
 --- a/luci-app-passwall/Makefile
 +++ b/luci-app-passwall/Makefile
-@@ -68,7 +68,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
+@@ -66,7 +66,7 @@ config PACKAGE_$(PKG_NAME)_Nftables_Transparent_Proxy
  config PACKAGE_$(PKG_NAME)_INCLUDE_Geoview
  	bool "Include Geoview"
  	select PACKAGE_geoview
