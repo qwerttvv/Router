@@ -46,8 +46,8 @@ msgstr "لیست قوانین"
 msgid "Access control"
 msgstr "کنترل دسترسی"
 
-msgid "Watch Logs"
-msgstr "مشاهده گزارش‌ها"
+msgid "Runtime Logs"
+msgstr "گزارش‌های زمان اجرا"
 
 msgid "Node Config"
 msgstr "پیکربندی گره"

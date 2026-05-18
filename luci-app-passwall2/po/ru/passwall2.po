@@ -46,8 +46,8 @@ msgstr "Список правил"
 msgid "Access control"
 msgstr "Контроль доступа"
 
-msgid "Watch Logs"
-msgstr "Просмотр журнала"
+msgid "Runtime Logs"
+msgstr "Журналы выполнения"
 
 msgid "Node Config"
 msgstr "Параметры узла"
