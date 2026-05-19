@@ -2006,6 +2006,10 @@ function gen_config(var)
 		}
 	end
 
+	route.default_domain_resolver = {
+		server = "direct"
+	}
+
 	if not dns.rules then dns.rules = {} end
 
 	for i, v in pairs(GLOBAL.DNS_SERVER) do
@@ -2102,10 +2106,6 @@ function gen_config(var)
 			type = "direct",
 			tag = "direct",
 			routing_mark = 255,
-			domain_resolver = {
-				server = "direct",
-				strategy = "prefer_ipv6"
-			}
 		})
 		for index, value in ipairs(config.outbounds) do
 			if not value["_flag_proxy_tag"] and not value.detour and value["_id"] and value.server and (value.server_port or value.server_ports) and not no_run then
