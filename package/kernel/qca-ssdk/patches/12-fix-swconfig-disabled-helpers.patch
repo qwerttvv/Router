@@ -12,7 +12,7 @@
  int
  qca_ar8327_sw_set_max_frame_size(struct switch_dev *dev,
  										const struct switch_attr *attr,
-@@ -180,8 +184,10 @@ qca_ar8327_sw_reset_switch(struct switch
+@@ -175,7 +180,9 @@ qca_ar8327_sw_reset_switch(struct switch
  	mutex_unlock(&priv->reg_mutex);
  
  	priv->init = true;

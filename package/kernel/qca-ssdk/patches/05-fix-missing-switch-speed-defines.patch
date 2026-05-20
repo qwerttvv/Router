@@ -1,10 +1,9 @@
 --- a/src/ref/ref_port_ctrl.c
 +++ b/src/ref/ref_port_ctrl.c
-@@ -50,6 +50,16 @@
- #include "ref_vlan.h"
+@@ -52,6 +52,16 @@
  #include <linux/time.h>
  #include "ref_port_ctrl.h"
-
+ 
 +#ifndef SWITCH_PORT_SPEED_2500
 +#define SWITCH_PORT_SPEED_2500 SWITCH_PORT_SPEED_UNKNOWN
 +#endif

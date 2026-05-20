@@ -1,6 +1,6 @@
 --- a/mk/obj.mk
 +++ b/mk/obj.mk
-@@ -439,7 +439,7 @@
+@@ -439,7 +439,7 @@ OBJ-COMMON  += src/shell_lib/shell.o src
  #                                 COMMON
  ###############################################################################
  OBJ-COMMON  += src/fal/fal_init.o src/fal/fal_reg_access.o src/adpt/adpt.o \

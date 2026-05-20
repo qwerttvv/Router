@@ -1,6 +1,7 @@
 --- a/src/init/ssdk_dts.c
 +++ b/src/init/ssdk_dts.c
-@@ -27,6 +27,7 @@
+@@ -26,6 +26,7 @@
+ #endif
  #include <linux/etherdevice.h>
  #include <linux/clk.h>
 +#include <linux/platform_device.h>

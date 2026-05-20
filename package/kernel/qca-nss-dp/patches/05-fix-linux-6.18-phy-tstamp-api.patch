@@ -1,6 +1,6 @@
 --- a/hal/dp_ops/edma_dp/edma_v1/edma_tx_rx.c
 +++ b/hal/dp_ops/edma_dp/edma_v1/edma_tx_rx.c
-@@ -227,10 +227,16 @@
+@@ -227,10 +227,16 @@ void nss_phy_tstamp_rx_buf(__attribute__
  	 * set to the correct PTP class value by calling ptp_classify_raw
  	 * in drv->rxtstamp function.
  	 */
@@ -17,7 +17,7 @@
  
  	netif_receive_skb(skb);
  }
-@@ -248,9 +254,14 @@
+@@ -248,9 +254,14 @@ void nss_phy_tstamp_tx_buf(struct net_de
  	 * set to the correct PTP class value by calling ptp_classify_raw
  	 * in the drv->txtstamp function.
  	 */

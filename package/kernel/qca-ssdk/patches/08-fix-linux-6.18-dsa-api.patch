@@ -11,7 +11,7 @@
  #include "ssdk_plat.h"
  /*qca808x_end*/
  #include "ssdk_clk.h"
-@@ -1269,7 +1273,7 @@
+@@ -1269,7 +1273,7 @@ static int qca_switchdev_register(struct
  }
  #endif
  

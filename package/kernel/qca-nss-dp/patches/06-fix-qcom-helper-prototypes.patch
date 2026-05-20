@@ -1,6 +1,6 @@
 --- a/hal/gmac_ops/qcom/qcom_if.c
 +++ b/hal/gmac_ops/qcom/qcom_if.c
-@@ -242,7 +242,7 @@ static int32_t qcom_get_stats(struct nss
+@@ -242,7 +242,7 @@ static int32_t qcom_get_netdev_stats(str
   * qcom_get_strset_count()
   *	Get string set count for ethtool operations
   */
@@ -10,7 +10,6 @@
  	struct net_device *netdev = nghd->netdev;
  
 @@ -261,7 +261,7 @@ int32_t qcom_get_strset_count(struct nss
- /*
   * qcom_get_strings()
   *	Get strings
   */

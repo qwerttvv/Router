@@ -1,7 +1,6 @@
 --- a/src/init/ssdk_mht_pinctrl.c
 +++ b/src/init/ssdk_mht_pinctrl.c
-@@ -286,12 +286,14 @@
-             case PIN_CONFIG_DRIVE_STRENGTH:
+@@ -287,10 +287,12 @@ static sw_error_t mht_gpio_pin_cfg_set(a
                  rv = mht_gpio_pin_cfg_set_drvs(dev_id, pin, arg);
                  break;
  

@@ -1,7 +1,6 @@
-diff -ru a/include/nss_dp_dev.h b/include/nss_dp_dev.h
---- a/include/nss_dp_dev.h	2026-01-19 14:43:05.000000000 +0800
-+++ b/include/nss_dp_dev.h	2026-05-12 00:19:13.160955118 +0800
-@@ -229,11 +229,10 @@
+--- a/include/nss_dp_dev.h
++++ b/include/nss_dp_dev.h
+@@ -229,11 +229,10 @@ struct nss_dp_dev {
  	unsigned long drv_flags;	/* Driver specific feature flags */
  
  	/* Phy related stuff */
@@ -14,10 +13,9 @@ diff -ru a/include/nss_dp_dev.h b/include/nss_dp_dev.h
  	uint32_t forced_speed;		/* Forced speed? */
  	uint32_t forced_duplex;		/* Forced duplex? */
  	uint32_t link_state;		/* Current link state */
-diff -ru a/nss_dp_main.c b/nss_dp_main.c
---- a/nss_dp_main.c	2026-05-12 00:18:48.231482114 +0800
-+++ b/nss_dp_main.c	2026-05-12 09:34:33.938034619 +0800
-@@ -494,7 +494,7 @@
+--- a/nss_dp_main.c
++++ b/nss_dp_main.c
+@@ -494,7 +494,7 @@ static int nss_dp_open(struct net_device
  
  	netif_start_queue(netdev);
  
@@ -26,7 +24,7 @@ diff -ru a/nss_dp_main.c b/nss_dp_main.c
  		/* Notify data plane link is up */
  		if (dp_priv->data_plane_ops->link_state(dp_priv->dpc, 1)) {
  			netdev_dbg(netdev, "Data plane set link failed\n");
-@@ -724,6 +724,22 @@
+@@ -724,6 +724,22 @@ static int32_t nss_dp_of_get_pdata(struc
  	hal_pdata->netdev = netdev;
  	hal_pdata->macid = dp_priv->macid;
  
@@ -49,7 +47,7 @@ diff -ru a/nss_dp_main.c b/nss_dp_main.c
  #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
  	dp_priv->phy_mii_type = of_get_phy_mode(np);
  #else
-@@ -731,18 +747,6 @@
+@@ -731,18 +747,6 @@ static int32_t nss_dp_of_get_pdata(struc
  		return -EFAULT;
  #endif
  
@@ -68,7 +66,7 @@ diff -ru a/nss_dp_main.c b/nss_dp_main.c
  	of_property_read_u32(np, "qcom,forced-speed", &dp_priv->forced_speed);
  	of_property_read_u32(np, "qcom,forced-duplex", &dp_priv->forced_duplex);
  
-@@ -835,69 +839,6 @@
+@@ -835,69 +839,6 @@ static int32_t nss_dp_of_get_pdata(struc
  	return 0;
  }
  
@@ -138,7 +136,7 @@ diff -ru a/nss_dp_main.c b/nss_dp_main.c
  #ifdef CONFIG_NET_SWITCHDEV
  /*
   * nss_dp_is_phy_dev()
-@@ -955,19 +896,27 @@
+@@ -955,19 +896,27 @@ static int32_t nss_dp_probe(struct platf
  	struct nss_dp_dev *dp_priv;
  	struct device_node *np = pdev->dev.of_node;
  	struct nss_gmac_hal_platform_data gmac_hal_pdata;
@@ -170,7 +168,7 @@ diff -ru a/nss_dp_main.c b/nss_dp_main.c
  		return -ENOMEM;
  	}
  
-@@ -1037,22 +986,15 @@
+@@ -1037,22 +986,15 @@ static int32_t nss_dp_probe(struct platf
  
  	dp_priv->drv_flags |= NSS_DP_PRIV_FLAG(INIT_DONE);
  

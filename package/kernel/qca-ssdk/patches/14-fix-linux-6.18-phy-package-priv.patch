@@ -11,9 +11,7 @@
  static a_uint16_t
  mht_uniphy_xpcs_mmd_read(a_uint32_t dev_id, a_uint16_t mmd_num,
  	a_uint16_t mmd_reg)
-@@ -825,14 +825,21 @@
- 	if (!phydev->shared) {
- 		SSDK_ERROR("phydev->shared is null\n");
+@@ -827,12 +831,19 @@ mht_interface_ops_init(a_uint32_t dev_id
  		return SW_BAD_PTR;
  	}
  

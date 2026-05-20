@@ -1,6 +1,6 @@
 --- a/src/init/ssdk_init.c
 +++ b/src/init/ssdk_init.c
-@@ -1439,7 +1439,7 @@
+@@ -1440,7 +1440,7 @@ static int ssdk_switch_register(a_uint32
  		}
  	}
  

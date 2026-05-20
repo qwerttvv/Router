@@ -8,96 +8,81 @@
  
  #if defined(IN_SWCONFIG)
  #include <linux/switch.h>
-@@ -1273,19 +1274,30 @@
- }
+@@ -1321,6 +1322,44 @@ static struct notifier_block ssdk_dsa_no
+ };
  #endif
  
--#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
--static int ssdk_dsa_event_link_change(struct net_device *dev, bool link)
-+#if IS_ENABLED(CONFIG_NET_DSA)
-+static int ssdk_dsa_link_change_refresh(struct net_device *dev)
- {
- 	struct dsa_port *dp = NULL;
- 	ssdk_netdev_switch_t *netdev_switch = NULL;
- 	struct qca_phy_priv* priv = NULL;
- 
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
- 	if (!dsa_slave_dev_check(dev))
- 		return NOTIFY_DONE;
-+#endif
- 
- 	/* find dp,master by dsa helper and get net_switch */
- 	dp = dsa_port_from_netdev(dev);
-+	if (IS_ERR_OR_NULL(dp) || !dp->cpu_dp)
-+		return NOTIFY_DONE;
++#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
++static void ssdk_dsa_netdev_link_refresh(struct net_device *dev)
++{
++	ssdk_netdev_switch_t *netdev_switch = NULL;
++	struct qca_phy_priv* priv = NULL;
++	struct net_device *conduit = NULL;
++	struct dsa_port *dp = NULL;
 +
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+	if (!dp->cpu_dp->conduit)
-+		return NOTIFY_DONE;
-+	netdev_switch = ssdk_dts_netdev_switch_find_by_netdev(dp->cpu_dp->conduit);
-+#else
- 	netdev_switch = ssdk_dts_netdev_switch_find_by_netdev(dp->cpu_dp->master);
++	netdev_switch = ssdk_dts_netdev_switch_find_by_netdev(dev);
++	if (!netdev_switch) {
++		dp = dsa_port_from_netdev(dev);
++		if (IS_ERR_OR_NULL(dp) || !dp->cpu_dp)
++			return;
++
++		conduit = dsa_port_to_conduit(dp);
++		if (!conduit)
++			return;
++
++		netdev_switch = ssdk_dts_netdev_switch_find_by_netdev(conduit);
++	}
++
++	if (!netdev_switch)
++		return;
++
++	priv = ssdk_phy_priv_data_get(netdev_switch->switch_dev_id);
++	if (!priv)
++		return;
++
++	if (priv->version != QCA_VER_MHT &&
++		priv->version != QCA_VER_AR8337 &&
++		priv->version != QCA_VER_AR8327)
++		return;
++
++	priv->polling_once = A_TRUE;
++	mod_delayed_work(system_wq, &priv->qm_dwork_polling, 0);
++}
 +#endif
- 	if (!netdev_switch)
- 		return NOTIFY_DONE;
- 
-@@ -1293,12 +1305,15 @@
- 	if (!priv)
- 		return NOTIFY_DONE;
- 
-+	/* Run one immediate SSDK link poll when DSA reports carrier change. */
- 	priv->polling_once = A_TRUE;
- 	mod_delayed_work(system_wq, &priv->qm_dwork_polling, 0);
- 
- 	return NOTIFY_OK;
- }
-+#endif
- 
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
- static int ssdk_dsa_event_nb(struct notifier_block *unused,
- 		unsigned long event, void *ptr)
++
+ #if defined(DESS) || defined(HPPE) || defined (ISISC) || defined (ISIS) || defined(MP) || defined(MHT)
+ static int ssdk_switch_register(a_uint32_t dev_id, ssdk_chip_type  chip_type)
  {
-@@ -1307,7 +1322,7 @@
- 			struct dsa_notifier_link *info = (struct dsa_notifier_link *)ptr;
- 
- 			SSDK_DEBUG("%s, link: %d.\n", info->info.dev->name, info->link);
--			return ssdk_dsa_event_link_change(info->info.dev, info->link);
-+			return ssdk_dsa_link_change_refresh(info->info.dev);
- 
- 		default:
- 			SSDK_INFO("DSA event %lu is not supported\n", event);
-@@ -1755,8 +1770,16 @@
+@@ -1755,8 +1794,16 @@ static int ssdk_dev_event(struct notifie
  				}
  			}
  			break;
 -#ifdef MP
 +		case NETDEV_UP:
 +#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+			ssdk_dsa_link_change_refresh(dev);
++			ssdk_dsa_netdev_link_refresh(dev);
 +#endif
 +			break;
  		case NETDEV_CHANGE:
 +#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+			ssdk_dsa_link_change_refresh(dev);
++			ssdk_dsa_netdev_link_refresh(dev);
 +#endif
 +#ifdef MP
  			if ((cfg.chip_type == CHIP_SCOMPHY) &&
  				(cfg.phy_id == MP_GEPHY)) {
  				if ((p_api == NULL) || (p_api->adpt_port_netdev_notify_set == NULL)
-@@ -1773,12 +1796,15 @@
- 						return NOTIFY_DONE;
+@@ -1774,11 +1821,14 @@ static int ssdk_dev_event(struct notifie
  					}
  				}
--			}
+ 			}
 -			break;
-+			}
  #endif
 +			break;
  		case NETDEV_REGISTER:
  			if (strstr(dev->name, "eth") && !(dev->priv_flags & IFF_802_1Q_VLAN))
  				ssdk_netdev_switch_init(dev);
 +#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
-+				ssdk_dsa_link_change_refresh(dev);
++				ssdk_dsa_netdev_link_refresh(dev);
 +#endif
  			break;
  	}

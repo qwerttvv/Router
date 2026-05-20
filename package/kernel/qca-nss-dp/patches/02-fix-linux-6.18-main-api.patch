@@ -8,7 +8,7 @@
  
  #define JUMBO_MRU_3K 3072
  
-@@ -510,7 +511,7 @@
+@@ -510,7 +511,7 @@ static int nss_dp_open(struct net_device
  	return 0;
  }
  
@@ -17,7 +17,7 @@
  /*
   * nss_dp_rx_flow_steer()
   *	Steer the flow rule to NSS
-@@ -679,7 +680,7 @@
+@@ -679,7 +680,7 @@ struct net_device_ops nss_dp_netdev_ops
  	.ndo_select_queue = nss_dp_select_queue,
  #endif
  
@@ -26,7 +26,7 @@
  	.ndo_rx_flow_steer = nss_dp_rx_flow_steer,
  #endif
  };
-@@ -911,7 +912,7 @@
+@@ -911,7 +912,7 @@ bool nss_dp_is_phy_dev(struct net_device
  /*
   * nss_dp_adjust_link()
   */
@@ -35,7 +35,7 @@
  {
  	struct nss_dp_dev *dp_priv = netdev_priv(netdev);
  	int current_state = dp_priv->link_state;
-@@ -1130,7 +1131,7 @@
+@@ -1130,7 +1131,7 @@ fail:
   * Note: We only remove the physical ports here. Virtual
   * port devices are removed explicitly by the VP module.
   */
@@ -44,7 +44,7 @@
  {
  	uint32_t i;
  	struct nss_dp_dev *dp_priv;
-@@ -1177,7 +1178,6 @@
+@@ -1177,7 +1178,6 @@ static int nss_dp_remove(struct platform
  		dp_global_ctx.nss_dp[i] = NULL;
  	}
  
@@ -52,7 +52,7 @@
  }
  
  static struct of_device_id nss_dp_dt_ids[] = {
-@@ -1260,7 +1260,7 @@
+@@ -1260,7 +1260,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
  /*
   * nss_dp_init()
   */
@@ -61,7 +61,7 @@
  {
  	int ret, i;
  
-@@ -1348,7 +1348,7 @@
+@@ -1348,7 +1348,7 @@ int __init nss_dp_init(void)
  /*
   * nss_dp_exit()
   */

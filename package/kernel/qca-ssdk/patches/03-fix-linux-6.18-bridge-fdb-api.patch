@@ -1,6 +1,6 @@
 --- a/src/ref/ref_acl.c
 +++ b/src/ref/ref_acl.c
-@@ -229,7 +229,9 @@ _ref_acl_mac_entry_add_rule(a_uint32_t d
+@@ -229,7 +229,9 @@ _ref_acl_mac_entry_create_rule(a_uint32_
  		eth_dev = dev_get_by_name(&init_net, entry->ifname);
  		if (eth_dev)
  		{

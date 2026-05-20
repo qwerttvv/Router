@@ -1,6 +1,6 @@
 --- a/hal/dp_ops/edma_dp/edma_v1/edma_data_plane.c
 +++ b/hal/dp_ops/edma_dp/edma_v1/edma_data_plane.c
-@@ -279,8 +279,13 @@ int edma_init(bool is_dp_override)
+@@ -279,8 +279,13 @@ int edma_init(void)
  	/*
  	 * Remap register resource
  	 */

@@ -1,6 +1,6 @@
 --- a/src/init/ssdk_plat.c
 +++ b/src/init/ssdk_plat.c
-@@ -307,8 +307,13 @@
+@@ -307,8 +307,13 @@ sw_error_t qca_bitbang_mii_raw_read_try(
  	if (strncmp(bus->id, "gpio", strlen("gpio")))
  		return SW_NOT_FOUND;
  
@@ -14,7 +14,7 @@
  		return SW_OK;
  	}
  
-@@ -323,8 +328,12 @@
+@@ -323,8 +328,12 @@ sw_error_t qca_bitbang_mii_raw_write_try
  	if (strncmp(bus->id, "gpio", strlen("gpio")))
  		return SW_NOT_FOUND;
  
@@ -27,7 +27,7 @@
  		return SW_OK;
  	}
  
-@@ -339,13 +348,25 @@
+@@ -339,13 +348,25 @@ sw_error_t qca_bitbang_mii_raw_update_tr
  	if (strncmp(bus->id, "gpio", strlen("gpio")))
  		return SW_NOT_FOUND;
  

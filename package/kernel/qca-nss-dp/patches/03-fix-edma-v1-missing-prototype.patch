@@ -1,6 +1,6 @@
 --- a/hal/dp_ops/edma_dp/edma_v1/edma_cfg.c
 +++ b/hal/dp_ops/edma_dp/edma_v1/edma_cfg.c
-@@ -714,7 +714,7 @@ void edma_hw_configure(struct edma_hw *e
+@@ -714,7 +714,7 @@ static void edma_configure_rings(struct
   * edma_hw_reset()
   *	Reset EDMA Hardware during initialization
   */
