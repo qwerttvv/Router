@@ -125,9 +125,9 @@ define Device/linksys_mr5500
 	$(call Device/linksys_ipq50xx_mx_base)
 	DEVICE_MODEL := MR5500
 	DEVICE_DTS_CONFIG := config@mp03.1
-	DEVICE_PACKAGES := ath11k-firmware-ipq5018-ddwrt  \
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
 		kmod-ath11k-pci \
-		ath11k-firmware-qcn9074-ddwrt \
+		ath11k-firmware-qcn9074 \
 		ipq-wifi-linksys_mr5500 \
 		kmod-usb-ledtrig-usbport
 endef
@@ -146,9 +146,9 @@ define Device/linksys_mx5500
 	$(call Device/linksys_ipq50xx_mx_base)
 	DEVICE_MODEL := MX5500
 	DEVICE_DTS_CONFIG := config@mp03.1
-	DEVICE_PACKAGES := ath11k-firmware-ipq5018-ddwrt  \
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
 		kmod-ath11k-pci \
-		ath11k-firmware-qcn9074-ddwrt \
+		ath11k-firmware-qcn9074 \
 		ipq-wifi-linksys_mx5500
 endef
 TARGET_DEVICES += linksys_mx5500
@@ -175,36 +175,51 @@ define Device/linksys_spnmx56
 	$(call Device/linksys_ipq50xx_mx_base)
 	DEVICE_MODEL := SPNMX56
 	DEVICE_DTS_CONFIG := config@mp03.1
-	DEVICE_PACKAGES := ath11k-firmware-ipq5018-ddwrt  \
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
 		kmod-ath11k-pci \
-		ath11k-firmware-qcn9074-ddwrt \
+		ath11k-firmware-qcn9074 \
 		ipq-wifi-linksys_spnmx56
 endef
 TARGET_DEVICES += linksys_spnmx56
 
-define Device/xiaomi_ax6000
+define Device/xiaomi_ipq50xx_ax_base
 	$(call Device/FitImage)
 	$(call Device/UbiFit)
 	DEVICE_VENDOR := Xiaomi
-	DEVICE_MODEL := AX6000
 	BLOCKSIZE := 128k
 	PAGESIZE := 2048
-	DEVICE_DTS_CONFIG := config@mp03.1
 	SOC := ipq5018
 	KERNEL_SIZE := 36864k
 	NAND_SIZE := 128m
-	DEVICE_PACKAGES := ath11k-firmware-ipq5018-ddwrt  \
-		kmod-ath11k-pci \
-		ath11k-firmware-qcn9074-ddwrt \
-		kmod-ath10k-ct-smallbuffers \
-		ath10k-firmware-qca9887-ct \
-		ipq-wifi-xiaomi_ax6000
 ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
 	ARTIFACTS := initramfs-factory.ubi
 	ARTIFACT/initramfs-factory.ubi := append-image-stage initramfs-uImage.itb | ubinize-kernel
 endif
 endef
+
+define Device/xiaomi_ax6000
+	$(call Device/xiaomi_ipq50xx_ax_base)
+	DEVICE_MODEL := AX6000
+	DEVICE_DTS_CONFIG := config@mp03.1
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
+		kmod-ath11k-pci \
+		ath11k-firmware-qcn9074 \
+		kmod-ath10k-ct-smallbuffers \
+		ath10k-firmware-qca9887-ct \
+		ipq-wifi-xiaomi_ax6000
+endef
 TARGET_DEVICES += xiaomi_ax6000
+
+define Device/xiaomi_redmi-ax5400
+	$(call Device/xiaomi_ipq50xx_ax_base)
+	DEVICE_MODEL := Redmi AX5400
+	DEVICE_DTS_CONFIG := config@mp03.1
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
+		kmod-ath11k-pci \
+		ath11k-firmware-qcn9074 \
+		ipq-wifi-xiaomi_redmi-ax5400
+endef
+TARGET_DEVICES += xiaomi_redmi-ax5400
 
 define Device/yuncore_ax830
 	$(call Device/FitImage)
@@ -229,9 +244,9 @@ define Device/yuncore_ax850
 	PAGESIZE := 2048
 	SOC := ipq5018
 	DEVICE_DTS_CONFIG := config@mp03.1
-	DEVICE_PACKAGES := ath11k-firmware-ipq5018-ddwrt  \
+	DEVICE_PACKAGES := ath11k-firmware-ipq5018 \
 		kmod-ath11k-pci \
-		ath11k-firmware-qcn9074-ddwrt \
+		ath11k-firmware-qcn9074 \
 		ipq-wifi-yuncore_ax850
 endef
 TARGET_DEVICES += yuncore_ax850
