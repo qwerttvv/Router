@@ -10,7 +10,6 @@
 };
 
 &wifi {
-	status = "okay";
-	qcom,ath11k-fw-memory-mode = <1>;
+	ieee80211-freq-limit = <2402000 5835000>;
 	qcom,ath11k-calibration-variant = "TP-Link-EAP610-Outdoor";
 };

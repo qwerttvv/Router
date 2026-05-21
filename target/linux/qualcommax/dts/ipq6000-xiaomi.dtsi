@@ -12,17 +12,17 @@
 
 / {
 	aliases {
+		ethernet1 = &dp2;
+		ethernet2 = &dp3;
+		ethernet3 = &dp4;
+		ethernet4 = &dp5;
+
 		serial0 = &blsp1_uart3;
 
 		led-boot = &led_system_yellow;
 		led-failsafe = &led_system_blue;
 		led-running = &led_system_blue;
 		led-upgrade = &led_system_yellow;
-
-		ethernet1 = &dp2;
-		ethernet2 = &dp3;
-		ethernet3 = &dp4;
-		ethernet4 = &dp5;
 	};
 
 	chosen {

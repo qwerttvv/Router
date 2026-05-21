@@ -19,10 +19,10 @@
 	aliases {
 		serial0 = &blsp1_uart5;
 
-		led-boot = &led_pw;
-		led-failsafe = &led_pw;
-		led-running = &led_pw;
-		led-upgrade = &led_pw;
+		led-boot = &led_power;
+		led-failsafe = &led_power;
+		led-running = &led_power;
+		led-upgrade = &led_power;
 	};
 
 	chosen {
@@ -43,27 +43,27 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_pw: pw {
+		led_power: power {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_POWER;
 			gpios = <&tlmm 46 GPIO_ACTIVE_HIGH>;
 		};
 
-		led_2g: 2g {
+		wlan2g {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_WLAN_2GHZ;
 			gpios = <&tlmm 47 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "phy1radio";
 		};
 
-		led_5g: 5g {
+		wlan5g {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_WLAN_5GHZ;
 			gpios = <&tlmm 48 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "phy0radio";
 		};
 
-		led_bt: bt {
+		bluetooth {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_BLUETOOTH;
 			gpios = <&tlmm 50 GPIO_ACTIVE_HIGH>;
@@ -106,72 +106,84 @@
 
 			partition@0 {
 				label = "0:sbl1";
-				reg = <0x00000000 0x00050000>;
+				reg = <0x0 0x50000>;
+				read-only;
 			};
 
 			partition@50000 {
 				label = "0:mibib";
-				reg = <0x00050000 0x00010000>;
+				reg = <0x50000 0x10000>;
+				read-only;
 			};
 
 			partition@60000 {
 				label = "0:qsee";
-				reg = <0x00060000 0x00180000>;
+				reg = <0x60000 0x180000>;
+				read-only;
 			};
 
 			partition@1e0000 {
 				label = "0:devcfg";
-				reg = <0x001e0000 0x00010000>;
+				reg = <0x1e0000 0x10000>;
+				read-only;
 			};
 
 			partition@1f0000 {
 				label = "0:apdp";
-				reg = <0x001f0000 0x00010000>;
+				reg = <0x1f0000 0x10000>;
+				read-only;
 			};
 
 			partition@200000 {
 				label = "0:rpm";
-				reg = <0x00200000 0x00040000>;
+				reg = <0x200000 0x40000>;
+				read-only;
 			};
 
 			partition@240000 {
 				label = "0:cdt";
-				reg = <0x00240000 0x00010000>;
+				reg = <0x240000 0x10000>;
+				read-only;
 			};
 
 			partition@250000 {
 				label = "0:appsblenv";
-				reg = <0x00250000 0x00010000>;
+				reg = <0x250000 0x10000>;
 			};
 
 			partition@260000 {
 				label = "0:appsbl";
-				reg = <0x00260000 0x000a0000>;
+				reg = <0x260000 0xa0000>;
+				read-only;
 			};
 
 			partition@300000 {
 				label = "0:art";
-				reg = <0x00300000 0x00040000>;
+				reg = <0x300000 0x40000>;
+				read-only;
 			};
 
 			partition@340000 {
 				label = "0:ethphyfw";
-				reg = <0x00340000 0x00080000>;
+				reg = <0x340000 0x80000>;
+				read-only;
 			};
 
 			partition@3c0000 {
 				label = "product_info";
-				reg = <0x003c0000 0x00010000>;
+				reg = <0x3c0000 0x10000>;
+				read-only;
 			};
 
 			partition@3d0000 {
 				label = "mtdoops";
-				reg = <0x003d0000 0x00020000>;
+				reg = <0x3d0000 0x20000>;
 			};
 
 			partition@3f0000 {
 				label = "priv_data1";
-				reg = <0x003f0000 0x00010000>;
+				reg = <0x3f0000 0x10000>;
+				read-only;
 			};
 		};
 	};

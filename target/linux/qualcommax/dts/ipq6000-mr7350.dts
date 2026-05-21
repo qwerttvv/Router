@@ -87,19 +87,19 @@
 		#size-cells = <0>;
 		reg = <0x62>;
 
-		led_system_red: system-red {
+		led_system_red: led@0 {
 			reg = <0>;
 			color = <LED_COLOR_ID_RED>;
 			function = LED_FUNCTION_STATUS;
 		};
 
-		led_system_green: system-green {
+		led_system_green: led@1 {
 			reg = <1>;
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_STATUS;
 		};
 
-		led_system_blue: system-blue {
+		led_system_blue: led@2 {
 			reg = <2>;
 			color = <LED_COLOR_ID_BLUE>;
 			function = LED_FUNCTION_STATUS;
@@ -153,7 +153,7 @@
 				nvmem-layout {
 					compatible = "ascii-eq-delim-env";
 
-					hw_mac_addr: hw-mac-addr {
+					hw_mac_addr: hw_mac_addr {
 						compatible = "mac-base";
 						#nvmem-cell-cells = <1>;
 					};

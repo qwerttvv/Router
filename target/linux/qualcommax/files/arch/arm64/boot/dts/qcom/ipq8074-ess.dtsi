@@ -519,7 +519,7 @@
 		reg = <0x3a001a00 0x200>;
 		qcom,mactype = <0>;
 		local-mac-address = [000000000000];
-		phy-mode = "sgmii";
+		phy-mode = "psgmii";
 		status = "disabled";
 	};
 
@@ -530,7 +530,7 @@
 		reg = <0x3a003000 0x3fff>;
 		qcom,mactype = <1>;
 		local-mac-address = [000000000000];
-		phy-mode = "sgmii";
+		phy-mode = "usxgmii";
 		status = "disabled";
 	};
 
@@ -541,7 +541,7 @@
 		reg = <0x3a007000 0x3fff>;
 		qcom,mactype = <1>;
 		local-mac-address = [000000000000];
-		phy-mode = "sgmii";
+		phy-mode = "usxgmii";
 		status = "disabled";
 	};
 };

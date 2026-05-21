@@ -17,11 +17,11 @@
 	compatible = "verizon,cr1000a", "qcom,ipq8074";
 
 	aliases {
-		serial0 = &blsp1_uart5;
-
 		ethernet4 = &dp5;
 		ethernet5 = &dp6;
+
 		label-mac-device = &dp5_syn;
+		serial0 = &blsp1_uart5;
 	};
 
 	chosen {

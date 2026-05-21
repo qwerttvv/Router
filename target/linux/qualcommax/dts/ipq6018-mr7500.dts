@@ -18,6 +18,7 @@
 	compatible = "linksys,mr7500", "qcom,ipq6018";
 
 	aliases {
+		label-mac-device = &dp5_syn;
 		serial0 = &blsp1_uart3;
 		serial1 = &blsp1_uart2;
 
@@ -25,8 +26,6 @@
 		led-running = &led_system_blue;
 		led-failsafe = &led_system_red;
 		led-upgrade = &led_system_green;
-
-		label-mac-device = &dp5_syn;
 	};
 
 	chosen {
@@ -70,7 +69,7 @@
 			linux,default-trigger = "usbport";
 		};
 
-		led_system_red: system-red {
+		led_system_red: red {
 			color = <LED_COLOR_ID_RED>;
 			function = LED_FUNCTION_INDICATOR;
 			pwms = <&pwm 2 1250000>;
@@ -78,14 +77,14 @@
 			panic-indicator;
 		};
 
-		led_system_green: system-green {
+		led_system_green: green {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_INDICATOR;
 			pwms = <&pwm 3 1250000>;
 			max-brightness = <255>;
 		};
 
-		led_system_blue: system-blue {
+		led_system_blue: blue {
 			color = <LED_COLOR_ID_BLUE>;
 			function = LED_FUNCTION_POWER;
 			pwms = <&pwm 0 1250000>;
@@ -103,7 +102,7 @@
 };
 
 &tlmm {
-	pwm_pins: pwm-pins {
+	pwm_pins: pwm_pinmux {
 		/*LED_B*/
 		mux_0 {
 			pins = "gpio29";
@@ -137,36 +136,21 @@
 		};
 	};
 
-	extcon_usb_pins: extcon-usb-pins {
+	extcon_usb_pins: extcon_usb_pins {
 		pins = "gpio26";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
 	};
 
-	button_pins: button-pins {
-		wps_button {
-			pins = "gpio37";
-			function = "gpio";
-			drive-strength = <8>;
-			bias-pull-up;
-		};
-		reset_button {
-			pins = "gpio56";
-			function = "gpio";
-			drive-strength = <8>;
-			bias-pull-up;
-		};
-	};
-
-	hsuart_pins: hsuart-pins {
+	hsuart_pins: hsuart_pins {
 		pins = "gpio71", "gpio72", "gpio69", "gpio70";
 		function = "blsp1_uart";
 		drive-strength = <8>;
 		bias-disable;
 	};
 
-	btcoex_pins: btcoex-pins {
+	btcoex_pins: btcoex_pins {
 		mux_0 {
 			pins = "gpio51";
 			function = "pta1_1";
@@ -450,7 +434,7 @@
 				nvmem-layout {
 					compatible = "ascii-eq-delim-env";
 
-					hw_mac_addr: hw-mac-addr {
+					hw_mac_addr: hw_mac_addr {
 						compatible = "mac-base";
 						#nvmem-cell-cells = <1>;
 					};

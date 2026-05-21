@@ -16,17 +16,18 @@
 	compatible = "jdcloud,re-ss-01", "qcom,ipq6018";
 
 	aliases {
+		ethernet1 = &dp2;
+		ethernet2 = &dp3;
+		ethernet3 = &dp4;
+		ethernet4 = &dp5;
+
+		label-mac-device = &dp2;
 		serial0 = &blsp1_uart3;
 
 		led-boot = &led_status_blue;
 		led-failsafe = &led_status_red;
 		led-running = &led_status_green;
 		led-upgrade = &led_status_red;
-
-		ethernet1 = &dp2;
-		ethernet2 = &dp3;
-		ethernet3 = &dp4;
-		ethernet4 = &dp5;
 	};
 
 	chosen {
@@ -52,19 +53,19 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_status_blue: status-blue {
-			color = <LED_COLOR_ID_BLUE>;
-			function = LED_FUNCTION_STATUS;
-			gpios = <&tlmm 35 GPIO_ACTIVE_HIGH>;
-		};
-
-		led_status_red: status-red {
+		led_status_red: red {
 			color = <LED_COLOR_ID_RED>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 37 GPIO_ACTIVE_HIGH>;
 		};
 
-		led_status_green: status-green {
+		led_status_blue: blue {
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 35 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_status_green: green {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 50 GPIO_ACTIVE_HIGH>;

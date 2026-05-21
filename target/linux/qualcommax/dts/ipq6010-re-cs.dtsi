@@ -27,19 +27,19 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_status_red: status-red {
+		led_status_red: red {
 			color = <LED_COLOR_ID_RED>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 57 GPIO_ACTIVE_HIGH>;
 		};
 
-		led_status_green: status-green {
+		led_status_green: green {
 			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 58 GPIO_ACTIVE_HIGH>;
 		};
 
-		led_status_blue: status-blue {
+		led_status_blue: blue {
 			color = <LED_COLOR_ID_BLUE>;
 			function = LED_FUNCTION_STATUS;
 			gpios = <&tlmm 79 GPIO_ACTIVE_HIGH>;

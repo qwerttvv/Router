@@ -13,14 +13,13 @@
 
 / {
 	aliases {
+		label-mac-device = &dp2;
 		serial0 = &blsp1_uart5;
 
 		led-boot = &led_system_yellow;
 		led-failsafe = &led_system_yellow;
 		led-running = &led_system_blue;
 		led-upgrade = &led_system_yellow;
-
-		label-mac-device = &dp2;
 	};
 
 	chosen {
@@ -42,6 +41,16 @@
 &qpic_nand {
 	status = "okay";
 
+	/*
+	 * Bootloader will find the NAND DT node by the compatible and
+	 * then "fixup" it by adding the partitions from the SMEM table
+	 * using the legacy bindings thus making it impossible for us
+	 * to change the partition table or utilize NVMEM for calibration.
+	 * So add a dummy partitions node that bootloader will populate
+	 * and set it as disabled so the kernel ignores it instead of
+	 * printing warnings due to the broken way bootloader adds the
+	 * partitions.
+	 */
 	partitions {
 		status = "disabled";
 	};
@@ -60,54 +69,54 @@
 
 			partition@0 {
 				label = "0:sbl1";
-				reg = <0x00000000 0x00100000>;
+				reg = <0x0 0x100000>;
 				read-only;
 			};
 
 			partition@100000 {
 				label = "0:mibib";
-				reg = <0x00100000 0x00100000>;
+				reg = <0x100000 0x100000>;
 				read-only;
 			};
 
 			partition@200000 {
 				label = "0:qsee";
-				reg = <0x00200000 0x00300000>;
+				reg = <0x200000 0x300000>;
 				read-only;
 			};
 
 			partition@500000 {
 				label = "0:devcfg";
-				reg = <0x00500000 0x00080000>;
+				reg = <0x500000 0x80000>;
 				read-only;
 			};
 
 			partition@580000 {
 				label = "0:rpm";
-				reg = <0x00580000 0x00080000>;
+				reg = <0x580000 0x80000>;
 				read-only;
 			};
 
 			partition@600000 {
 				label = "0:cdt";
-				reg = <0x00600000 0x00080000>;
+				reg = <0x600000 0x80000>;
 				read-only;
 			};
 
 			partition@680000 {
 				label = "0:appsblenv";
-				reg = <0x00680000 0x00080000>;
+				reg = <0x680000 0x80000>;
 			};
 
 			partition@700000 {
 				label = "0:appsbl";
-				reg = <0x00700000 0x00100000>;
+				reg = <0x700000 0x100000>;
 				read-only;
 			};
 
 			partition@800000 {
 				label = "0:art";
-				reg = <0x00800000 0x00080000>;
+				reg = <0x800000 0x80000>;
 				read-only;
 
 				nvmem-layout {
@@ -116,45 +125,50 @@
 					#size-cells = <1>;
 
 					macaddr_dp2: macaddr@6 {
-						reg = <0x06 0x06>;
+						reg = <0x6 0x6>;
 					};
 
 					macaddr_dp3: macaddr@c {
-						reg = <0x0c 0x06>;
+						reg = <0xc 0x6>;
 					};
 
 					macaddr_dp4: macaddr@12 {
-						reg = <0x12 0x06>;
+						reg = <0x12 0x6>;
 					};
 
 					macaddr_dp5: macaddr@18 {
-						reg = <0x18 0x06>;
+						reg = <0x18 0x6>;
 					};
 
 					caldata_qca9889: caldata@4d000 {
-						reg = <0x33000 0x00844>;
+						reg = <0x33000 0x844>;
 					};
 				};
 			};
 
 			partition@880000 {
 				label = "bdata";
-				reg = <0x00880000 0x00080000>;
+				reg = <0x880000 0x80000>;
 			};
 
 			partition@900000 {
+				/* This is crash + crash_syslog parts combined */
 				label = "pstore";
-				reg = <0x00900000 0x00100000>;
+				reg = <0x900000 0x100000>;
 			};
 
+			/* Make the first rootfs a dedicated ubi partition for kernel */
 			partition@a00000 {
 				label = "ubi_kernel";
-				reg = <0x00a00000 0x023c0000>;
+				reg = <0xa00000 0x23c0000>;
 			};
 
+			/* Place the real rootfs in the original second rootfs and
+			 * expand it to the end of the nand
+			 */
 			rootfs: partition@2dc0000 {
 				label = "rootfs";
-				reg = <0x02dc0000 0x0d240000>;
+				reg = <0x2dc0000 0xd240000>;
 			};
 		};
 	};
@@ -198,9 +212,9 @@
 &switch {
 	status = "okay";
 
-	switch_lan_bmp = <(ESS_PORT3 | ESS_PORT4 | ESS_PORT5)>;
-	switch_wan_bmp = <ESS_PORT2>;
-	switch_mac_mode = <MAC_MODE_PSGMII>;
+	switch_lan_bmp = <(ESS_PORT3 | ESS_PORT4 | ESS_PORT5)>; /* lan port bitmap */
+	switch_wan_bmp = <ESS_PORT2>; /* wan port bitmap */
+	switch_mac_mode = <MAC_MODE_PSGMII>; /* mac mode for uniphy instance0*/
 
 	qcom,port_phyinfo {
 		port@2 {

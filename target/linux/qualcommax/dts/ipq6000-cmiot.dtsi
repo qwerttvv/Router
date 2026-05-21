@@ -11,12 +11,12 @@
 
 / {
 	aliases {
-		serial0 = &blsp1_uart3;
-
 		ethernet0 = &dp1;
 		ethernet1 = &dp2;
 		ethernet3 = &dp4;
 		ethernet4 = &dp5;
+
+		serial0 = &blsp1_uart3;
 	};
 
 	chosen {

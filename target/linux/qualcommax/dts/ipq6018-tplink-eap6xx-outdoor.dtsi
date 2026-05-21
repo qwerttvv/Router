@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 
+/dts-v1/;
+
 #include "ipq6018.dtsi"
 #include "ipq6018-ess.dtsi"
 #include "ipq6018-nss.dtsi"
-#include "ipq6018-common.dtsi"
 #include "ipq6018-cp-cpu.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
@@ -21,7 +22,7 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
-		bootargs-append = " root=/dev/ubiblock0_1";
+		bootargs-append = " ubi.block=0,rootfs root=/dev/ubiblock0_1";
 	};
 
 	keys {
@@ -37,13 +38,13 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_sys_yellow: sys-yellow {
+		led_sys_yellow: led-0 {
 			function = "system";
 			color = <LED_COLOR_ID_YELLOW>;
 			gpios = <&tlmm 35 GPIO_ACTIVE_HIGH>;
 		};
 
-		led_sys_green: sys-green {
+		led_sys_green: led-1 {
 			function = "system";
 			color = <LED_COLOR_ID_GREEN>;
 			gpios = <&tlmm 37 GPIO_ACTIVE_HIGH>;
@@ -57,11 +58,32 @@
 	};
 };
 
+&blsp1_uart3 {
+	pinctrl-0 = <&serial_3_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
 &tlmm {
-	phy_reset_pins: phy-reset-pins {
+	mdio_pins: mdio-pins {
+		mdc {
+			pins = "gpio64";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+
+		mdio {
+			pins = "gpio65";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	phy_reset_pin: phy-reset-pin {
 		pins = "gpio77";
 		function = "gpio";
-		drive-strength = <8>;
 		bias-pull-up;
 	};
 
@@ -74,9 +96,10 @@
 };
 
 &dp5 {
-	status = "okay";
 	phy-handle = <&rtl8211f_4>;
+	phy-mode = "sgmii";
 	label = "lan";
+	status = "okay";
 };
 
 &edma {
@@ -84,16 +107,15 @@
 };
 
 &mdio {
-	status = "okay";
-
-	pinctrl-0 = <&mdio_pins>, <&phy_reset_pins>;
+	pinctrl-0 = <&mdio_pins>, <&phy_reset_pin>;
 	pinctrl-names = "default";
 	reset-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
+	reset-delay-us = <10000>;
+	reset-post-delay-us = <50000>;
+	status = "okay";
 
 	rtl8211f_4: ethernet-phy@4 {
-		compatible = "ethernet-phy-id001c.c916";
 		reg = <4>;
-
 		realtek,clkout-disable;
 		realtek,aldps-enable;
 	};
@@ -101,16 +123,19 @@
 
 &switch {
 	switch_lan_bmp = <ESS_PORT5>;
-	switch_mac_mode1 = <MAC_MODE_SGMII_PLUS>;
+	switch_mac_mode1 = <MAC_MODE_SGMII_CHANNEL0>;
 	status = "okay";
 
 	qcom,port_phyinfo {
-		port@5 {
+		port@4 {
 			port_id = <5>;
 			phy_address = <4>;
-			port_mac_sel = "QGMAC_PORT";
 		};
 	};
+};
+
+&qpic_bam {
+	status = "okay";
 };
 
 &qpic_nand {
@@ -122,9 +147,9 @@
 		nand-ecc-strength = <4>;
 		nand-ecc-step-size = <512>;
 		nand-bus-width = <8>;
-
-		partitions {
-			compatible = "qcom,smem-part";
-		};
 	};
+};
+
+&wifi {
+	status = "okay";
 };
