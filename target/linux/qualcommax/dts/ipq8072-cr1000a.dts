@@ -121,6 +121,12 @@
 	pinctrl-names = "default";
 	reset-gpios = <&tlmm 37 GPIO_ACTIVE_LOW>;
 
+	rtl9303: ethernet-phy@4 {
+		//compatible = "ethernet-phy-ieee802.3-c45";
+		reg = <0x04>;
+		// reset-gpios = <&tlmm 63 GPIO_ACTIVE_LOW>;
+	};
+
 	aqr113c: ethernet-phy@8 {
 		compatible = "ethernet-phy-ieee802.3-c45";
 		reg = <0x08>;
@@ -144,7 +150,7 @@
 	switch_mac_mode2 = <MAC_MODE_USXGMII>;
 
 	qcom,port_phyinfo {
-		rtl9303:port@5 {
+		port@5 {
 			port_id = <5>;
 			phy_address = <0x4>;
 		};
@@ -152,7 +158,6 @@
 		port@6 {
 			port_id = <6>;
 			phy_address = <0x8>;
-			ethernet-phy-ieee802.3-c45;
 		};
 	};
 };
@@ -200,6 +205,5 @@
 
 &sdhc_1 {
 	status = "okay";
-
 	vqmmc-supply = <&l11>;
 };

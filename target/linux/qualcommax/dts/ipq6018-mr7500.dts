@@ -321,7 +321,6 @@
 	status = "okay";
 	label = "lan1";
 	phy-handle = <&qca8075_0>;
-	phy-mode = "qsgmii";
 	nvmem-cells = <&hw_mac_addr 1>;
 	nvmem-cell-names = "mac-address";
 };
@@ -330,7 +329,6 @@
 	status = "okay";
 	label = "lan2";
 	phy-handle = <&qca8075_1>;
-	phy-mode = "qsgmii";
 	nvmem-cells = <&hw_mac_addr 1>;
 	nvmem-cell-names = "mac-address";
 };
@@ -339,7 +337,6 @@
 	status = "okay";
 	label = "lan3";
 	phy-handle = <&qca8075_2>;
-	phy-mode = "qsgmii";
 	nvmem-cells = <&hw_mac_addr 1>;
 	nvmem-cell-names = "mac-address";
 };
@@ -348,7 +345,6 @@
 	status = "okay";
 	label = "lan4";
 	phy-handle = <&qca8075_3>;
-	phy-mode = "qsgmii";
 	nvmem-cells = <&hw_mac_addr 1>;
 	nvmem-cell-names = "mac-address";
 };
@@ -357,7 +353,6 @@
 	status = "okay";
 	label = "wan";
 	phy-handle = <&aqr114c>;
-	phy-mode = "usxgmii";
 	nvmem-cells = <&hw_mac_addr 0>;
 	nvmem-cell-names = "mac-address";
 };

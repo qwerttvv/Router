@@ -264,13 +264,13 @@
 	status = "okay";
 };
 
-&dp5 {
+&dp5_syn {
 	status = "okay";
 	phy-handle = <&qca8081_24>;
 	label = "wan";
 };
 
-&dp6 {
+&dp6_syn {
 	status = "okay";
 	phy-handle = <&qca8081_28>;
 	label = "lan";

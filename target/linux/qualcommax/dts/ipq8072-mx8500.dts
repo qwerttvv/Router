@@ -403,7 +403,6 @@
 
 &dp1 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_0>;
 	label = "lan1";
 	nvmem-cells = <&hw_mac_addr 1>;
@@ -412,7 +411,6 @@
 
 &dp2 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_1>;
 	label = "lan2";
 	nvmem-cells = <&hw_mac_addr 1>;
@@ -421,7 +419,6 @@
 
 &dp3 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_2>;
 	label = "lan3";
 	nvmem-cells = <&hw_mac_addr 1>;
@@ -430,7 +427,6 @@
 
 &dp4 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_3>;
 	label = "lan4";
 	nvmem-cells = <&hw_mac_addr 1>;
@@ -439,7 +435,6 @@
 
 &dp6_syn {
 	status = "okay";
-	phy-mode = "usxgmii";
 	phy-handle = <&aqr114c>;
 	label = "wan";
 	nvmem-cells = <&hw_mac_addr 0>;

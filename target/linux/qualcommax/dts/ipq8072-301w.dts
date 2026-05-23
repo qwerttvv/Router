@@ -22,7 +22,7 @@
 		ethernet1 = &dp2;
 		ethernet2 = &dp3;
 		ethernet3 = &dp4;
-		ethernet4 = &dp5;
+		ethernet4 = &dp5_syn;
 		ethernet5 = &dp6_syn;
 
 		label-mac-device = &dp1;
@@ -397,43 +397,36 @@
 
 &dp1 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_16>;
 	label = "lan4";
 };
 
 &dp2 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_17>;
 	label = "lan3";
 };
 
 &dp3 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_18>;
 	label = "lan2";
 };
 
 &dp4 {
 	status = "okay";
-	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_19>;
 	label = "lan1";
 };
 
-&dp5 {
+&dp5_syn {
 	status = "okay";
-	qcom,mactype = <1>;
-	phy-mode = "usxgmii";
 	phy-handle = <&aqr113c_8>;
 	label = "10g-1";
 };
 
 &dp6_syn {
 	status = "okay";
-	phy-mode = "usxgmii";
 	phy-handle = <&aqr113c_0>;
 	label = "10g-2";
 };

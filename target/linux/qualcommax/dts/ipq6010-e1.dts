@@ -19,7 +19,7 @@
 		ethernet1 = &dp2;
 		ethernet2 = &dp3;
 		ethernet3 = &dp4;
-		ethernet4 = &dp5;
+		ethernet4 = &dp5_syn;
 
 		serial0 = &blsp1_uart3;
 		serial1 = &blsp1_uart2;
@@ -502,7 +502,7 @@
 	label = "lan3";
 };
 
-&dp5 {
+&dp5_syn {
 	status = "okay";
 	phy-handle = <&qca8081>;
 	label = "wan";
