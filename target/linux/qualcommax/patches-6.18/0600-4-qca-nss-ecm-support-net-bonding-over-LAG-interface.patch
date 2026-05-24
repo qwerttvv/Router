@@ -1,26 +1,33 @@
 --- a/drivers/net/bonding/bond_3ad.c
 +++ b/drivers/net/bonding/bond_3ad.c
-@@ -115,6 +115,40 @@ static void ad_marker_response_received(
+@@ -115,6 +115,52 @@ static void ad_marker_response_received(
  					struct port *port);
  static void ad_update_actor_keys(struct port *port, bool reset);
  
 +/* QCA NSS ECM bonding support - Start */
 +struct bond_cb __rcu *bond_cb;
++static DEFINE_SPINLOCK(bond_cb_lock);
 +
 +int bond_register_cb(struct bond_cb *cb)
 +{
 +	struct bond_cb *lag_cb;
++	struct bond_cb *old_cb;
 +
-+	lag_cb = kzalloc(sizeof(*lag_cb), GFP_ATOMIC | __GFP_NOWARN);
-+	if (!lag_cb) {
-+		return -1;
++	lag_cb = kmemdup(cb, sizeof(*lag_cb), GFP_ATOMIC | __GFP_NOWARN);
++	if (!lag_cb)
++		return -ENOMEM;
++
++	spin_lock_bh(&bond_cb_lock);
++	old_cb = rcu_dereference_protected(bond_cb,
++					      lockdep_is_held(&bond_cb_lock));
++	rcu_assign_pointer(bond_cb, lag_cb);
++	spin_unlock_bh(&bond_cb_lock);
++
++	if (old_cb) {
++		synchronize_rcu();
++		kfree(old_cb);
 +	}
 +
-+	memcpy((void *)lag_cb, (void *)cb, sizeof(*cb));
-+
-+	rcu_read_lock();
-+	rcu_assign_pointer(bond_cb, lag_cb);
-+	rcu_read_unlock();
 +	return 0;
 +}
 +EXPORT_SYMBOL(bond_register_cb);
@@ -29,11 +36,16 @@
 +{
 +	struct bond_cb *lag_cb_main;
 +
-+	rcu_read_lock();
-+	lag_cb_main = rcu_dereference(bond_cb);
++	spin_lock_bh(&bond_cb_lock);
++	lag_cb_main = rcu_dereference_protected(bond_cb,
++						    lockdep_is_held(&bond_cb_lock));
 +	rcu_assign_pointer(bond_cb, NULL);
-+	rcu_read_unlock();
++	spin_unlock_bh(&bond_cb_lock);
 +
++	if (!lag_cb_main)
++		return;
++
++	synchronize_rcu();
 +	kfree(lag_cb_main);
 +}
 +EXPORT_SYMBOL(bond_unregister_cb);
@@ -41,7 +53,7 @@
  
  /* ================= api to bonding and kernel code ================== */
  
-@@ -1183,7 +1217,31 @@ static void ad_mux_machine(struct port *
+@@ -1183,7 +1229,31 @@ static void ad_mux_machine(struct port *
  			ad_disable_collecting_distributing(port,
  							   update_slave_arr);
  			port->ntt = true;
@@ -73,7 +85,7 @@
  		case AD_MUX_COLLECTING_DISTRIBUTING:
  			port->actor_oper_port_state |= LACP_STATE_COLLECTING;
  			port->actor_oper_port_state |= LACP_STATE_DISTRIBUTING;
-@@ -2128,6 +2186,17 @@ static void ad_disable_collecting_distri
+@@ -2128,6 +2198,17 @@ static void ad_disable_collecting_distri
  		__disable_port(port);
  		/* Slave array needs an update */
  		*update_slave_arr = true;
