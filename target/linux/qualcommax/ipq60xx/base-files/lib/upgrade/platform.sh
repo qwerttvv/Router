@@ -42,7 +42,8 @@ platform_do_upgrade() {
 		fw_setenv bootcount 0
 		nand_do_upgrade "$1"
 		;;
-	anysafe,e1)
+	anysafe,e1|\
+	dptech,ap3000-2c)
 		CI_UBIPART="rootfs"
 		nand_do_upgrade "$1"
 		;;

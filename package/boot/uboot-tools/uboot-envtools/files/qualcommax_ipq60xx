@@ -9,6 +9,7 @@ board=$(board_name)
 
 case "$board" in
 anysafe,e1|\
+dptech,ap3000-2c|\
 philips,ly1800|\
 sy,y6010|\
 8devices,mango-dvk|\
