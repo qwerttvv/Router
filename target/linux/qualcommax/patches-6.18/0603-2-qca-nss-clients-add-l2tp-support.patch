@@ -218,7 +218,7 @@
  
 --- a/drivers/net/ppp/ppp_generic.c
 +++ b/drivers/net/ppp/ppp_generic.c
-@@ -3023,6 +3023,22 @@ char *ppp_dev_name(struct ppp_channel *c
+@@ -3026,6 +3026,22 @@ char *ppp_dev_name(struct ppp_channel *c
  	return name;
  }
  
@@ -241,7 +241,7 @@
  
  /*
   * Disconnect a channel from the generic layer.
-@@ -3778,6 +3794,32 @@ int ppp_is_multilink(struct net_device *
+@@ -3781,6 +3797,32 @@ int ppp_is_multilink(struct net_device *
  }
  EXPORT_SYMBOL(ppp_is_multilink);
  
@@ -274,7 +274,7 @@
  /* ppp_channel_get_protocol()
   *	Call this to obtain the underlying protocol of the PPP channel,
   *	e.g. PX_PROTO_OE
-@@ -3916,6 +3958,59 @@ int ppp_hold_channels(struct net_device
+@@ -3919,6 +3961,59 @@ int ppp_hold_channels(struct net_device
  }
  EXPORT_SYMBOL(ppp_hold_channels);
  
@@ -334,7 +334,7 @@
  /* ppp_release_channels()
   *	Releases channels
   */
-@@ -3943,6 +4038,7 @@ EXPORT_SYMBOL(ppp_unregister_channel);
+@@ -3946,6 +4041,7 @@ EXPORT_SYMBOL(ppp_unregister_channel);
  EXPORT_SYMBOL(ppp_channel_index);
  EXPORT_SYMBOL(ppp_unit_number);
  EXPORT_SYMBOL(ppp_dev_name);

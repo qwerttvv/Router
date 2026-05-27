@@ -53,7 +53,7 @@
  
  /* ================= api to bonding and kernel code ================== */
  
-@@ -1183,7 +1229,31 @@ static void ad_mux_machine(struct port *
+@@ -1185,7 +1231,31 @@ static void ad_mux_machine(struct port *
  			ad_disable_collecting_distributing(port,
  							   update_slave_arr);
  			port->ntt = true;
@@ -85,7 +85,7 @@
  		case AD_MUX_COLLECTING_DISTRIBUTING:
  			port->actor_oper_port_state |= LACP_STATE_COLLECTING;
  			port->actor_oper_port_state |= LACP_STATE_DISTRIBUTING;
-@@ -2128,6 +2198,17 @@ static void ad_disable_collecting_distri
+@@ -2138,6 +2208,17 @@ static void ad_disable_collecting_distri
  		__disable_port(port);
  		/* Slave array needs an update */
  		*update_slave_arr = true;
@@ -586,7 +586,7 @@
  static bool bond_flow_ip(struct sk_buff *skb, struct flow_keys *fk, const void *data,
  			 int hlen, __be16 l2_proto, int *nhoff, int *ip_proto, bool l34)
  {
-@@ -5264,15 +5657,18 @@ static netdev_tx_t bond_3ad_xor_xmit(str
+@@ -5266,15 +5659,18 @@ static netdev_tx_t bond_3ad_xor_xmit(str
  				     struct net_device *dev)
  {
  	struct bonding *bond = netdev_priv(dev);
@@ -612,7 +612,7 @@
  }
  
  /* in broadcast mode, we send everything to all or usable slave interfaces.
-@@ -5537,7 +5933,7 @@ static netdev_tx_t __bond_start_xmit(str
+@@ -5539,7 +5935,7 @@ static netdev_tx_t __bond_start_xmit(str
  			return bond_xmit_broadcast(skb, dev, false);
  		fallthrough;
  	case BOND_MODE_XOR:
