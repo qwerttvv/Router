@@ -12,7 +12,7 @@ index 96938fa..149577b 100644
  config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy
  	bool "Include Haproxy"
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index 49a0d62..7a9fe6e 100644
+index ebbf339..40a70e9 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 @@ -445,6 +445,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
