@@ -1,55 +1,40 @@
 --- a/src/init/ssdk_plat.c
 +++ b/src/init/ssdk_plat.c
-@@ -307,8 +307,13 @@ sw_error_t qca_bitbang_mii_raw_read_try(
+@@ -307,8 +307,8 @@ sw_error_t qca_bitbang_mii_raw_read_try(
  	if (strncmp(bus->id, "gpio", strlen("gpio")))
  		return SW_NOT_FOUND;
  
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
+-	if (gpio_priv && gpio_priv->sw_read) {
+-		*val = gpio_priv->sw_read(bus, reg);
 +	if (gpio_priv) {
 +		*val = mdiobb_read_c22(bus, reg >> 5, reg & 0x1f);
-+#else
- 	if (gpio_priv && gpio_priv->sw_read) {
- 		*val = gpio_priv->sw_read(bus, reg);
-+#endif
  		return SW_OK;
  	}
  
-@@ -323,8 +328,12 @@ sw_error_t qca_bitbang_mii_raw_write_try
+@@ -323,8 +323,7 @@ sw_error_t qca_bitbang_mii_raw_write_try
  	if (strncmp(bus->id, "gpio", strlen("gpio")))
  		return SW_NOT_FOUND;
  
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
+-	if (gpio_priv && gpio_priv->sw_write) {
+-		gpio_priv->sw_write(bus, reg, val);
 +	if (gpio_priv && !mdiobb_write_c22(bus, reg >> 5, reg & 0x1f, val)) {
-+#else
- 	if (gpio_priv && gpio_priv->sw_write) {
- 		gpio_priv->sw_write(bus, reg, val);
-+#endif
  		return SW_OK;
  	}
  
-@@ -339,13 +348,25 @@ sw_error_t qca_bitbang_mii_raw_update_tr
+@@ -339,13 +338,13 @@ sw_error_t qca_bitbang_mii_raw_update_tr
  	if (strncmp(bus->id, "gpio", strlen("gpio")))
  		return SW_NOT_FOUND;
  
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
+-	if (gpio_priv && gpio_priv->sw_read && gpio_priv->sw_write) {
 +	if (gpio_priv) {
-+#else
- 	if (gpio_priv && gpio_priv->sw_read && gpio_priv->sw_write) {
-+#endif
  		a_uint32_t val;
  
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
+-		val = gpio_priv->sw_read(bus, reg);
 +		val = mdiobb_read_c22(bus, reg >> 5, reg & 0x1f);
-+#else
- 		val = gpio_priv->sw_read(bus, reg);
-+#endif
  		val &= ~clear;
  		val |= set;
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
+-		gpio_priv->sw_write(bus, reg, val);
 +		mdiobb_write_c22(bus, reg >> 5, reg & 0x1f, val);
-+#else
- 		gpio_priv->sw_write(bus, reg, val);
-+#endif
  
  		return SW_OK;
  	}

@@ -2333,7 +2333,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
 +void ath11k_nss_mpp_timer_cb(struct timer_list *timer)
 +{
 +	nss_wifi_mesh_msg_callback_t msg_cb;
-+	struct arvif_nss *nss = from_timer(nss, timer,mpp_expiry_timer);
++	struct arvif_nss *nss = timer_container_of(nss, timer, mpp_expiry_timer);
 +	struct ath11k_vif *arvif = container_of(nss, struct ath11k_vif, nss);
 +	struct ath11k_base *ab = arvif->ar->ab;
 +	LIST_HEAD(local_entry);
@@ -2805,7 +2805,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
 +	LIST_HEAD(mpp_local_entry);
 +	nss_tx_status_t status;
 +
-+	del_timer_sync(&nss->mpp_expiry_timer);
++	timer_delete_sync(&nss->mpp_expiry_timer);
 +
 +	spin_lock_bh(&ar->nss.dump_lock);
 +	list_splice_tail_init(&nss->mpath_dump, &mpath_local_entry);

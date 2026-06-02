@@ -1,6 +1,15 @@
 --- a/nss_dp_main.c
 +++ b/nss_dp_main.c
-@@ -42,6 +42,7 @@
+@@ -38,10 +38,16 @@
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(6, 6, 0))
+ #include <net/netdev_rx_queue.h>
+ #endif
++#ifdef CONFIG_RFS_ACCEL
++#include <linux/hash.h>
++#include <net/hotdata.h>
++#include <net/rps.h>
++#endif
+ #if defined(NSS_DP_MAC_POLL_SUPPORT)
  #include <init/ssdk_init.h>
  #endif
  #include "nss_dp_hal.h"
@@ -8,25 +17,28 @@
  
  #define JUMBO_MRU_3K 3072
  
-@@ -510,7 +511,7 @@ static int nss_dp_open(struct net_device
- 	return 0;
- }
+@@ -550,17 +556,17 @@ static int nss_dp_rx_flow_steer(struct n
+ 	}
  
--#ifdef CONFIG_RFS_ACCEL
-+#if defined(CONFIG_RFS_ACCEL) && (LINUX_VERSION_CODE < KERNEL_VERSION(6,18,0))
- /*
-  * nss_dp_rx_flow_steer()
-  *	Steer the flow rule to NSS
-@@ -679,7 +680,7 @@ struct net_device_ops nss_dp_netdev_ops
- 	.ndo_select_queue = nss_dp_select_queue,
- #endif
+ 	hash = skb_get_hash(skb);
+-	rxflow = &flow_table->flows[hash & flow_table->mask];
++	rxflow = &flow_table->flows[hash_32(hash, flow_table->log)];
+ 	rxcpu = (uint32_t)rxflow->cpu;
  
--#ifdef CONFIG_RFS_ACCEL
-+#if defined(CONFIG_RFS_ACCEL) && (LINUX_VERSION_CODE < KERNEL_VERSION(6,18,0))
- 	.ndo_rx_flow_steer = nss_dp_rx_flow_steer,
- #endif
- };
-@@ -911,7 +912,7 @@ bool nss_dp_is_phy_dev(struct net_device
+-	sock_flow_table = rcu_dereference(rps_sock_flow_table);
++	sock_flow_table = rcu_dereference(net_hotdata.rps_sock_flow_table);
+ 	if (!sock_flow_table) {
+ 		netdev_dbg(netdev, "Global RPS flow table not found\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	rfscpu = sock_flow_table->ents[hash & sock_flow_table->mask];
+-	rfscpu &= rps_cpu_mask;
++	rfscpu &= net_hotdata.rps_cpu_mask;
+ 
+ 	if (rxcpu == rfscpu)
+ 		return 0;
+@@ -911,7 +917,7 @@ bool nss_dp_is_phy_dev(struct net_device
  /*
   * nss_dp_adjust_link()
   */
@@ -35,7 +47,7 @@
  {
  	struct nss_dp_dev *dp_priv = netdev_priv(netdev);
  	int current_state = dp_priv->link_state;
-@@ -1130,7 +1131,7 @@ fail:
+@@ -1130,7 +1136,7 @@ fail:
   * Note: We only remove the physical ports here. Virtual
   * port devices are removed explicitly by the VP module.
   */
@@ -44,15 +56,16 @@
  {
  	uint32_t i;
  	struct nss_dp_dev *dp_priv;
-@@ -1177,7 +1178,6 @@ static int nss_dp_remove(struct platform
+@@ -1176,8 +1182,6 @@ static int nss_dp_remove(struct platform
+ 		free_netdev(dp_priv->netdev);
  		dp_global_ctx.nss_dp[i] = NULL;
  	}
- 
+-
 -	return 0;
  }
  
  static struct of_device_id nss_dp_dt_ids[] = {
-@@ -1260,7 +1260,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
+@@ -1260,7 +1264,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
  /*
   * nss_dp_init()
   */
@@ -61,7 +74,7 @@
  {
  	int ret, i;
  
-@@ -1348,7 +1348,7 @@ int __init nss_dp_init(void)
+@@ -1348,7 +1352,7 @@ int __init nss_dp_init(void)
  /*
   * nss_dp_exit()
   */

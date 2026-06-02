@@ -1,0 +1,9 @@
+--- a/src/init/ssdk_init.c
++++ b/src/init/ssdk_init.c
+@@ -2053,5 +2053,6 @@ module_init(regi_init);
+ module_exit(regi_exit);
+ 
+ MODULE_DESCRIPTION("QCA SSDK Driver");
++MODULE_INFO(description, "QCA SSDK Driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+ /*qca808x_end*/

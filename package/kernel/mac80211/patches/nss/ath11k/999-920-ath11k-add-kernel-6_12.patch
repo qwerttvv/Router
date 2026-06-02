@@ -102,7 +102,7 @@
 +static void ath11k_nss_mpp_timer_cb(struct timer_list *timer)
  {
  	nss_wifi_mesh_msg_callback_t msg_cb;
- 	struct arvif_nss *nss = from_timer(nss, timer,mpp_expiry_timer);
+ 	struct arvif_nss *nss = timer_container_of(nss, timer, mpp_expiry_timer);
 @@ -2532,7 +2532,7 @@ static void ath11k_nss_mesh_vdev_free(st
  }
  #endif

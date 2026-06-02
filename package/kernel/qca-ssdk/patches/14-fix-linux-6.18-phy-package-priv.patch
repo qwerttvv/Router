@@ -1,34 +1,28 @@
 --- a/src/hsl/mht/mht_interface_ctrl.c
 +++ b/src/hsl/mht/mht_interface_ctrl.c
-@@ -24,6 +24,10 @@
+@@ -24,6 +24,8 @@
  #include "ssdk_mht_clk.h"
  #include "ssdk_clk.h"
  
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6,18,0))
 +void *phy_package_get_priv(struct phy_device *phydev);
-+#endif
 +
  static a_uint16_t
  mht_uniphy_xpcs_mmd_read(a_uint32_t dev_id, a_uint16_t mmd_num,
  	a_uint16_t mmd_reg)
-@@ -827,12 +831,19 @@ mht_interface_ops_init(a_uint32_t dev_id
+@@ -827,13 +829,12 @@ mht_interface_ops_init(a_uint32_t dev_id
  		return SW_BAD_PTR;
  	}
  
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,18,0))
- 	if (!phydev->shared->priv) {
- 		SSDK_ERROR("phydev->shared->priv is null\n");
- 		return SW_BAD_PTR;
- 	}
--
- 	shared_priv = phydev->shared->priv;
-+#else
+-	if (!phydev->shared->priv) {
+-		SSDK_ERROR("phydev->shared->priv is null\n");
 +	shared_priv = phy_package_get_priv(phydev);
 +	if (!shared_priv) {
 +		SSDK_ERROR("phy package private data is null\n");
-+		return SW_BAD_PTR;
-+	}
-+#endif
+ 		return SW_BAD_PTR;
+ 	}
  
+-	shared_priv = phydev->shared->priv;
+-
  	shared_priv->phy_clk_init = ssdk_mht_gcc_clock_init;
  	shared_priv->phy_qusgmii_mode_set = mht_interface_uqxgmii_mode_set;
+ 	shared_priv->phy_clk_en_set = ssdk_mht_port_clk_en_set;

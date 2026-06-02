@@ -11,38 +11,94 @@
  #include "ssdk_plat.h"
  /*qca808x_end*/
  #include "ssdk_clk.h"
-@@ -1269,7 +1273,7 @@ static int qca_switchdev_register(struct
+@@ -1269,54 +1273,6 @@ static int qca_switchdev_register(struct
  }
  #endif
  
 -#if IS_ENABLED(CONFIG_NET_DSA)
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
- static int ssdk_dsa_event_link_change(struct net_device *dev, bool link)
+-static int ssdk_dsa_event_link_change(struct net_device *dev, bool link)
+-{
+-	struct dsa_port *dp = NULL;
+-	ssdk_netdev_switch_t *netdev_switch = NULL;
+-	struct qca_phy_priv* priv = NULL;
+-
+-	if (!dsa_slave_dev_check(dev))
+-		return NOTIFY_DONE;
+-
+-	/* find dp,master by dsa helper and get net_switch */
+-	dp = dsa_port_from_netdev(dev);
+-	netdev_switch = ssdk_dts_netdev_switch_find_by_netdev(dp->cpu_dp->master);
+-	if (!netdev_switch)
+-		return NOTIFY_DONE;
+-
+-	priv = ssdk_phy_priv_data_get(netdev_switch->switch_dev_id);
+-	if (!priv)
+-		return NOTIFY_DONE;
+-
+-	priv->polling_once = A_TRUE;
+-	mod_delayed_work(system_wq, &priv->qm_dwork_polling, 0);
+-
+-	return NOTIFY_OK;
+-}
+-
+-static int ssdk_dsa_event_nb(struct notifier_block *unused,
+-		unsigned long event, void *ptr)
+-{
+-	switch (event) {
+-		case DSA_NOTIFIER_PORT_LINK:
+-			struct dsa_notifier_link *info = (struct dsa_notifier_link *)ptr;
+-
+-			SSDK_DEBUG("%s, link: %d.\n", info->info.dev->name, info->link);
+-			return ssdk_dsa_event_link_change(info->info.dev, info->link);
+-
+-		default:
+-			SSDK_INFO("DSA event %lu is not supported\n", event);
+-	}
+-
+-	return NOTIFY_DONE;
+-}
+-
+-static struct notifier_block ssdk_dsa_notifier_nb = {
+-	.notifier_call = ssdk_dsa_event_nb,
+-};
+-#endif
+-
+ #if defined(DESS) || defined(HPPE) || defined (ISISC) || defined (ISIS) || defined(MP) || defined(MHT)
+ static int ssdk_switch_register(a_uint32_t dev_id, ssdk_chip_type  chip_type)
  {
- 	struct dsa_port *dp = NULL;
-@@ -1436,7 +1440,7 @@ static int ssdk_switch_register(a_uint32
+@@ -1436,13 +1392,6 @@ static int ssdk_switch_register(a_uint32
  		}
  	}
  
 -#if IS_ENABLED(CONFIG_NET_DSA)
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
- 	if (priv->version == QCA_VER_MHT ||
- 		priv->version == QCA_VER_AR8337 ||
- 		priv->version == QCA_VER_AR8327)
-@@ -1466,7 +1470,7 @@ static int ssdk_switch_unregister(a_uint
+-	if (priv->version == QCA_VER_MHT ||
+-		priv->version == QCA_VER_AR8337 ||
+-		priv->version == QCA_VER_AR8327)
+-		register_dsa_blocking_notifier(&ssdk_dsa_notifier_nb);
+-#endif
+-
+ 	return 0;
+ }
+ 
+@@ -1466,13 +1415,6 @@ static int ssdk_switch_unregister(a_uint
  	unregister_switch(&qca_phy_priv_global[dev_id]->sw_dev);
  #endif
  
 -#if IS_ENABLED(CONFIG_NET_DSA)
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 18, 0))
- 	if (priv->version == QCA_VER_MHT ||
- 		priv->version == QCA_VER_AR8337 ||
- 		priv->version == QCA_VER_AR8327)
-@@ -1706,6 +1710,43 @@ static void ssdk_cfg_default_init(ssdk_i
+-	if (priv->version == QCA_VER_MHT ||
+-		priv->version == QCA_VER_AR8337 ||
+-		priv->version == QCA_VER_AR8327)
+-		unregister_dsa_blocking_notifier(&ssdk_dsa_notifier_nb);
+-#endif
+-
+ 	return 0;
+ }
+ #endif
+@@ -1706,6 +1648,43 @@ static void ssdk_cfg_default_init(ssdk_i
  }
  /*qca808x_end*/
  
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
++#if IS_ENABLED(CONFIG_NET_DSA)
 +static void ssdk_dsa_refresh_link_polling(struct net_device *dev)
 +{
 +	struct dsa_port *dp = NULL;
@@ -82,20 +138,20 @@
  //#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0))
  static int ssdk_dev_event(struct notifier_block *this, unsigned long event, void *ptr)
  {
-@@ -1751,8 +1792,11 @@ static int ssdk_dev_event(struct notifie
+@@ -1751,8 +1730,11 @@ static int ssdk_dev_event(struct notifie
  				}
  			}
  			break;
 -#ifdef MP
  		case NETDEV_CHANGE:
-+#if IS_ENABLED(CONFIG_NET_DSA) && (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 18, 0))
++#if IS_ENABLED(CONFIG_NET_DSA)
 +			ssdk_dsa_refresh_link_polling(dev);
 +#endif
 +#ifdef MP
  			if ((cfg.chip_type == CHIP_SCOMPHY) &&
  				(cfg.phy_id == MP_GEPHY)) {
  				if ((p_api == NULL) || (p_api->adpt_port_netdev_notify_set == NULL)
-@@ -1770,8 +1814,8 @@ static int ssdk_dev_event(struct notifie
+@@ -1770,8 +1752,8 @@ static int ssdk_dev_event(struct notifie
  					}
  				}
  			}
