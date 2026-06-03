@@ -1,7 +1,0 @@
---- a/nss_dp_main.c
-+++ b/nss_dp_main.c
-@@ -1295,3 +1295,4 @@ module_exit(nss_dp_exit);
- 
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_DESCRIPTION("NSS Data Plane Network Driver");
-+MODULE_INFO(description, "NSS Data Plane Network Driver");

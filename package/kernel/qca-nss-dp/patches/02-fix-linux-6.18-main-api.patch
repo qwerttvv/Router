@@ -83,3 +83,8 @@
  {
  	/*
  	 * Ensure netdev remove is done before HAL cleanup.
+@@ -1366,3 +1370,4 @@ module_exit(nss_dp_exit);
+ 
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_DESCRIPTION("NSS Data Plane Network Driver");
++MODULE_INFO(description, "NSS Data Plane Network Driver");

@@ -161,3 +161,10 @@
  		case NETDEV_REGISTER:
  			if (strstr(dev->name, "eth") && !(dev->priv_flags & IFF_802_1Q_VLAN))
  				ssdk_netdev_switch_init(dev);
+@@ -2071,5 +2053,6 @@ module_init(regi_init);
+ module_exit(regi_exit);
+ 
+ MODULE_DESCRIPTION("QCA SSDK Driver");
++MODULE_INFO(description, "QCA SSDK Driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+ /*qca808x_end*/
