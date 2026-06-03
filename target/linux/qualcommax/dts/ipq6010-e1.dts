@@ -19,7 +19,7 @@
 		ethernet1 = &dp2;
 		ethernet2 = &dp3;
 		ethernet3 = &dp4;
-		ethernet4 = &dp5_syn;
+		ethernet4 = &dp5;
 
 		serial0 = &blsp1_uart3;
 		serial1 = &blsp1_uart2;
@@ -412,6 +412,7 @@
 
 	ethernet-phy-package@0 {
 		compatible = "qcom,qca8075-package";
+		qcom,package-mode = "psgmii";
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0>;
@@ -502,8 +503,9 @@
 	label = "lan3";
 };
 
-&dp5_syn {
+&dp5 {
 	status = "okay";
+	phy-mode = "sgmii";
 	phy-handle = <&qca8081>;
 	label = "wan";
 };

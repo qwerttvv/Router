@@ -3,6 +3,7 @@
 /dts-v1/;
 
 #include "ipq6010-philips.dtsi"
+#include "ipq6018-cp-cpu.dtsi"
 
 / {
 	model = "Philips LY1800";

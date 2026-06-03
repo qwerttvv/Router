@@ -11,7 +11,7 @@
 		ethernet2 = &dp2;
 		ethernet3 = &dp3;
 		ethernet4 = &dp4;
-		ethernet5 = &dp5_syn;
+		ethernet5 = &dp5;
 	};
 
 	chosen {
@@ -51,7 +51,7 @@
 	/delete-property/ nvmem-cell-names;
 };
 
-&dp5_syn {
+&dp5 {
 	/delete-property/ nvmem-cells;
 	/delete-property/ nvmem-cell-names;
 };

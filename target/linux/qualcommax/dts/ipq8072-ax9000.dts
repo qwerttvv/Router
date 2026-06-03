@@ -19,7 +19,7 @@
 	compatible = "xiaomi,ax9000", "qcom,ipq8074";
 
 	aliases {
-		label-mac-device = &dp5_syn;
+		label-mac-device = &dp5;
 		serial0 = &blsp1_uart5;
 
 		led-boot = &led_system_yellow;
@@ -278,7 +278,7 @@
 						reg = <0x12 0x6>;
 					};
 
-					macaddr_dp5_syn: macaddr@18 {
+					macaddr_dp5: macaddr@18 {
 						reg = <0x18 0x6>;
 					};
 
@@ -321,11 +321,10 @@
 
 	ethernet-phy-package@0 {
 		compatible = "qcom,qca8075-package";
+		qcom,package-mode = "qsgmii";
 		#address-cells = <1>;
 		#size-cells = <0>;
 		reg = <0>;
-
-		qcom,package-mode = "qsgmii";
 
 		qca8075_0: ethernet-phy@0 {
 			compatible = "ethernet-phy-ieee802.3-c22";
@@ -459,6 +458,7 @@
 
 &dp1 {
 	status = "okay";
+	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_0>;
 	label = "lan4";
 	nvmem-cells = <&macaddr_dp1>;
@@ -467,6 +467,7 @@
 
 &dp2 {
 	status = "okay";
+	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_1>;
 	label = "lan3";
 	nvmem-cells = <&macaddr_dp2>;
@@ -475,6 +476,7 @@
 
 &dp3 {
 	status = "okay";
+	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_2>;
 	label = "lan2";
 	nvmem-cells = <&macaddr_dp3>;
@@ -483,17 +485,19 @@
 
 &dp4 {
 	status = "okay";
+	phy-mode = "qsgmii";
 	phy-handle = <&qca8075_3>;
 	label = "lan1";
 	nvmem-cells = <&macaddr_dp4>;
 	nvmem-cell-names = "mac-address";
 };
 
-&dp5_syn {
+&dp5 {
 	status = "okay";
+	phy-mode = "sgmii";
 	phy-handle = <&qca8081>;
 	label = "wan";
-	nvmem-cells = <&macaddr_dp5_syn>;
+	nvmem-cells = <&macaddr_dp5>;
 	nvmem-cell-names = "mac-address";
 };
 

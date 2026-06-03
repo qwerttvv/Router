@@ -31,7 +31,6 @@
 &switch {
 	switch_lan_bmp = <(ESS_PORT2 | ESS_PORT3 | ESS_PORT4)>;
 	switch_wan_bmp = <ESS_PORT1>;
-	switch_mac_mode = <MAC_MODE_PSGMII>;
 };
 
 &edma {

@@ -13,7 +13,7 @@
 		ethernet1 = &dp2;
 		ethernet2 = &dp3;
 		ethernet3 = &dp4;
-		ethernet4 = &dp5_syn;
+		ethernet4 = &dp5;
 
 		label-mac-device = &dp1;
 	};
@@ -77,7 +77,6 @@
 &switch {
 	switch_lan_bmp = <(ESS_PORT1 | ESS_PORT2 | ESS_PORT3 | ESS_PORT4)>;
 	switch_wan_bmp = <ESS_PORT5>;
-	switch_mac_mode = <MAC_MODE_PSGMII>;
 	switch_mac_mode1 = <MAC_MODE_SGMII_PLUS>;
 
 	qcom,port_phyinfo {
@@ -117,8 +116,9 @@
 	label = "lan4";
 };
 
-&dp5_syn {
+&dp5 {
 	status = "okay";
+	phy-mode = "sgmii";
 	phy-handle = <&qca8081>;
 	label = "wan";
 };
