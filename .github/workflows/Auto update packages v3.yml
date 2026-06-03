@@ -64,7 +64,6 @@ jobs:
         pakcages: 
           - chinadns-ng
           - geoview
-          # - haproxy
           - hysteria
           - ipt2socks
           - microsocks
@@ -72,7 +71,6 @@ jobs:
           - shadow-tls
           - shadowsocks-rust
           - sing-box
-          - tuic-client
           - v2ray-plugin
           - xray-core
           - xray-plugin
@@ -99,9 +97,6 @@ jobs:
             prerelease_api_command: >
               curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/snowie2000/geoview/releases" | jq -r 'first | .tag_name' | sed -e 's/.*v//'
             release_download_url: https://codeload.github.com/snowie2000/geoview/tar.gz/
-
-          # - pakcages: haproxy
-
 
           - pakcages: hysteria
             update_type: single
@@ -176,16 +171,6 @@ jobs:
             prerelease_api_command: >
               curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/SagerNet/sing-box/releases" | jq -r 'first | .tag_name' | sed -e 's/.*v//'
             release_download_url: https://codeload.github.com/SagerNet/sing-box/tar.gz/v
-
-          - pakcages: tuic-client
-            update_type: multi_arch_tuic
-            folder: tuic-client
-            version_head: PKG_VERSION:=
-            release_api_command: >
-              curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/Itsusinn/tuic/releases" | jq -r 'map(select(.prerelease|not)) | first | .tag_name' | sed -e 's/.*v//'
-            prerelease_api_command: >
-              curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/Itsusinn/tuic/releases" | jq -r 'first | .tag_name' | sed -e 's/.*v//'
-            base_download_url: https://github.com/Itsusinn/tuic/releases/download/v
 
           - pakcages: v2ray-plugin
             update_type: single
