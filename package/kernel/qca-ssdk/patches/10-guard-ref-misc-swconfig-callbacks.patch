@@ -1,0 +1,15 @@
+--- a/src/ref/ref_misc.c
++++ b/src/ref/ref_misc.c
+@@ -54,6 +54,7 @@
+ #include "hsl_phy.h"
+ #endif
+ 
++#if defined(IN_SWCONFIG)
+ int
+ qca_ar8327_sw_set_max_frame_size(struct switch_dev *dev,
+ 										const struct switch_attr *attr,
+@@ -201,3 +202,4 @@ qca_ar8327_sw_reset_switch(struct switch
+ 	return rv;
+ }
+ 
++#endif

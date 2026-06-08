@@ -27,17 +27,17 @@ define KernelPackage/qca-nss-dp
   CATEGORY:=Kernel modules
   SUBMENU:=Network Devices
   DEPENDS:=@TARGET_qualcommax +kmod-qca-ssdk
-  TITLE:=Qualcom NSS dataplane ethernet driver
+  TITLE:=Qualcomm NSS dataplane ethernet driver
   FILES:=$(PKG_BUILD_DIR)/qca-nss-dp.ko
   AUTOLOAD:=$(call AutoLoad,31,qca-nss-dp,1)
 endef
 
 define KernelPackage/qca-nss-dp/Description
-  NSS dataplane ethernet driver for Qualcom SoCs.
+  NSS dataplane ethernet driver for Qualcomm SoCs.
 endef
 
 define Build/InstallDev
-	mkdir -p $(1)/usr/include/qca-nss-dp
+	$(INSTALL_DIR) $(1)/usr/include/qca-nss-dp
 	$(CP) $(PKG_BUILD_DIR)/exports/* $(1)/usr/include/qca-nss-dp/
 endef
 

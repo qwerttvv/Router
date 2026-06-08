@@ -1,14 +1,15 @@
 --- a/src/ref/ref_acl.c
 +++ b/src/ref/ref_acl.c
-@@ -23,7 +23,6 @@
+@@ -23,7 +23,7 @@
  #include "ssdk_init.h"
  #include "ssdk_plat.h"
  #include <linux/etherdevice.h>
 -#include <linux/if_bridge.h>
++#include <linux/rtnetlink.h>
  
  /* entry 0-1 is for global deny all and accept eapol rule
     entry 2-9 is for phy port1 specific mac accept rule
-@@ -128,7 +127,6 @@ _ref_acl_mac_entry_create_rule(a_uint32_
+@@ -128,7 +128,6 @@ _ref_acl_mac_entry_create_rule(a_uint32_
  {
  	sw_error_t rv = SW_OK;
  	fal_acl_rule_t rule = {0};
@@ -16,7 +17,7 @@
  	a_uint32_t port_id = ssdk_ifname_to_port(dev_id, entry->ifname);
  	SSDK_DEBUG("port_id %d entry_idx %d\n", port_id, entry_idx);
  
-@@ -224,15 +222,6 @@ _ref_acl_mac_entry_create_rule(a_uint32_
+@@ -224,14 +223,24 @@ _ref_acl_mac_entry_create_rule(a_uint32_
  		ref_acl_mac_entry[dev_id][entry_idx].port_map = BIT(port_id);
  		ref_acl_mac_entry[dev_id][entry_idx].acl_policy = 1;
  	}
@@ -27,8 +28,24 @@
 -		{
 -			br_fdb_delete_by_netdev(eth_dev, entry->src_mac.uc, 0);
 -			dev_put(eth_dev);
--		}
--	}
++	else if (!is_deny_all_mac(entry->src_mac.uc) && !entry->acl_policy) {
++		struct net_device *eth_dev;
++
++		rtnl_lock();
++		eth_dev = __dev_get_by_name(&init_net, entry->ifname);
++		if (eth_dev && netif_is_bridge_port(eth_dev)) {
++			struct net_device *br_dev = netdev_master_upper_dev_get(eth_dev);
++			const struct net_device_ops *ops = br_dev ? br_dev->netdev_ops : NULL;
++
++			if (ops && ops->ndo_fdb_del) {
++				struct ndmsg ndm = { .ndm_flags = NTF_MASTER };
++				bool notified = false;
++
++				ops->ndo_fdb_del(&ndm, NULL, eth_dev,
++					entry->src_mac.uc, 0, &notified, NULL);
++			}
+ 		}
++		rtnl_unlock();
+ 	}
  	return rv;
  }
- 

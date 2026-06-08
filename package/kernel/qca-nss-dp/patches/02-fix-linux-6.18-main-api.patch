@@ -1,14 +1,16 @@
 --- a/nss_dp_main.c
 +++ b/nss_dp_main.c
-@@ -38,10 +38,16 @@
- #if (LINUX_VERSION_CODE > KERNEL_VERSION(6, 6, 0))
- #include <net/netdev_rx_queue.h>
+@@ -35,13 +35,17 @@
+ #include <fal/fal_port_ctrl.h>
  #endif
+ #include <net/switchdev.h>
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(6, 6, 0))
+ #include <net/netdev_rx_queue.h>
 +#ifdef CONFIG_RFS_ACCEL
 +#include <linux/hash.h>
 +#include <net/hotdata.h>
 +#include <net/rps.h>
-+#endif
+ #endif
  #if defined(NSS_DP_MAC_POLL_SUPPORT)
  #include <init/ssdk_init.h>
  #endif
@@ -17,7 +19,7 @@
  
  #define JUMBO_MRU_3K 3072
  
-@@ -550,17 +556,17 @@ static int nss_dp_rx_flow_steer(struct n
+@@ -550,17 +554,17 @@ static int nss_dp_rx_flow_steer(struct n
  	}
  
  	hash = skb_get_hash(skb);
@@ -38,7 +40,7 @@
  
  	if (rxcpu == rfscpu)
  		return 0;
-@@ -911,7 +917,7 @@ bool nss_dp_is_phy_dev(struct net_device
+@@ -911,7 +915,7 @@ bool nss_dp_is_phy_dev(struct net_device
  /*
   * nss_dp_adjust_link()
   */
@@ -47,7 +49,7 @@
  {
  	struct nss_dp_dev *dp_priv = netdev_priv(netdev);
  	int current_state = dp_priv->link_state;
-@@ -1130,7 +1136,7 @@ fail:
+@@ -1130,7 +1134,7 @@ fail:
   * Note: We only remove the physical ports here. Virtual
   * port devices are removed explicitly by the VP module.
   */
@@ -56,7 +58,7 @@
  {
  	uint32_t i;
  	struct nss_dp_dev *dp_priv;
-@@ -1176,8 +1182,6 @@ static int nss_dp_remove(struct platform
+@@ -1176,8 +1180,6 @@ static int nss_dp_remove(struct platform
  		free_netdev(dp_priv->netdev);
  		dp_global_ctx.nss_dp[i] = NULL;
  	}
@@ -65,7 +67,7 @@
  }
  
  static struct of_device_id nss_dp_dt_ids[] = {
-@@ -1260,7 +1264,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
+@@ -1260,7 +1262,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
  /*
   * nss_dp_init()
   */
@@ -74,7 +76,7 @@
  {
  	int ret, i;
  
-@@ -1348,7 +1352,7 @@ int __init nss_dp_init(void)
+@@ -1348,7 +1350,7 @@ int __init nss_dp_init(void)
  /*
   * nss_dp_exit()
   */
@@ -83,7 +85,7 @@
  {
  	/*
  	 * Ensure netdev remove is done before HAL cleanup.
-@@ -1366,3 +1370,4 @@ module_exit(nss_dp_exit);
+@@ -1366,3 +1368,4 @@ module_exit(nss_dp_exit);
  
  MODULE_LICENSE("Dual BSD/GPL");
  MODULE_DESCRIPTION("NSS Data Plane Network Driver");

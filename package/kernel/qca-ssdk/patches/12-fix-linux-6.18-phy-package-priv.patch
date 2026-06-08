@@ -1,15 +1,14 @@
 --- a/src/hsl/mht/mht_interface_ctrl.c
 +++ b/src/hsl/mht/mht_interface_ctrl.c
-@@ -24,6 +24,8 @@
+@@ -24,6 +24,7 @@
  #include "ssdk_mht_clk.h"
  #include "ssdk_clk.h"
  
-+void *phy_package_get_priv(struct phy_device *phydev);
-+
++#include "phylib.h"
  static a_uint16_t
  mht_uniphy_xpcs_mmd_read(a_uint32_t dev_id, a_uint16_t mmd_num,
  	a_uint16_t mmd_reg)
-@@ -827,13 +829,12 @@ mht_interface_ops_init(a_uint32_t dev_id
+@@ -827,13 +828,12 @@ mht_interface_ops_init(a_uint32_t dev_id
  		return SW_BAD_PTR;
  	}
  

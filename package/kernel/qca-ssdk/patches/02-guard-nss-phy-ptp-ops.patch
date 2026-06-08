@@ -1,0 +1,12 @@
+--- a/include/hsl/phy/hsl_phy.h
++++ b/include/hsl/phy/hsl_phy.h
+@@ -1160,7 +1160,8 @@ struct hsl_phy_api *hsl_phy_api_get(a_ui
+ 			struct nss_phy_ptp_ops *ptp_ops = NULL;					\
+ 			struct nss_phy_device nss_phydev;					\
+ 			hsl_port_nss_phy_ops_get(dev_id, port_id, &nss_phydev, &nss_phy_ops);	\
+-			ptp_ops = nss_phy_ops->ptp_ops;						\
++			if (nss_phy_ops)							\
++				ptp_ops = nss_phy_ops->ptp_ops;				\
+ 			if (ptp_ops && ptp_ops->func)						\
+ 				rv = ptp_ops->func(&nss_phydev, ##__VA_ARGS__);			\
+ 		}										\

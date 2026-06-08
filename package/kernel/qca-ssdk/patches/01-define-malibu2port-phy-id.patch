@@ -1,0 +1,13 @@
+--- a/include/hsl/phy/hsl_phy.h
++++ b/include/hsl/phy/hsl_phy.h
+@@ -17,6 +17,10 @@ extern "C" {
+ #include <linux/phy.h>
+ #include "qca-nss-phy/nss_phy.h"
+ 
++#ifndef MALIBU2PORT_PHY
++#define MALIBU2PORT_PHY 0x004dd0b0
++#endif
++
+ 	/** Phy function reset type */
+ 	typedef enum {
+ 		PHY_FIFO_RESET = 0,	/**< Phy fifo reset */

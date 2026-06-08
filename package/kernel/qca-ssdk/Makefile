@@ -19,6 +19,8 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_TARGET_qualcommax_ipq60xx \
 	CONFIG_TARGET_qualcommax_ipq50xx
 
+PKG_BUILD_DEPENDS:=qca-nss-phy
+
 include $(INCLUDE_DIR)/kernel.mk
 include $(INCLUDE_DIR)/package.mk
 
@@ -26,7 +28,7 @@ define KernelPackage/qca-ssdk
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Devices
-  TITLE:=Qualcom SSDK switch driver
+  TITLE:=Qualcomm SSDK switch driver
   DEPENDS:=@(TARGET_qualcommax) +kmod-dsa
   FILES:=$(PKG_BUILD_DIR)/build/bin/qca-ssdk.ko
   AUTOLOAD:=$(call AutoLoad,30,qca-ssdk)
@@ -45,6 +47,7 @@ QCA_SSDK_SYMVERS:=$(PKG_BUILD_DIR)/mk/Module.symvers
 EXTRA_CFLAGS:= \
 	-Wno-missing-prototypes \
 	-Wno-missing-declarations \
+	-I$(LINUX_DIR)/drivers/net/phy \
 	-I$(STAGING_DIR)/usr/include
 
 MAKE_FLAGS+= \
