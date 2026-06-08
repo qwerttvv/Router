@@ -62,6 +62,7 @@
 };
 
 &blsp1_spi1 {
+	status = "okay";
 
 	flash@0 {
 		#address-cells = <1>;
@@ -178,11 +179,11 @@
 					#address-cells = <1>;
 					#size-cells = <1>;
 
-					macaddr_art_0: macaddr@0 {
+					macaddr_wan: macaddr@0 {
 						reg = <0x0 0x6>;
 					};
 
-					macaddr_art_6: macaddr@6 {
+					macaddr_lan: macaddr@6 {
 						reg = <0x6 0x6>;
 					};
 				};
@@ -282,7 +283,7 @@
 	status = "okay";
 	phy-handle = <&qca8075_2>;
 	label = "wan";
-	nvmem-cells = <&macaddr_art_0>;
+	nvmem-cells = <&macaddr_wan>;
 	nvmem-cell-names = "mac-address";
 };
 
@@ -290,7 +291,7 @@
 	status = "okay";
 	phy-handle = <&qca8075_3>;
 	label = "lan1";
-	nvmem-cells = <&macaddr_art_6>;
+	nvmem-cells = <&macaddr_lan>;
 	nvmem-cell-names = "mac-address";
 };
 
@@ -298,7 +299,7 @@
 	status = "okay";
 	phy-handle = <&qca8075_4>;
 	label = "lan2";
-	nvmem-cells = <&macaddr_art_6>;
+	nvmem-cells = <&macaddr_lan>;
 	nvmem-cell-names = "mac-address";
 };
 

@@ -28,9 +28,9 @@ case "$board" in
 		[ "$PHYNBR" = "1" ] && macaddr_add $label_mac 2 > /sys${DEVPATH}/macaddress
 		;;
 	dptech,ap3000-2c)
-		label_mac=$(get_mac_label)
-		[ "$PHYNBR" = "0" ] && macaddr_add $label_mac 2 > /sys${DEVPATH}/macaddress
-		[ "$PHYNBR" = "1" ] && macaddr_add $label_mac 1 > /sys${DEVPATH}/macaddress
+		label_mac=$(mtd_get_mac_binary 0:ART 0x6)
+		[ "$PHYNBR" = "0" ] && macaddr_add $label_mac 1 > /sys${DEVPATH}/macaddress
+		[ "$PHYNBR" = "1" ] && macaddr_add $label_mac 2 > /sys${DEVPATH}/macaddress
 		;;
 	glinet,gl-ax1800|\
 	glinet,gl-axt1800)

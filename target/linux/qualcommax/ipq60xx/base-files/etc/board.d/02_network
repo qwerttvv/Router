@@ -72,6 +72,11 @@ ipq60xx_setup_macs()
 	alfa-network,ap120c-ax)
 		label_mac=$(mtd_get_mac_binary 0:ART 0x12)
 		;;
+	dptech,ap3000-2c)
+		wan_mac=$(mtd_get_mac_binary 0:ART 0x0)
+		lan_mac=$(mtd_get_mac_binary 0:ART 0x6)
+		label_mac=$lan_mac
+		;;
 	qihoo,360v6)
 		lan_mac=$(mtd_get_mac_ascii factory lanMac)
 		wan_mac=$(macaddr_add "$lan_mac" 1)
