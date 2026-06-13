@@ -5,8 +5,8 @@ Subject: [PATCH] Update 607-qca-add-add-nss-bridge-mgr-support.patch for kernel 
 
 ---
  include/linux/if_bridge.h |  4 ++++
- net/bridge/br_fdb.c       | 25 +++++++++++++++++++++----
- 2 files changed, 25 insertions(+), 4 deletions(-)
+ net/bridge/br_fdb.c       | 10 ++++++++++
+ 2 files changed, 14 insertions(+)
 
 --- a/include/linux/if_bridge.h
 +++ b/include/linux/if_bridge.h
@@ -21,32 +21,7 @@ Subject: [PATCH] Update 607-qca-add-add-nss-bridge-mgr-support.patch for kernel 
  #endif
 --- a/net/bridge/br_fdb.c
 +++ b/net/bridge/br_fdb.c
-@@ -597,7 +597,7 @@ void br_fdb_cleanup(struct work_struct *
- 	unsigned long delay = hold_time(br);
- 	unsigned long work_delay = delay;
- 	unsigned long now = jiffies;
--	u8 mac_addr[6]; /* QCA NSS ECM support */
-+	struct br_fdb_event fdb_event; /* QCA NSS bridge-mgr support */
- 
- 	/* this part is tricky, in order to avoid blocking learning and
- 	 * consequently forwarding, we rely on rcu to delete objects with
-@@ -625,12 +625,13 @@ void br_fdb_cleanup(struct work_struct *
- 		} else {
- 			spin_lock_bh(&br->hash_lock);
- 			if (!hlist_unhashed(&f->fdb_node)) {
--				ether_addr_copy(mac_addr, f->key.addr.addr);
-+				memset(&fdb_event, 0, sizeof(fdb_event));
-+				ether_addr_copy(fdb_event.addr, f->key.addr.addr);
- 				fdb_delete(br, f, true);
- 				/* QCA NSS ECM support - Start */
- 				atomic_notifier_call_chain(
- 					&br_fdb_update_notifier_list, 0,
--					(void *)mac_addr);
-+					(void *)&fdb_event);
- 				/* QCA NSS ECM support - End */
- 			}
- 			spin_unlock_bh(&br->hash_lock);
-@@ -1055,10 +1056,21 @@ static bool __fdb_mark_active(struct net
+@@ -1047,6 +1047,16 @@ static bool __fdb_mark_active(struct net
  		  test_and_clear_bit(BR_FDB_NOTIFY_INACTIVE, &fdb->flags));
  }
  
@@ -63,30 +38,3 @@ Subject: [PATCH] Update 607-qca-add-add-nss-bridge-mgr-support.patch for kernel 
  void br_fdb_update(struct net_bridge *br, struct net_bridge_port *source,
  		   const unsigned char *addr, u16 vid, unsigned long flags)
  {
- 	struct net_bridge_fdb_entry *fdb;
-+	struct br_fdb_event fdb_event; /* QCA NSS bridge-mgr support */
- 
- 	/* some users want to always flood. */
- 	if (hold_time(br) == 0)
-@@ -1084,6 +1096,12 @@ void br_fdb_update(struct net_bridge *br
- 			if (unlikely(source != READ_ONCE(fdb->dst) &&
- 				     !test_bit(BR_FDB_STICKY, &fdb->flags))) {
- 				br_switchdev_fdb_notify(br, fdb, RTM_DELNEIGH);
-+				/* QCA NSS bridge-mgr support - Start */
-+				ether_addr_copy(fdb_event.addr, addr);
-+				fdb_event.br = br;
-+				fdb_event.orig_dev = fdb->dst->dev;
-+				fdb_event.dev = source->dev;
-+				/* QCA NSS bridge-mgr support - End */
- 				WRITE_ONCE(fdb->dst, source);
- 				fdb_modified = true;
- 				/* Take over HW learned entry */
-@@ -1100,7 +1118,7 @@ void br_fdb_update(struct net_bridge *br
- 				/* QCA NSS ECM support - Start */
- 				atomic_notifier_call_chain(
- 					&br_fdb_update_notifier_list,
--					0, (void *)addr);
-+					0, (void *)&fdb_event);
- 				/* QCA NSS ECM support - End */
- 			}
- 

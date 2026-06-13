@@ -26,8 +26,9 @@ define KernelPackage/qca-nss-dp
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Devices
-  DEPENDS:=@TARGET_qualcommax +kmod-qca-ssdk
   TITLE:=Qualcomm NSS dataplane ethernet driver
+  DEPENDS:=@TARGET_qualcommax \
+	+kmod-qca-ssdk
   FILES:=$(PKG_BUILD_DIR)/qca-nss-dp.ko
   AUTOLOAD:=$(call AutoLoad,31,qca-nss-dp,1)
 endef
@@ -41,22 +42,34 @@ define Build/InstallDev
 	$(CP) $(PKG_BUILD_DIR)/exports/* $(1)/usr/include/qca-nss-dp/
 endef
 
-EXTRA_CFLAGS+= \
+NSS_DP_INCLUDE_DIRS:= \
+	$(PKG_BUILD_DIR)/include \
+	$(PKG_BUILD_DIR)/exports \
+	$(PKG_BUILD_DIR)/hal/include \
+	$(PKG_BUILD_DIR)/hal/dp_ops/include \
+	$(PKG_BUILD_DIR)/hal/dp_ops/edma_dp/edma_v1/include \
+	$(STAGING_DIR)/usr/include/qca-ssdk
+
+NSS_DP_INCLUDES:=$(patsubst %,-I%,$(NSS_DP_INCLUDE_DIRS))
+NSS_DP_SUBTARGET:=$(subst ",,$(CONFIG_TARGET_SUBTARGET))
+
+EXTRA_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include/qca-ssdk
 
 NSS_DP_HAL_DIR:=$(PKG_BUILD_DIR)/hal
+
 define Build/Configure
-	$(CP) $(NSS_DP_HAL_DIR)/soc_ops/$(CONFIG_TARGET_SUBTARGET)/nss_$(CONFIG_TARGET_SUBTARGET).h \
+	$(CP) $(NSS_DP_HAL_DIR)/soc_ops/$(NSS_DP_SUBTARGET)/nss_$(NSS_DP_SUBTARGET).h \
 		$(PKG_BUILD_DIR)/exports/nss_dp_arch.h
 endef
 
 define Build/Compile
 	+$(KERNEL_MAKE) $(PKG_JOBS) \
-		-C "$(LINUX_DIR)" \
 		M="$(PKG_BUILD_DIR)" \
 		KBUILD_EXTRA_SYMBOLS="$(QCA_SSDK_SYMVERS)" \
-		NSS_DP_INCLUDE="-I$(PKG_BUILD_DIR)/include -I$(PKG_BUILD_DIR)/exports -I$(PKG_BUILD_DIR)/hal/include -I$(PKG_BUILD_DIR)/hal/dp_ops/include -I$(PKG_BUILD_DIR)/hal/dp_ops/edma_dp/edma_v1/include -I$(STAGING_DIR)/usr/include/qca-ssdk" \
-		EXTRA_CFLAGS="$(EXTRA_CFLAGS)" SoC="$(CONFIG_TARGET_SUBTARGET)" \
+		NSS_DP_INCLUDE="$(NSS_DP_INCLUDES)" \
+		EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
+		SoC="$(NSS_DP_SUBTARGET)" \
 		modules
 endef
 

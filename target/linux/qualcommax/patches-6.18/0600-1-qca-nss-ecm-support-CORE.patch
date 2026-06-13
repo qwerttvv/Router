@@ -284,7 +284,7 @@
 +	/* QCA NSS ECM support - Start */
 +	if (fdb->dst) {
 +		int event;
-+		struct br_fdb_event fdb_event;
++		struct br_fdb_event fdb_event = { };
 +
 +		if (type == RTM_NEWNEIGH)
 +			event = BR_FDB_EVENT_ADD;
@@ -326,32 +326,28 @@
  void br_fdb_cleanup(struct work_struct *work)
  {
  	struct net_bridge *br = container_of(work, struct net_bridge,
-@@ -548,6 +597,7 @@ void br_fdb_cleanup(struct work_struct *
- 	unsigned long delay = hold_time(br);
- 	unsigned long work_delay = delay;
- 	unsigned long now = jiffies;
-+	u8 mac_addr[6]; /* QCA NSS ECM support */
+@@ -1002,6 +1051,7 @@ void br_fdb_update(struct net_bridge *br
+ 		   const unsigned char *addr, u16 vid, unsigned long flags)
+ {
+ 	struct net_bridge_fdb_entry *fdb;
++	struct br_fdb_event fdb_event = { }; /* QCA NSS ECM support */
  
- 	/* this part is tricky, in order to avoid blocking learning and
- 	 * consequently forwarding, we rely on rcu to delete objects with
-@@ -574,8 +624,15 @@ void br_fdb_cleanup(struct work_struct *
- 			work_delay = min(work_delay, this_timer - now);
- 		} else {
- 			spin_lock_bh(&br->hash_lock);
--			if (!hlist_unhashed(&f->fdb_node))
-+			if (!hlist_unhashed(&f->fdb_node)) {
-+				ether_addr_copy(mac_addr, f->key.addr.addr);
- 				fdb_delete(br, f, true);
+ 	/* some users want to always flood. */
+ 	if (hold_time(br) == 0)
+@@ -1027,6 +1077,12 @@ void br_fdb_update(struct net_bridge *br
+ 			if (unlikely(source != READ_ONCE(fdb->dst) &&
+ 				     !test_bit(BR_FDB_STICKY, &fdb->flags))) {
+ 				br_switchdev_fdb_notify(br, fdb, RTM_DELNEIGH);
 +				/* QCA NSS ECM support - Start */
-+				atomic_notifier_call_chain(
-+					&br_fdb_update_notifier_list, 0,
-+					(void *)mac_addr);
++				ether_addr_copy(fdb_event.addr, addr);
++				fdb_event.br = br;
++				fdb_event.orig_dev = fdb->dst->dev;
++				fdb_event.dev = source->dev;
 +				/* QCA NSS ECM support - End */
-+			}
- 			spin_unlock_bh(&br->hash_lock);
- 		}
- 	}
-@@ -1039,6 +1096,12 @@ void br_fdb_update(struct net_bridge *br
+ 				WRITE_ONCE(fdb->dst, source);
+ 				fdb_modified = true;
+ 				/* Take over HW learned entry */
+@@ -1039,6 +1095,12 @@ void br_fdb_update(struct net_bridge *br
  				 */
  				if (unlikely(test_bit(BR_FDB_LOCKED, &fdb->flags)))
  					clear_bit(BR_FDB_LOCKED, &fdb->flags);
@@ -359,12 +355,12 @@
 +				/* QCA NSS ECM support - Start */
 +				atomic_notifier_call_chain(
 +					&br_fdb_update_notifier_list,
-+					0, (void *)addr);
++					0, (void *)&fdb_event);
 +				/* QCA NSS ECM support - End */
  			}
  
  			if (unlikely(test_bit(BR_FDB_ADDED_BY_USER, &flags))) {
-@@ -1066,6 +1129,70 @@ void br_fdb_update(struct net_bridge *br
+@@ -1066,6 +1128,70 @@ void br_fdb_update(struct net_bridge *br
  	}
  }
  

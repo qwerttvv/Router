@@ -29,7 +29,8 @@ define KernelPackage/qca-ssdk
   CATEGORY:=Kernel modules
   SUBMENU:=Network Devices
   TITLE:=Qualcomm SSDK switch driver
-  DEPENDS:=@(TARGET_qualcommax) +kmod-dsa
+  DEPENDS:=@TARGET_qualcommax \
+	+kmod-dsa
   FILES:=$(PKG_BUILD_DIR)/build/bin/qca-ssdk.ko
   AUTOLOAD:=$(call AutoLoad,30,qca-ssdk)
 endef
@@ -38,11 +39,13 @@ define KernelPackage/qca-ssdk/Description
   Driver for Qualcomm Atheros switches.
 endef
 
-GCC_VERSION=$(shell echo "$(CONFIG_GCC_VERSION)" | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+GCC_VERSION:=$(shell echo "$(CONFIG_GCC_VERSION)" | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
 
-LNX_CONFIG_OPTS = LNX_MAKEOPTS='$(KERNEL_MAKEOPTS) KCFLAGS="$(EXTRA_CFLAGS)"' PRJ_PATH=$(PKG_BUILD_DIR) MODULE_TYPE=KSLIB modules
+LNX_CONFIG_OPTS:=LNX_MAKEOPTS='$(KERNEL_MAKEOPTS)' PRJ_PATH=$(PKG_BUILD_DIR) MODULE_TYPE=KSLIB modules
 
 QCA_SSDK_SYMVERS:=$(PKG_BUILD_DIR)/mk/Module.symvers
+
+SSDK_SUBTARGET:=$(subst ",,$(CONFIG_TARGET_SUBTARGET))
 
 EXTRA_CFLAGS:= \
 	-Wno-missing-prototypes \
@@ -50,7 +53,7 @@ EXTRA_CFLAGS:= \
 	-I$(LINUX_DIR)/drivers/net/phy \
 	-I$(STAGING_DIR)/usr/include
 
-MAKE_FLAGS+= \
+SSDK_MAKE_FLAGS:=$(MAKE_FLAGS) \
 	TARGET_NAME=$(CONFIG_TARGET_NAME) \
 	MK_PATH=$(PKG_BUILD_DIR)/mk \
 	TOOL_PATH=$(firstword $(TOOLCHAIN_BIN_DIRS)) \
@@ -61,60 +64,58 @@ MAKE_FLAGS+= \
 	TARGET_SUFFIX=$(CONFIG_TARGET_SUFFIX) \
 	GCC_VERSION=$(GCC_VERSION) \
 	EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
-	SoC=$(CONFIG_TARGET_SUBTARGET) \
+	SoC=$(SSDK_SUBTARGET) \
 	SHELL="$(BASH)" \
-	PTP_FEATURE=disable SWCONFIG_FEATURE=disable \
+	PTP_FEATURE=disable \
+	SWCONFIG_FEATURE=disable \
 	ISISC_ENABLE=disable \
-	IN_QCA803X_PHY=FALSE IN_QCA808X_PHY=FALSE \
-	IN_MALIBU_PHY=FALSE IN_MP_PHY=FALSE \
-	$(LNX_CONFIG_OPTS)
+	IN_QCA803X_PHY=FALSE \
+	IN_QCA808X_PHY=FALSE \
+	IN_MALIBU_PHY=FALSE \
+	IN_MP_PHY=FALSE
 
-ifeq ($(CONFIG_TARGET_SUBTARGET), "ipq807x")
-	MAKE_FLAGS+= CHIP_TYPE=HPPE
-endif
-
-ifeq ($(CONFIG_TARGET_SUBTARGET), "ipq60xx")
-	MAKE_FLAGS+= CHIP_TYPE=CPPE IN_AQUANTIA_PHY=TRUE
-endif
-
-ifeq ($(CONFIG_TARGET_SUBTARGET), "ipq50xx")
-	MAKE_FLAGS+= CHIP_TYPE=MP
+ifeq ($(SSDK_SUBTARGET),ipq807x)
+SSDK_MAKE_FLAGS += CHIP_TYPE=HPPE
+else ifeq ($(SSDK_SUBTARGET),ipq60xx)
+SSDK_MAKE_FLAGS += CHIP_TYPE=CPPE IN_AQUANTIA_PHY=TRUE
+else ifeq ($(SSDK_SUBTARGET),ipq50xx)
+SSDK_MAKE_FLAGS += CHIP_TYPE=MP
 endif
 
 define Build/Compile
-	+$(MAKE) $(PKG_JOBS) $(MAKE_FLAGS) -C $(PKG_BUILD_DIR)/mk $(LNX_CONFIG_OPTS)
+	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR)/mk $(SSDK_MAKE_FLAGS) $(LNX_CONFIG_OPTS)
 	$(INSTALL_DIR) $(PKG_SYMVERS_DIR)
 	$(CP) $(QCA_SSDK_SYMVERS) $(PKG_SYMVERS_DIR)/$(PKG_NAME).symvers
 endef
 
 define Build/InstallDev
-	$(INSTALL_DIR) $(1)/usr/include/qca-ssdk
-	$(INSTALL_DIR) $(1)/usr/include/qca-ssdk/api
-	$(INSTALL_DIR) $(1)/usr/include/qca-ssdk/ref
-	$(INSTALL_DIR) $(1)/usr/include/qca-ssdk/fal
-	$(INSTALL_DIR) $(1)/usr/include/qca-ssdk/sal
-	$(INSTALL_DIR) $(1)/usr/include/qca-ssdk/init
-	$(CP) -rf $(PKG_BUILD_DIR)/include/api/sw_ioctl.h $(1)/usr/include/qca-ssdk/api
+	$(INSTALL_DIR) \
+		$(1)/usr/include/qca-ssdk \
+		$(1)/usr/include/qca-ssdk/api \
+		$(1)/usr/include/qca-ssdk/ref \
+		$(1)/usr/include/qca-ssdk/fal \
+		$(1)/usr/include/qca-ssdk/sal \
+		$(1)/usr/include/qca-ssdk/init
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/api/sw_ioctl.h $(1)/usr/include/qca-ssdk/api/
 	if [ -f $(PKG_BUILD_DIR)/include/ref/ref_vsi.h ]; then \
-	$(CP) -rf $(PKG_BUILD_DIR)/include/ref/ref_vsi.h $(1)/usr/include/qca-ssdk/ref/; \
+		$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/ref/ref_vsi.h $(1)/usr/include/qca-ssdk/ref/; \
 	fi
 	if [ -f $(PKG_BUILD_DIR)/include/ref/ref_fdb.h ]; then \
-	$(CP) -rf $(PKG_BUILD_DIR)/include/ref/ref_fdb.h $(1)/usr/include/qca-ssdk/ref/; \
+		$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/ref/ref_fdb.h $(1)/usr/include/qca-ssdk/ref/; \
 	fi
 	if [ -f $(PKG_BUILD_DIR)/include/ref/ref_port_ctrl.h ]; then \
-	$(CP) -rf $(PKG_BUILD_DIR)/include/ref/ref_port_ctrl.h $(1)/usr/include/qca-ssdk/ref/; \
+		$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/ref/ref_port_ctrl.h $(1)/usr/include/qca-ssdk/ref/; \
 	fi
 	if [ -f $(PKG_BUILD_DIR)/include/init/ssdk_init.h ]; then \
-	$(CP) -rf $(PKG_BUILD_DIR)/include/init/ssdk_init.h $(1)/usr/include/qca-ssdk/init/; \
+		$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/init/ssdk_init.h $(1)/usr/include/qca-ssdk/init/; \
 	fi
 	if [ -f $(PKG_BUILD_DIR)/include/init/ssdk_netlink.h ]; then \
-	$(CP) -rf $(PKG_BUILD_DIR)/include/init/ssdk_netlink.h $(1)/usr/include/qca-ssdk/init/; \
+		$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/init/ssdk_netlink.h $(1)/usr/include/qca-ssdk/init/; \
 	fi
-	$(CP) -rf $(PKG_BUILD_DIR)/include/fal $(1)/usr/include/qca-ssdk
-	$(CP) -rf $(PKG_BUILD_DIR)/include/common/*.h $(1)/usr/include/qca-ssdk
-	$(CP) -rf $(PKG_BUILD_DIR)/include/sal/os/linux/*.h $(1)/usr/include/qca-ssdk
-	$(CP) -rf $(PKG_BUILD_DIR)/include/sal/os/*.h $(1)/usr/include/qca-ssdk
-
+	$(CP) $(PKG_BUILD_DIR)/include/fal $(1)/usr/include/qca-ssdk/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/common/*.h $(1)/usr/include/qca-ssdk/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/sal/os/linux/*.h $(1)/usr/include/qca-ssdk/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/include/sal/os/*.h $(1)/usr/include/qca-ssdk/
 endef
 
 $(eval $(call KernelPackage,qca-ssdk))

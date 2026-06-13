@@ -1,0 +1,31 @@
+--- a/src/ref/ref_mib.c
++++ b/src/ref/ref_mib.c
+@@ -47,6 +47,10 @@
+ #include "ssdk_plat.h"
+ #include "ref_vlan.h"
+ 
++static int _qca_ar8327_sw_capture_port_tx_counter(a_uint32_t dev_id, int port);
++static int _qca_ar8327_sw_capture_port_rx_counter(a_uint32_t dev_id, int port);
++void qca_ar8327_sw_mib_task(struct qca_phy_priv *priv);
++
+ #if defined(IN_SWCONFIG)
+ int
+ _qca_ar8327_sw_capture_port_counter(struct switch_dev *dev, int port)
+@@ -482,7 +486,7 @@ qca_ar8327_sw_get_port_mib(struct switch
+ }
+ #endif
+ 
+-int
++static int
+ _qca_ar8327_sw_capture_port_tx_counter(a_uint32_t dev_id, int port)
+ {
+     fal_mib_info_t  mib_Info;
+@@ -493,7 +497,7 @@ _qca_ar8327_sw_capture_port_tx_counter(a
+     return 0;
+ }
+ 
+-int
++static int
+ _qca_ar8327_sw_capture_port_rx_counter(a_uint32_t dev_id, int port)
+ {
+     fal_mib_info_t  mib_Info;
