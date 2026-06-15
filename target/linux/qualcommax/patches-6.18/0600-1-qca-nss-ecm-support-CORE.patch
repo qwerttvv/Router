@@ -709,7 +709,7 @@
  static inline const void *choose_neigh_daddr(const struct in6_addr *p,
  					     struct sk_buff *skb,
  					     const void *daddr)
-@@ -3973,6 +3976,10 @@ int ip6_route_add(struct fib6_config *cf
+@@ -3976,6 +3979,10 @@ int ip6_route_add(struct fib6_config *cf
  		return err;
  
  	err = __ip6_ins_rt(rt, &cfg->fc_nlinfo, extack);
@@ -720,7 +720,7 @@
  	fib6_info_release(rt);
  
  	return err;
-@@ -3994,6 +4001,9 @@ static int __ip6_del_rt(struct fib6_info
+@@ -3997,6 +4004,9 @@ static int __ip6_del_rt(struct fib6_info
  	err = fib6_del(rt, info);
  	spin_unlock_bh(&table->tb6_lock);
  
@@ -730,7 +730,7 @@
  out:
  	fib6_info_release(rt);
  	return err;
-@@ -6527,6 +6537,20 @@ static int ip6_route_dev_notify(struct n
+@@ -6532,6 +6542,20 @@ static int ip6_route_dev_notify(struct n
  	return NOTIFY_OK;
  }
  
@@ -894,7 +894,7 @@
  	/*
  	 * Get the required data from the packet.
  	 */
-@@ -1286,7 +1290,7 @@ int nf_conntrack_tcp_packet(struct nf_co
+@@ -1287,7 +1291,7 @@ int nf_conntrack_tcp_packet(struct nf_co
  		 IP_CT_TCP_FLAG_DATA_UNACKNOWLEDGED &&
  		 timeouts[new_state] > timeouts[TCP_CONNTRACK_UNACK])
  		timeout = timeouts[TCP_CONNTRACK_UNACK];
@@ -903,7 +903,7 @@
  		 timeouts[new_state] > timeouts[TCP_CONNTRACK_RETRANS])
  		timeout = timeouts[TCP_CONNTRACK_RETRANS];
  	else
-@@ -1598,6 +1602,9 @@ void nf_conntrack_tcp_init_net(struct ne
+@@ -1599,6 +1603,9 @@ void nf_conntrack_tcp_init_net(struct ne
  	 */
  	tn->tcp_be_liberal = 0;
  

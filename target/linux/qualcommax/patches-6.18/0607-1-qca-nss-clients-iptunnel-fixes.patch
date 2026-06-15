@@ -91,15 +91,7 @@ Includes iptunnel fixes by integrating the following patches:
  		return -1;
 --- a/net/ipv4/ip_tunnel_core.c
 +++ b/net/ipv4/ip_tunnel_core.c
-@@ -38,6 +38,7 @@
- #include <net/geneve.h>
- #include <net/vxlan.h>
- #include <net/erspan.h>
-+#include <net/vxlan.h>
- 
- const struct ip_tunnel_encap_ops __rcu *
- 		iptun_encaps[MAX_IPTUN_ENCAP_OPS] __read_mostly;
-@@ -56,7 +57,12 @@ void iptunnel_xmit(struct sock *sk, stru
+@@ -56,7 +56,12 @@ void iptunnel_xmit(struct sock *sk, stru
  	struct net *net = dev_net(rt->dst.dev);
  	struct net_device *dev = skb->dev;
  	struct iphdr *iph;
@@ -112,7 +104,7 @@ Includes iptunnel fixes by integrating the following patches:
  
  	if (unlikely(dev_recursion_level() > IP_TUNNEL_RECURSION_LIMIT)) {
  		if (dev) {
-@@ -94,6 +100,15 @@ void iptunnel_xmit(struct sock *sk, stru
+@@ -94,6 +99,15 @@ void iptunnel_xmit(struct sock *sk, stru
  	iph->ttl	=	ttl;
  	__ip_select_ident(net, iph, skb_shinfo(skb)->gso_segs ?: 1);
  
