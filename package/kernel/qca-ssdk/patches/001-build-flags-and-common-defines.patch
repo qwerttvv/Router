@@ -1,0 +1,41 @@
+--- a/include/common/sw.h
++++ b/include/common/sw.h
+@@ -26,6 +26,10 @@ extern "C" {
+ #include "sw_error.h"
+ #include "shared_func.h"
+ 
++#ifdef __KERNEL__
++#include <linux/string.h>
++#endif
++
+ #ifdef __cplusplus
+ }
+ #endif                          /* __cplusplus */
+--- a/mk/cflags.mk
++++ b/mk/cflags.mk
+@@ -337,6 +337,7 @@ MODULE_INC += -I$(PRJ_PATH)/include \
+                    -I$(PRJ_PATH)/include/ref \
+                    -I$(PRJ_PATH)/include/adpt \
+                    -I$(PRJ_PATH)/include/hsl \
++                   -I$(PRJ_PATH)/include/hsl/mht \
+                    -I$(PRJ_PATH)/include/hsl/phy \
+                    -I$(PRJ_PATH)/include/sal/os \
+                    -I$(PRJ_PATH)/include/sal/os/linux \
+@@ -484,5 +485,5 @@ endif
+ #############################################
+ #            combine all cflags
+ #############################################
+-ccflags-y += ${MODULE_INC} ${MODULE_CFLAG} -DFALLTHROUGH -Werror -Wall
++ccflags-y += ${MODULE_INC} ${MODULE_CFLAG} ${EXTRA_CFLAGS} -DFALLTHROUGH -Werror -Wall
+ 
+--- a/mk/obj.mk
++++ b/mk/obj.mk
+@@ -439,7 +439,7 @@ OBJ-COMMON  += src/shell_lib/shell.o src
+ #                                 COMMON
+ ###############################################################################
+ OBJ-COMMON  += src/fal/fal_init.o src/fal/fal_reg_access.o src/adpt/adpt.o \
+-               src/ref/ref_uci.o src/hsl/hsl_dev.o src/hsl/hsl_api.o \
++               src/hsl/hsl_dev.o src/hsl/hsl_api.o \
+                src/hsl/hsl_port_prop.o src/util/util.o src/sal/sd/sd.o \
+                src/sal/sd/linux/uk_interface/sw_api_ks_ioctl.o \
+                src/api/api_access.o

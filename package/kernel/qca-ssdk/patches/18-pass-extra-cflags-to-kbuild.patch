@@ -1,9 +1,0 @@
---- a/mk/cflags.mk
-+++ b/mk/cflags.mk
-@@ -485,5 +485,5 @@ endif
- #############################################
- #            combine all cflags
- #############################################
--ccflags-y += ${MODULE_INC} ${MODULE_CFLAG} -DFALLTHROUGH -Werror -Wall
-+ccflags-y += ${MODULE_INC} ${MODULE_CFLAG} ${EXTRA_CFLAGS} -DFALLTHROUGH -Werror -Wall
- 

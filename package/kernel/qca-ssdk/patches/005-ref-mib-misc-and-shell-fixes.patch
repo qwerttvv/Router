@@ -1,58 +1,49 @@
---- a/include/common/sw.h
-+++ b/include/common/sw.h
-@@ -26,6 +26,10 @@ extern "C" {
- #include "sw_error.h"
- #include "shared_func.h"
+--- a/src/ref/ref_mib.c
++++ b/src/ref/ref_mib.c
+@@ -47,6 +47,10 @@
+ #include "ssdk_plat.h"
+ #include "ref_vlan.h"
  
-+#ifdef __KERNEL__
-+#include <linux/string.h>
-+#endif
++static int _qca_ar8327_sw_capture_port_tx_counter(a_uint32_t dev_id, int port);
++static int _qca_ar8327_sw_capture_port_rx_counter(a_uint32_t dev_id, int port);
++void qca_ar8327_sw_mib_task(struct qca_phy_priv *priv);
 +
- #ifdef __cplusplus
+ #if defined(IN_SWCONFIG)
+ int
+ _qca_ar8327_sw_capture_port_counter(struct switch_dev *dev, int port)
+@@ -482,7 +486,7 @@ qca_ar8327_sw_get_port_mib(struct switch
  }
- #endif                          /* __cplusplus */
---- a/app/nathelper/linux/host_helper.c
-+++ b/app/nathelper/linux/host_helper.c
-@@ -1268,7 +1268,7 @@ dev_check(char *in_dev, char *dev_list)
-         return 0;
-     }
+ #endif
  
--    strlcpy(temp, dev_list, sizeof(temp));
-+    strscpy(temp, dev_list, sizeof(temp));
-     list = temp;
+-int
++static int
+ _qca_ar8327_sw_capture_port_tx_counter(a_uint32_t dev_id, int port)
+ {
+     fal_mib_info_t  mib_Info;
+@@ -493,7 +497,7 @@ _qca_ar8327_sw_capture_port_tx_counter(a
+     return 0;
+ }
  
-     while ((list_dev = strsep(&list, " ")) != NULL)
-@@ -1314,7 +1314,7 @@ static void hnat_add_neigh(struct neighb
- 	memset(&msg, 0, sizeof(msg));
- 	msg.arp_in.ip = *((uint32_t *)neigh->primary_key);
- 	memcpy(msg.arp_in.mac, neigh->ha, ETH_ALEN);
--	strlcpy(msg.arp_in.name, neigh->dev->name, IFNAMSIZ);
-+	strscpy(msg.arp_in.name, neigh->dev->name, IFNAMSIZ);
- 	msg.arp_in.in = neigh->dev;
+-int
++static int
+ _qca_ar8327_sw_capture_port_rx_counter(a_uint32_t dev_id, int port)
+ {
+     fal_mib_info_t  mib_Info;
+--- a/src/ref/ref_misc.c
++++ b/src/ref/ref_misc.c
+@@ -54,6 +54,7 @@
+ #include "hsl_phy.h"
+ #endif
  
- 	if (neigh->dev->priv_flags & IFF_EBRIDGE) {
---- a/src/init/ssdk_mht_clk.c
-+++ b/src/init/ssdk_mht_clk.c
-@@ -746,16 +746,16 @@ sw_error_t ssdk_mht_clk_rate_get(a_uint3
- 	char clk_id[64] = {0};
- 	a_bool_t bypass_en = A_FALSE;
++#if defined(IN_SWCONFIG)
+ int
+ qca_ar8327_sw_set_max_frame_size(struct switch_dev *dev,
+ 										const struct switch_attr *attr,
+@@ -201,3 +202,4 @@ qca_ar8327_sw_reset_switch(struct switch
+ 	return rv;
+ }
  
--	strlcpy(clk_id, clock_id, sizeof(clk_id));
-+	strscpy(clk_id, clock_id, sizeof(clk_id));
- 
- 	ssdk_mht_port5_uniphy0_clk_src_get(dev_id, &bypass_en);
- 	if (bypass_en == A_TRUE) {
- 		if (strncasecmp(clock_id, MHT_MAC5_TX_UNIPHY0_CLK,
- 					strlen(MHT_MAC5_TX_UNIPHY0_CLK)) == 0)
--			strlcpy(clk_id, MHT_MAC4_RX_CLK, sizeof(clk_id));
-+			strscpy(clk_id, MHT_MAC4_RX_CLK, sizeof(clk_id));
- 		else if (strncasecmp(clock_id, MHT_MAC5_RX_UNIPHY0_CLK,
- 					strlen(MHT_MAC5_RX_UNIPHY0_CLK)) == 0)
--			strlcpy(clk_id, MHT_MAC4_TX_CLK, sizeof(clk_id));
-+			strscpy(clk_id, MHT_MAC4_TX_CLK, sizeof(clk_id));
- 	}
- 
- 	clk = ssdk_mht_clk_find(clk_id);
++#endif
 --- a/src/shell_lib/shell_io.c
 +++ b/src/shell_lib/shell_io.c
 @@ -979,16 +979,16 @@ cmd_sscanf(const char *buf, const char *
