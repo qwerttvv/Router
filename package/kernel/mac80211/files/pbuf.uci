@@ -6,3 +6,4 @@ config general opt
   # option memory_profile '512mb'
   # option memory_profile '256mb'
   option scaling_governor 'schedutil'
+  option reload_wifi '0'

@@ -19,6 +19,7 @@ define Package/qca-nss-phy
   SUBMENU:=Network Devices
   TITLE:=Qualcomm NSS PHY headers
   URL:=https://git.codelinaro.org/clo/qsdk/oss/lklm/qca-nss-phy
+  DEPENDS:=@TARGET_qualcommax
   BUILDONLY:=1
 endef
 
