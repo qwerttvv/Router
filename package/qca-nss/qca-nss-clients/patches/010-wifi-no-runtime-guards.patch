@@ -1,6 +1,6 @@
 --- a/netlink/Makefile
 +++ b/netlink/Makefile
-@@ -15,7 +15,7 @@ ccflags-y += -DCONFIG_NSS_NLDYNAMIC_INTE
+@@ -17,7 +17,7 @@ ccflags-y += -DCONFIG_NSS_NLDYNAMIC_INTE
  ccflags-y += -DCONFIG_NSS_NLN2H=1
  ccflags-y += -DCONFIG_NSS_NLIPV4_REASM=$(strip $(if $(filter $(CONFIG_NSS_NLIPV4_REASM), y), 1 , 0))
  ccflags-y += -DCONFIG_NSS_NLIPV6_REASM=$(strip $(if $(filter $(CONFIG_NSS_NLIPV6_REASM), y), 1 , 0))
@@ -9,7 +9,7 @@
  ccflags-y += -DCONFIG_NSS_NLLSO_RX=$(strip $(if $(filter $(CONFIG_NSS_NLLSO_RX), y), 1 , 0))
  ccflags-y += -DCONFIG_NSS_NLMAP_T=$(strip $(if $(filter $(CONFIG_NSS_NLMAP_T), y), 1 , 0))
  ccflags-y += -DCONFIG_NSS_NLPPPOE=$(strip $(if $(filter $(CONFIG_NSS_NLPPPOE), y), 1 , 0))
-@@ -49,7 +49,9 @@ endif
+@@ -51,7 +51,9 @@ endif
  ifneq (,$(filter $(CONFIG_NSS_NLIPV6_REASM), y))
  qca-nss-netlink-objs += nss_nlipv6_reasm.o
  endif

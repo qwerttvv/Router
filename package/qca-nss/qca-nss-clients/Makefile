@@ -16,6 +16,7 @@ PKG_BUILD_PARALLEL:=1
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_KERNEL_IPQ_MEM_PROFILE \
 	CONFIG_LOWMEM_FLASH \
+	CONFIG_TARGET_SUBTARGET \
 	CONFIG_NSS_DRV_BRIDGE_ENABLE \
 	CONFIG_NSS_DRV_GRE_ENABLE \
 	CONFIG_NSS_DRV_GRE_REDIR_ENABLE \
@@ -41,6 +42,10 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_NSS_DRV_VXLAN_ENABLE \
 	CONFIG_NSS_DRV_WIFIOFFLOAD_ENABLE \
 	CONFIG_NSS_DRV_WIFI_MESH_ENABLE \
+	CONFIG_NSS_NLGRE_REDIR_ENABLE \
+	CONFIG_NSS_NLLSO_RX \
+	CONFIG_NSS_NLQRFS_ENABLE \
+	CONFIG_NSS_NLUDP_ST_ENABLE \
 	CONFIG_ATH11K_NSS_MESH_SUPPORT \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-eogremgr \
@@ -400,6 +405,30 @@ EXTRA_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include/nat46
 
 NSS_CLIENTS_MAKE_OPTS:=
+
+# Keep modules without OpenWrt packages/runtime integration explicitly disabled
+# at the package boundary. Add a KernelPackage before removing an entry here.
+NSS_CLIENTS_FORCE_DISABLED_MODULES:= \
+	capwapmgr \
+	clmapmgr \
+	dtlsmgr \
+	ipsecmgr \
+	ipsecmgr-klips \
+	ipsecmgr-xfrm \
+	pvxlanmgr \
+	tlsmgr
+
+NSS_CLIENTS_UNPACKAGED_MODULES:= \
+	mscs \
+	ovpn-mgr \
+	portifmgr \
+	profile
+
+NSS_CLIENTS_DISABLED_MODULES:= \
+	$(NSS_CLIENTS_FORCE_DISABLED_MODULES) \
+	$(NSS_CLIENTS_UNPACKAGED_MODULES)
+
+NSS_CLIENTS_MAKE_OPTS += $(foreach module,$(NSS_CLIENTS_DISABLED_MODULES),$(module)=n)
 
 define NssClientModule
 ifneq ($$(CONFIG_PACKAGE_kmod-qca-nss-drv-$(1)),)

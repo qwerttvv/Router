@@ -16,6 +16,7 @@ PKG_FLAGS:=nonshared
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
+	CONFIG_TARGET_SUBTARGET \
 	CONFIG_NSS_MEM_PROFILE_HIGH \
 	CONFIG_NSS_MEM_PROFILE_MEDIUM \
 	CONFIG_NSS_MEM_PROFILE_LOW \
@@ -187,8 +188,8 @@ endif
 DRV_MAKE_OPTS:=
 
 # QSDK enables most NSS feature blocks unless the variable is explicitly "n".
-# Keep unpackaged or non-qualcommax common-path features disabled here as an
-# OpenWrt guard. The source Makefile also forces them off in the patch layer.
+# Keep unsupported or unpackaged common-path features disabled from this single
+# OpenWrt package entry.
 NSS_DRV_FORCE_DISABLED_FEATURES:= \
 	CAPWAP \
 	C2C \

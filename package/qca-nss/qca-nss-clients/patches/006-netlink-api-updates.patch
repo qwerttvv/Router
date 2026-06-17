@@ -1,13 +1,6 @@
 --- a/netlink/Makefile
 +++ b/netlink/Makefile
-@@ -1,6 +1,4 @@
- CAPWAP_ENABLED := $(strip $(if $(filter $(capwapmgr), y), 1 , 0))
--IPSEC_ENABLED := $(strip $(if $(filter $(ipsecmgr), y), 1 , 0))
--DTLS_ENABLED := $(strip $(if $(filter $(dtlsmgr), y), 1 , 0))
- 
- ccflags-y := -Wall -Werror
- ccflags-y += -I$(obj)/include
-@@ -10,68 +8,81 @@ ccflags-y += -DNSS_CLIENT_BUILD_ID="$(BU
+@@ -10,47 +10,71 @@ ccflags-y += -DNSS_CLIENT_BUILD_ID="$(BU
  
  ccflags-y += -DCONFIG_NSS_NLIPV4=1
  ccflags-y += -DCONFIG_NSS_NLIPV6=1
@@ -36,11 +29,9 @@
 +ccflags-y += -DCONFIG_NSS_NLQRFS=$(strip $(if $(filter $(CONFIG_NSS_NLQRFS), y), 1 , 0))
 +ccflags-y += -DCONFIG_NSS_NLPPTP=$(strip $(if $(filter $(CONFIG_NSS_NLPPTP), y), 1 , 0))
  ccflags-y += -DCONFIG_NSS_NLCAPWAP=${CAPWAP_ENABLED}
--ccflags-y += -DCONFIG_NSS_NLIPSEC=${IPSEC_ENABLED}
--ccflags-y += -DCONFIG_NSS_NLDTLS=${DTLS_ENABLED}
+ ccflags-y += -DCONFIG_NSS_NLIPSEC=${IPSEC_ENABLED}
+ ccflags-y += -DCONFIG_NSS_NLDTLS=${DTLS_ENABLED}
 -ccflags-y += -DCONFIG_NSS_NLUDP_ST=1
-+ccflags-y += -DCONFIG_NSS_NLIPSEC=0
-+ccflags-y += -DCONFIG_NSS_NLDTLS=0
 +ccflags-y += -DCONFIG_NSS_NLUDP_ST=$(strip $(if $(filter $(CONFIG_NSS_NLUDP_ST), y), 1 , 0))
  
  qca-nss-netlink-objs := nss_nl.o
@@ -92,16 +83,10 @@
  
  ifneq (,$(filter $(capwapmgr), y))
  qca-nss-netlink-objs += nss_nlcapwap.o
+@@ -64,14 +88,11 @@ ifneq (,$(filter $(ipsecmgr), y))
+ qca-nss-netlink-objs += nss_nlipsec.o
  endif
  
--ifneq (,$(filter $(dtlsmgr), y))
--qca-nss-netlink-objs += nss_nldtls.o
--endif
--
--ifneq (,$(filter $(ipsecmgr), y))
--qca-nss-netlink-objs += nss_nlipsec.o
--endif
--
 +ccflags-y += -DCONFIG_NSS_NLC2C_TX=$(strip $(if $(filter $(CONFIG_NSS_NLC2C), y), 1 , 0))
 +ccflags-y += -DCONFIG_NSS_NLC2C_RX=$(strip $(if $(filter $(CONFIG_NSS_NLC2C), y), 1 , 0))
  ifeq ($(SoC),$(filter $(SoC),ipq807x ipq807x_64))
