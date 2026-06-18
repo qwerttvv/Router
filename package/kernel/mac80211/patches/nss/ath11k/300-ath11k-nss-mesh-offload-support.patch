@@ -3337,7 +3337,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	ATH11K_DBG_WMI		= 0x00000002,
 --- a/local-symbols
 +++ b/local-symbols
-@@ -168,6 +168,7 @@ ATH11K_DEBUGFS=
+@@ -167,6 +167,7 @@ ATH11K_DEBUGFS=
  ATH11K_TRACING=
  ATH11K_SPECTRAL=
  ATH11K_THERMAL=

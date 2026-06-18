@@ -1,31 +1,6 @@
 menu "Configuration"
 	depends on PACKAGE_kmod-qca-nss-drv
 
-comment "Build Options"
-
-choice
-	prompt "Memory Profile"
-	default NSS_MEM_PROFILE_HIGH
-	help
-	  This option allows you to select the memory profile.
-	  It should correspond to the total RAM of your board.
-
-config NSS_MEM_PROFILE_HIGH
-	bool "Use 1G memory profile"
-	help
-	  This allows configuring NSS boards with 1GB+ memory.
-
-config NSS_MEM_PROFILE_MEDIUM
-	bool "Use 512MB memory profile"
-	help
-	  This allows configuring NSS for boards with 512M memory.
-
-config NSS_MEM_PROFILE_LOW
-	bool "Use 256MB memory profile"
-	help
-	  This allows configuring NSS for boards with 256M memory.
-endchoice
-
 config NSS_DRV_BRIDGE_ENABLE
 	bool "Enable BRIDGE"
 	depends on TARGET_qualcommax_ipq807x || TARGET_qualcommax_ipq60xx
@@ -65,6 +40,9 @@ config NSS_DRV_LAG_ENABLE
 	bool "Enable LAG"
 	depends on TARGET_qualcommax_ipq807x || TARGET_qualcommax_ipq60xx
 
+config NSS_DRV_LSO_RX_ENABLE
+	bool "Enable LSO RX"
+
 config NSS_DRV_MAPT_ENABLE
 	bool "Enable MAPT"
 
@@ -73,9 +51,6 @@ config NSS_DRV_MATCH_ENABLE
 
 config NSS_DRV_MIRROR_ENABLE
 	bool "Enable MIRROR"
-
-config NSS_DRV_LSO_RX_ENABLE
-	bool "Enable LSO RX"
 
 config NSS_DRV_PPPOE_ENABLE
 	bool "Enable PPPOE"
@@ -100,10 +75,6 @@ config NSS_DRV_SJACK_ENABLE
 config NSS_DRV_TRUSTSEC_ENABLE
 	bool "Enable TRUSTSEC"
 
-config NSS_DRV_UDP_ST_ENABLE
-	bool "Enable UDP Speedtest"
-	depends on TARGET_qualcommax_ipq807x || TARGET_qualcommax_ipq50xx
-
 config NSS_DRV_TRUSTSEC_RX_ENABLE
 	bool "Enable TRUSTSEC_RX"
 	depends on NSS_DRV_TRUSTSEC_ENABLE
@@ -113,6 +84,10 @@ config NSS_DRV_TUN6RD_ENABLE
 
 config NSS_DRV_TUNIPIP6_ENABLE
 	bool "Enable TUNIPIP6"
+
+config NSS_DRV_UDP_ST_ENABLE
+	bool "Enable UDP Speedtest"
+	depends on TARGET_qualcommax_ipq807x || TARGET_qualcommax_ipq50xx
 
 config NSS_DRV_VIRT_IF_ENABLE
 	bool "Enable VIRT_IF"

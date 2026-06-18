@@ -33,7 +33,7 @@ define KernelPackage/qca-ssdk
   AUTOLOAD:=$(call AutoLoad,30,qca-ssdk)
 endef
 
-define KernelPackage/qca-ssdk/Description
+define KernelPackage/qca-ssdk/description
   Driver for Qualcomm Atheros switches.
 endef
 

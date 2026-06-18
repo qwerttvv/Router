@@ -16,11 +16,11 @@ PKG_FLAGS:=nonshared
 PKG_BUILD_FLAGS:=gc-sections lto
 
 PKG_CONFIG_DEPENDS:= \
+	CONFIG_TARGET_SUBTARGET \
+	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_BRIDGE_VLAN_FILTERING \
 	CONFIG_IPV6 \
-	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_NSS_DRV_PPPOE_ENABLE \
-	CONFIG_TARGET_SUBTARGET \
 	CONFIG_PACKAGE_kmod-bonding \
 	CONFIG_PACKAGE_kmod-gre \
 	CONFIG_PACKAGE_kmod-gre6 \
@@ -49,20 +49,20 @@ define KernelPackage/qca-nss-ecm
 	+ethtool \
 	+kmod-nf-conntrack \
 	+kmod-qca-nss-drv \
-	+PACKAGE_kmod-qca-mcs:kmod-qca-mcs \
 	+PACKAGE_kmod-bonding:kmod-bonding \
-	+PACKAGE_kmod-vxlan:kmod-vxlan \
 	+PACKAGE_kmod-nat46:kmod-nat46 \
 	+PACKAGE_kmod-ppp:kmod-ppp \
 	+PACKAGE_kmod-pppoe:kmod-pppoe \
+	+PACKAGE_kmod-pppol2tp:kmod-pppol2tp \
 	+PACKAGE_kmod-pptp:kmod-pptp \
-	+PACKAGE_kmod-pppol2tp:kmod-pppol2tp
+	+PACKAGE_kmod-qca-mcs:kmod-qca-mcs \
+	+PACKAGE_kmod-vxlan:kmod-vxlan
   TITLE:=QCA NSS Enhanced Connection Manager (ECM)
   FILES:=$(PKG_BUILD_DIR)/ecm.ko
   KCONFIG:=CONFIG_NF_CONNTRACK_DSCPREMARK_EXT=y
 endef
 
-define KernelPackage/qca-nss-ecm/Description
+define KernelPackage/qca-nss-ecm/description
 This package contains the QCA NSS Enhanced Connection Manager
 endef
 
@@ -80,15 +80,15 @@ define KernelPackage/qca-nss-ecm/install
 		$(1)/etc/uci-defaults \
 		$(1)/lib/netifd/offload \
 		$(1)/usr/bin
-	$(INSTALL_DATA) ./files/qca-nss-ecm.firewall $(1)/etc/firewall.d/qca-nss-ecm
-	$(INSTALL_BIN) ./files/qca-nss-ecm.init $(1)/etc/init.d/qca-nss-ecm
 	$(INSTALL_BIN) ./files/ecm_dump.sh $(1)/usr/bin/
+	$(INSTALL_BIN) ./files/qca-nss-ecm.init $(1)/etc/init.d/qca-nss-ecm
+	$(INSTALL_DATA) ./files/disable_offloads.hotplug $(1)/etc/hotplug.d/net/99-disable_offloads
 	$(INSTALL_DATA) ./files/disable_offloads.sh $(1)/lib/netifd/offload
 	$(INSTALL_DATA) ./files/on-demand-down $(1)/lib/netifd/offload/on-demand-down
-	$(INSTALL_DATA) ./files/qca-nss-ecm.uci $(1)/etc/config/ecm
 	$(INSTALL_DATA) ./files/qca-nss-ecm.defaults $(1)/etc/uci-defaults/99-qca-nss-ecm
+	$(INSTALL_DATA) ./files/qca-nss-ecm.firewall $(1)/etc/firewall.d/qca-nss-ecm
 	$(INSTALL_DATA) ./files/qca-nss-ecm.sysctl $(1)/etc/sysctl.d/qca-nss-ecm.conf
-	$(INSTALL_DATA) ./files/disable_offloads.hotplug $(1)/etc/hotplug.d/net/99-disable_offloads
+	$(INSTALL_DATA) ./files/qca-nss-ecm.uci $(1)/etc/config/ecm
 endef
 
 EXTRA_CFLAGS += \

@@ -72,7 +72,7 @@
 +ifneq (,$(filter $(CONFIG_NSS_NLPPTP), y))
  qca-nss-netlink-objs += nss_nlpptp.o
 +endif
-+ifeq ($(SoC),$(filter $(SoC),ipq95xx ipq50xx ipq807x_64))
++ifeq ($(SoC),$(filter $(SoC),ipq95xx ipq50xx ipq50xx_64 ipq807x ipq807x_64))
 +ifneq (,$(filter $(CONFIG_NSS_NLUDP_ST), y))
  qca-nss-netlink-objs += nss_nludp_st.o
 +endif

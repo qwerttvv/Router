@@ -33,13 +33,12 @@ PKG_DRIVERS = \
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_kmod-mac80211 \
 	CONFIG_PACKAGE_CFG80211_TESTMODE \
+	CONFIG_PACKAGE_IWLWIFI_DEBUG \
+	CONFIG_PACKAGE_IWLWIFI_DEBUGFS \
 	CONFIG_PACKAGE_MAC80211_DEBUGFS \
 	CONFIG_PACKAGE_MAC80211_MESH \
 	CONFIG_PACKAGE_MAC80211_TRACING \
-	CONFIG_PACKAGE_MAC80211_NSS_SUPPORT \
-	CONFIG_PACKAGE_IWLWIFI_DEBUG \
-	CONFIG_PACKAGE_IWLWIFI_DEBUGFS \
-	CONFIG_PACKAGE_RTLWIFI_DEBUG \
+	CONFIG_PACKAGE_RTLWIFI_DEBUG
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -61,12 +60,12 @@ config_package=$(if $(and $(CONFIG_PACKAGE_kmod-$(1)),$(call mac80211_variant_ch
 mac80211_variant_check=$(if $(ALL_VARIANTS),$(filter $(BUILD_VARIANT),$(if $(1),$(1),$(firstword $(ALL_VARIANTS)))),y)
 
 config-y:= \
-	WLAN \
 	CFG80211_CERTIFICATION_ONUS \
+	MAC80211_RC_DEFAULT_MINSTREL \
 	MAC80211_RC_MINSTREL \
 	MAC80211_RC_MINSTREL_HT \
 	MAC80211_RC_MINSTREL_VHT \
-	MAC80211_RC_DEFAULT_MINSTREL \
+	WLAN \
 	WLAN_VENDOR_ADMTEK \
 	WLAN_VENDOR_ATH \
 	WLAN_VENDOR_ATMEL \
@@ -81,7 +80,7 @@ config-y:= \
 	WLAN_VENDOR_RSI \
 	WLAN_VENDOR_ST \
 	WLAN_VENDOR_TI \
-	WLAN_VENDOR_ZYDAS \
+	WLAN_VENDOR_ZYDAS
 
 config-$(call config_package,cfg80211,$(ALL_VARIANTS)) += CFG80211
 config-$(CONFIG_PACKAGE_CFG80211_TESTMODE) += NL80211_TESTMODE
@@ -132,8 +131,7 @@ define KernelPackage/mac80211
   $(call KernelPackage/mac80211/Default)
   TITLE:=Linux 802.11 Wireless Networking Stack
   # +kmod-crypto-cmac is a runtime only dependency of net/mac80211/aes_cmac.c
-  DEPENDS+= +kmod-cfg80211 +kmod-crypto-cmac +kmod-crypto-ccm +kmod-crypto-gcm +hostapd-common \
-  +ATH11K_NSS_SUPPORT:kmod-qca-nss-drv
+  DEPENDS+= +kmod-cfg80211 +kmod-crypto-cmac +kmod-crypto-ccm +kmod-crypto-gcm +hostapd-common
   KCONFIG:=\
 	CONFIG_AVERAGE=y
   FILES:= $(PKG_BUILD_DIR)/net/mac80211/mac80211.ko
@@ -143,14 +141,6 @@ endef
 
 define KernelPackage/mac80211/config
   if PACKAGE_kmod-mac80211
-
-  if PACKAGE_kmod-qca-nss-drv
-		config PACKAGE_MAC80211_NSS_SUPPORT
-			bool "Enable NSS support"
-			default y
-			help
-				This option enables support for NSS in QCA boards.
-  endif
 
 	config PACKAGE_MAC80211_DEBUGFS
 		bool "Export mac80211 internals in DebugFS"
@@ -276,7 +266,6 @@ endif
 config-$(call config_package,mac80211-hwsim) += MAC80211_HWSIM
 config-$(call config_package,mt7601u) += MT7601U
 config-y += WL_MEDIATEK
-
 config-$(call config_package,wlcore) += WLCORE WLCORE_SDIO
 config-$(call config_package,wl12xx) += WL12XX
 config-$(call config_package,wl18xx) += WL18XX
@@ -296,8 +285,6 @@ endif
 ifdef CONFIG_ATH11K_NSS_SUPPORT
 	IREMAP_CFLAGS+=-I$(STAGING_DIR)/usr/include/qca-nss-drv -I$(STAGING_DIR)/usr/include/qca-nss-clients
 endif
-
-config-$(CONFIG_PACKAGE_MAC80211_NSS_SUPPORT) += MAC80211_NSS_SUPPORT
 
 MAKE_OPTS:= \
 	$(subst -C $(LINUX_DIR),-C "$(PKG_BUILD_DIR)",$(KERNEL_MAKEOPTS)) \

@@ -31,7 +31,7 @@ define KernelPackage/qca-mcs
   AUTOLOAD:=$(call AutoLoad,42,qca-mcs)
 endef
 
-define KernelPackage/qca-mcs/Description
+define KernelPackage/qca-mcs/description
   This package installs the IGMP/MLD Snooping Module.
 endef
 

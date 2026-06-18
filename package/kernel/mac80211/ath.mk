@@ -3,79 +3,55 @@ PKG_DRIVERS += \
 	ath11k ath11k-ahb ath11k-pci ath12k carl9170 owl-loader ar5523 wil6210 qcom-qmi-helpers
 
 PKG_CONFIG_DEPENDS += \
-	CONFIG_PACKAGE_ATH_DEBUG \
-	CONFIG_PACKAGE_ATH_DFS \
-	CONFIG_PACKAGE_ATH_SPECTRAL \
-	CONFIG_PACKAGE_ATH_DYNACK \
+	CONFIG_ATH_USER_REGD \
 	CONFIG_ATH9K_HWRNG \
 	CONFIG_ATH9K_SUPPORT_PCOEM \
 	CONFIG_ATH9K_TX99 \
 	CONFIG_ATH10K_LEDS \
 	CONFIG_ATH10K_THERMAL \
+	CONFIG_ATH11K_DEBUGFS_HTT_STATS \
+	CONFIG_ATH11K_DEBUGFS_STA \
+	CONFIG_ATH11K_NSS_MESH_SUPPORT \
+	CONFIG_ATH11K_NSS_SUPPORT \
 	CONFIG_ATH11K_THERMAL \
 	CONFIG_ATH12K_THERMAL \
-	CONFIG_ATH11K_DEBUGFS_STA \
-	CONFIG_ATH11K_DEBUGFS_HTT_STATS \
-	CONFIG_ATH_USER_REGD \
-	CONFIG_ATH11K_MEM_PROFILE_1G \
-	CONFIG_ATH11K_MEM_PROFILE_512M \
-	CONFIG_ATH11K_MEM_PROFILE_256M \
-	CONFIG_ATH11K_NSS_SUPPORT \
-	CONFIG_ATH11K_NSS_MESH_SUPPORT
+	CONFIG_PACKAGE_ATH_DEBUG \
+	CONFIG_PACKAGE_ATH_DFS \
+	CONFIG_PACKAGE_ATH_DYNACK \
+	CONFIG_PACKAGE_ATH_SPECTRAL
 
 ifdef CONFIG_PACKAGE_MAC80211_DEBUGFS
   config-y += \
+	ATH5K_DEBUG \
+	ATH6KL_DEBUG \
 	ATH9K_DEBUGFS \
 	ATH9K_HTC_DEBUGFS \
 	ATH10K_DEBUGFS \
 	ATH11K_DEBUGFS \
 	ATH12K_DEBUGFS \
 	CARL9170_DEBUGFS \
-	ATH5K_DEBUG \
-	ATH6KL_DEBUG \
 	WIL6210_DEBUGFS
 endif
 
 ifdef CONFIG_PACKAGE_MAC80211_TRACING
   config-y += \
+	ATH_TRACEPOINTS \
+	ATH5K_TRACER \
+	ATH6KL_TRACING \
 	ATH10K_TRACING \
 	ATH11K_TRACING \
 	ATH12K_TRACING \
-	ATH6KL_TRACING \
-	ATH_TRACEPOINTS \
-	ATH5K_TRACER \
 	WIL6210_TRACING
 endif
 
-config-$(call config_package,qcom-qmi-helpers) += QCOM_QMI_HELPERS
+config-$(call config_package,ar5523) += AR5523
 config-$(call config_package,ath,regular sdio smallbuffers) += ATH_CARDS ATH_COMMON
-config-$(CONFIG_PACKAGE_ATH_DEBUG) += ATH_DEBUG ATH10K_DEBUG ATH11K_DEBUG ATH12K_DEBUG ATH9K_STATION_STATISTICS
-config-$(CONFIG_PACKAGE_ATH_DFS) += ATH9K_DFS_CERTIFIED ATH10K_DFS_CERTIFIED
-config-$(CONFIG_PACKAGE_ATH_SPECTRAL) += ATH9K_COMMON_SPECTRAL ATH10K_SPECTRAL ATH11K_SPECTRAL
-config-$(CONFIG_PACKAGE_ATH_DYNACK) += ATH9K_DYNACK
+config-$(call config_package,ath5k) += ATH5K ATH5K_PCI
+config-$(call config_package,ath6kl) += ATH6KL
+config-$(call config_package,ath6kl-sdio) += ATH6KL_SDIO
+config-$(call config_package,ath6kl-usb) += ATH6KL_USB
 config-$(call config_package,ath9k) += ATH9K
 config-$(call config_package,ath9k-common) += ATH9K_COMMON
-config-$(call config_package,owl-loader) += ATH9K_PCI_NO_EEPROM
-config-$(CONFIG_TARGET_ath79) += ATH9K_AHB
-config-$(CONFIG_TARGET_ipq40xx) += ATH10K_AHB
-config-$(CONFIG_PCI) += ATH9K_PCI
-config-$(CONFIG_ATH_USER_REGD) += ATH_USER_REGD ATH_REG_DYNAMIC_USER_REG_HINTS
-config-$(CONFIG_ATH9K_HWRNG) += ATH9K_HWRNG
-config-$(CONFIG_ATH9K_SUPPORT_PCOEM) += ATH9K_PCOEM
-config-$(CONFIG_ATH9K_TX99) += ATH9K_TX99
-config-$(CONFIG_ATH9K_UBNTHSR) += ATH9K_UBNTHSR
-config-$(CONFIG_ATH10K_LEDS) += ATH10K_LEDS
-config-$(CONFIG_ATH10K_THERMAL) += ATH10K_THERMAL
-config-$(CONFIG_ATH11K_THERMAL) += ATH11K_THERMAL
-config-$(CONFIG_ATH12K_THERMAL) += ATH12K_THERMAL
-config-$(CONFIG_ATH11K_MEM_PROFILE_1G) += ATH11K_MEM_PROFILE_1G
-config-$(CONFIG_ATH11K_MEM_PROFILE_512M) += ATH11K_MEM_PROFILE_512M
-config-$(CONFIG_ATH11K_MEM_PROFILE_256M) += ATH11K_MEM_PROFILE_256M
-config-$(CONFIG_ATH11K_NSS_SUPPORT) += ATH11K_NSS_SUPPORT
-config-$(CONFIG_ATH11K_NSS_MESH_SUPPORT) += ATH11K_NSS_MESH_SUPPORT
-config-$(CONFIG_ATH11K_DEBUGFS_STA) += ATH11K_DEBUGFS_STA
-config-$(CONFIG_ATH11K_DEBUGFS_HTT_STATS) += ATH11K_DEBUGFS_HTT_STATS
-
 config-$(call config_package,ath9k-htc) += ATH9K_HTC
 config-$(call config_package,ath10k,regular) += ATH10K ATH10K_PCI
 config-$(call config_package,ath10k-sdio,sdio) += ATH10K ATH10K_SDIO
@@ -84,17 +60,31 @@ config-$(call config_package,ath11k) += ATH11K
 config-$(call config_package,ath11k-ahb) += ATH11K_AHB
 config-$(call config_package,ath11k-pci) += ATH11K_PCI
 config-$(call config_package,ath12k) += ATH12K
-
-config-$(call config_package,ath5k) += ATH5K ATH5K_PCI
-
-config-$(call config_package,ath6kl) += ATH6KL
-config-$(call config_package,ath6kl-sdio) += ATH6KL_SDIO
-config-$(call config_package,ath6kl-usb) += ATH6KL_USB
-
 config-$(call config_package,carl9170) += CARL9170
-config-$(call config_package,ar5523) += AR5523
-
+config-$(call config_package,owl-loader) += ATH9K_PCI_NO_EEPROM
+config-$(call config_package,qcom-qmi-helpers) += QCOM_QMI_HELPERS
 config-$(call config_package,wil6210) += WIL6210
+
+config-$(CONFIG_ATH_USER_REGD) += ATH_USER_REGD ATH_REG_DYNAMIC_USER_REG_HINTS
+config-$(CONFIG_ATH9K_HWRNG) += ATH9K_HWRNG
+config-$(CONFIG_ATH9K_SUPPORT_PCOEM) += ATH9K_PCOEM
+config-$(CONFIG_ATH9K_TX99) += ATH9K_TX99
+config-$(CONFIG_ATH9K_UBNTHSR) += ATH9K_UBNTHSR
+config-$(CONFIG_ATH10K_LEDS) += ATH10K_LEDS
+config-$(CONFIG_ATH10K_THERMAL) += ATH10K_THERMAL
+config-$(CONFIG_ATH11K_DEBUGFS_HTT_STATS) += ATH11K_DEBUGFS_HTT_STATS
+config-$(CONFIG_ATH11K_DEBUGFS_STA) += ATH11K_DEBUGFS_STA
+config-$(CONFIG_ATH11K_NSS_MESH_SUPPORT) += ATH11K_NSS_MESH_SUPPORT
+config-$(CONFIG_ATH11K_NSS_SUPPORT) += ATH11K_NSS_SUPPORT ATH11K_MEM_PROFILE_512M
+config-$(CONFIG_ATH11K_THERMAL) += ATH11K_THERMAL
+config-$(CONFIG_ATH12K_THERMAL) += ATH12K_THERMAL
+config-$(CONFIG_PACKAGE_ATH_DEBUG) += ATH_DEBUG ATH10K_DEBUG ATH11K_DEBUG ATH12K_DEBUG ATH9K_STATION_STATISTICS
+config-$(CONFIG_PACKAGE_ATH_DFS) += ATH9K_DFS_CERTIFIED ATH10K_DFS_CERTIFIED
+config-$(CONFIG_PACKAGE_ATH_DYNACK) += ATH9K_DYNACK
+config-$(CONFIG_PACKAGE_ATH_SPECTRAL) += ATH9K_COMMON_SPECTRAL ATH10K_SPECTRAL ATH11K_SPECTRAL
+config-$(CONFIG_PCI) += ATH9K_PCI
+config-$(CONFIG_TARGET_ath79) += ATH9K_AHB
+config-$(CONFIG_TARGET_ipq40xx) += ATH10K_AHB
 
 define KernelPackage/ath/config
   if PACKAGE_kmod-ath
@@ -353,12 +343,7 @@ define KernelPackage/ath11k
   URL:=https://wireless.wiki.kernel.org/en/users/drivers/ath11k
   DEPENDS+= +kmod-ath +@DRIVER_11AC_SUPPORT +@DRIVER_11AX_SUPPORT \
   +kmod-crypto-michael-mic +ATH11K_THERMAL:kmod-hwmon-core \
-  +ATH11K_THERMAL:kmod-thermal +kmod-qcom-qmi-helpers \
-  +ATH11K_NSS_SUPPORT:kmod-qca-nss-drv \
-  +ATH11K_NSS_MESH_SUPPORT:kmod-qca-nss-drv-wifi-meshmgr \
-  +@(ATH11K_NSS_SUPPORT):NSS_DRV_WIFIOFFLOAD_ENABLE \
-  +@(ATH11K_NSS_SUPPORT):NSS_DRV_WIFI_EXT_VDEV_ENABLE \
-  +@(ATH11K_NSS_MESH_SUPPORT):NSS_DRV_WIFI_MESH_ENABLE
+  +ATH11K_THERMAL:kmod-thermal +kmod-qcom-qmi-helpers
   FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k.ko
 ifdef CONFIG_ATH11K_NSS_SUPPORT
   AUTOLOAD:=$(call AutoProbe,ath11k)
@@ -379,8 +364,9 @@ define KernelPackage/ath11k/config
 
        config ATH11K_THERMAL
                bool "Enable thermal sensors and throttling support"
+			   depends on TARGET_qualcommax
                depends on PACKAGE_kmod-ath11k
-               default y if TARGET_qualcommax
+               default y
 
       config ATH11K_DEBUGFS_STA
                bool "Enable ath11k station statistics"
@@ -400,44 +386,24 @@ define KernelPackage/ath11k/config
 
        config ATH11K_NSS_SUPPORT
                bool "Enable NSS WiFi offload"
-               select ATH11K_MEM_PROFILE_512M
+               depends on TARGET_qualcommax
+               depends on PACKAGE_kmod-ath11k
+               select NSS_DRV_WIFIOFFLOAD_ENABLE
+               select NSS_DRV_WIFI_EXT_VDEV_ENABLE
+               select PACKAGE_kmod-qca-nss-drv
                select PACKAGE_kmod-qca-nss-ecm
                default y
                help
-                  Say Y to enable NSS WiFi offload support. Ensure you enable feeds for NSS drivers.
-                  https://github.com/qosmio/nss-packages
+                  Say Y to enable NSS WiFi offload support
 
        config ATH11K_NSS_MESH_SUPPORT
                bool "Enable NSS WiFi Mesh offload"
                depends on ATH11K_NSS_SUPPORT
+               select NSS_DRV_WIFI_MESH_ENABLE
                select PACKAGE_MAC80211_MESH
-               default n
+               select PACKAGE_kmod-qca-nss-drv-wifi-meshmgr
+               default y
 
-       choice
-            prompt "Memory Profile"
-            depends on PACKAGE_kmod-ath11k
-            default ATH11K_MEM_PROFILE_512M
-            help
-            	This option allows you to select the memory profile.
-            	It should correspond to the total RAM of your board.
-
-          config ATH11K_MEM_PROFILE_1G
-               bool "Use 1G memory profile"
-               help
-                  This allows configuring ath11k for boards with 1GB+ memory.
-
-          config ATH11K_MEM_PROFILE_512M
-               bool "Use 512MB memory profile"
-               help
-                  This allows configuring ath11k for boards with 512M memory.
-                  The default is 1GB if not selected
-
-          config ATH11K_MEM_PROFILE_256M
-               bool "Use 256MB memory profile"
-               help
-                  This allows configuring ath11k for boards with 256M memory.
-                  The default is 1GB if not selected
-       endchoice
 endef
 
 define KernelPackage/ath11k-ahb

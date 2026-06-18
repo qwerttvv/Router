@@ -33,7 +33,6 @@ DEFAULT_PACKAGES += \
 	kmod-qca-nss-drv-tun6rd \
 	kmod-qca-nss-drv-tunipip6 \
 	kmod-qca-nss-drv-vlan-mgr \
-	kmod-qca-nss-drv-vxlanmgr \
-	kmod-qca-nss-drv-wifi-meshmgr
+	kmod-qca-nss-drv-vxlanmgr
 
 $(eval $(call BuildTarget))

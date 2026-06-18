@@ -36,7 +36,7 @@ ifneq ($(CONFIG_PACKAGE_kmod-qca-nss-crypto),)
 endif
 endef
 
-define KernelPackage/qca-nss-crypto/Description
+define KernelPackage/qca-nss-crypto/description
 This package contains a NSS crypto driver for QCA chipset
 endef
 

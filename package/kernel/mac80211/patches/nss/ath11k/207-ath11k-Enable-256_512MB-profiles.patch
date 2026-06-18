@@ -22,7 +22,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
 
 --- a/drivers/net/wireless/ath/ath11k/Kconfig
 +++ b/drivers/net/wireless/ath/ath11k/Kconfig
-@@ -23,6 +23,20 @@ config ATH11K_NSS_SUPPORT
+@@ -23,6 +23,13 @@ config ATH11K_NSS_SUPPORT
  
  	  If unsure, say Y to enable NSS offload support.
  
@@ -32,13 +32,6 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
 +	default n
 +	---help---
 +	Enables 512MB memory profile for ath11k
-+
-+config ATH11K_MEM_PROFILE_256M
-+	bool "ath11k enable 256MB memory profile"
-+	depends on ATH11K
-+	default n
-+	---help---
-+	Enables 256MB memory profile for ath11k
 +
  config ATH11K_AHB
  	tristate "Atheros ath11k AHB support"
@@ -125,11 +118,10 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  	ATH11K_QMI_FILE_TYPE_BDF_GOLDEN,
 --- a/local-symbols
 +++ b/local-symbols
-@@ -161,6 +161,8 @@ ATH11K=
+@@ -161,6 +161,7 @@ ATH11K=
  ATH11K_AHB=
  ATH11K_PCI=
  ATH11K_NSS_SUPPORT=
-+ATH11K_MEM_PROFILE_256M=
 +ATH11K_MEM_PROFILE_512M=
  ATH11K_DEBUG=
  ATH11K_DEBUGFS=

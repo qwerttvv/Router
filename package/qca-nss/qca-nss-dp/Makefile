@@ -31,7 +31,7 @@ define KernelPackage/qca-nss-dp
   AUTOLOAD:=$(call AutoLoad,31,qca-nss-dp,1)
 endef
 
-define KernelPackage/qca-nss-dp/Description
+define KernelPackage/qca-nss-dp/description
   NSS dataplane ethernet driver for Qualcomm SoCs.
 endef
 

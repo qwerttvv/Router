@@ -15,11 +15,8 @@ PKG_BUILD_PARALLEL:=1
 PKG_FLAGS:=nonshared
 
 PKG_CONFIG_DEPENDS:= \
-	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_TARGET_SUBTARGET \
-	CONFIG_NSS_MEM_PROFILE_HIGH \
-	CONFIG_NSS_MEM_PROFILE_MEDIUM \
-	CONFIG_NSS_MEM_PROFILE_LOW \
+	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_NSS_DRV_BRIDGE_ENABLE \
 	CONFIG_NSS_DRV_CRYPTO_ENABLE \
 	CONFIG_NSS_DRV_GRE_ENABLE \
@@ -29,9 +26,9 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_NSS_DRV_IPV4_REASM_ENABLE \
 	CONFIG_NSS_DRV_IPV6_ENABLE \
 	CONFIG_NSS_DRV_IPV6_REASM_ENABLE \
-	CONFIG_NSS_DRV_LSO_RX_ENABLE \
 	CONFIG_NSS_DRV_L2TP_ENABLE \
 	CONFIG_NSS_DRV_LAG_ENABLE \
+	CONFIG_NSS_DRV_LSO_RX_ENABLE \
 	CONFIG_NSS_DRV_MAPT_ENABLE \
 	CONFIG_NSS_DRV_MATCH_ENABLE \
 	CONFIG_NSS_DRV_MIRROR_ENABLE \
@@ -41,17 +38,18 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_NSS_DRV_RMNET_ENABLE \
 	CONFIG_NSS_DRV_SHAPER_ENABLE \
 	CONFIG_NSS_DRV_SJACK_ENABLE \
-	CONFIG_NSS_DRV_UDP_ST_ENABLE \
 	CONFIG_NSS_DRV_TRUSTSEC_ENABLE \
 	CONFIG_NSS_DRV_TRUSTSEC_RX_ENABLE \
 	CONFIG_NSS_DRV_TUN6RD_ENABLE \
 	CONFIG_NSS_DRV_TUNIPIP6_ENABLE \
+	CONFIG_NSS_DRV_UDP_ST_ENABLE \
 	CONFIG_NSS_DRV_VIRT_IF_ENABLE \
 	CONFIG_NSS_DRV_VLAN_ENABLE \
 	CONFIG_NSS_DRV_VXLAN_ENABLE \
-	CONFIG_NSS_DRV_WIFIOFFLOAD_ENABLE \
 	CONFIG_NSS_DRV_WIFI_EXT_VDEV_ENABLE \
 	CONFIG_NSS_DRV_WIFI_MESH_ENABLE \
+	CONFIG_NSS_DRV_WIFIOFFLOAD_ENABLE \
+	CONFIG_PACKAGE_kmod-qca-nss-crypto \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-eogremgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-gre \
@@ -70,7 +68,6 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-vlan-mgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-vxlanmgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-wifi-meshmgr \
-	CONFIG_PACKAGE_kmod-qca-nss-crypto \
 	CONFIG_PACKAGE_kmod-qca-nss-ecm \
 	CONFIG_PACKAGE_kmod-gre \
 	CONFIG_PACKAGE_kmod-gre6 \
@@ -103,10 +100,10 @@ define KernelPackage/qca-nss-drv
 	+@(PACKAGE_kmod-qca-nss-drv-match):NSS_DRV_MATCH_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-match):NSS_DRV_WIFIOFFLOAD_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-mirror):NSS_DRV_MIRROR_ENABLE \
-	+@(PACKAGE_kmod-qca-nss-drv-netlink):NSS_DRV_IPV6_ENABLE \
-	+@(PACKAGE_kmod-qca-nss-drv-netlink):NSS_DRV_WIFIOFFLOAD_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-netlink&&NSS_DRV_UDP_ST_ENABLE):NSS_DRV_RMNET_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-netlink&&PACKAGE_kmod-qca-nss-drv-gre):NSS_DRV_GRE_REDIR_ENABLE \
+	+@(PACKAGE_kmod-qca-nss-drv-netlink):NSS_DRV_IPV6_ENABLE \
+	+@(PACKAGE_kmod-qca-nss-drv-netlink):NSS_DRV_WIFIOFFLOAD_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-pppoe):NSS_DRV_PPPOE_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-pptp):NSS_DRV_PPTP_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-qdisc):NSS_DRV_SHAPER_ENABLE \
@@ -114,11 +111,11 @@ define KernelPackage/qca-nss-drv
 	+@(PACKAGE_kmod-qca-nss-drv-tunipip6):NSS_DRV_TUNIPIP6_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-vlan-mgr):NSS_DRV_VLAN_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-vxlanmgr):NSS_DRV_VXLAN_ENABLE \
-	+@(PACKAGE_kmod-qca-nss-drv-wifi-meshmgr):NSS_DRV_WIFIOFFLOAD_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-wifi-meshmgr):NSS_DRV_WIFI_MESH_ENABLE \
+	+@(PACKAGE_kmod-qca-nss-drv-wifi-meshmgr):NSS_DRV_WIFIOFFLOAD_ENABLE \
+	+@(PACKAGE_kmod-qca-nss-ecm&&PACKAGE_kmod-pppoe):NSS_DRV_PPPOE_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-ecm):NSS_DRV_IPV6_ENABLE \
-	+@(PACKAGE_kmod-qca-nss-ecm):NSS_DRV_VIRT_IF_ENABLE \
-	+@(PACKAGE_kmod-qca-nss-ecm&&PACKAGE_kmod-pppoe):NSS_DRV_PPPOE_ENABLE
+	+@(PACKAGE_kmod-qca-nss-ecm):NSS_DRV_VIRT_IF_ENABLE
   TITLE:=Kernel driver for NSS (core driver)
   FILES:=$(PKG_BUILD_DIR)/qca-nss-drv.ko
   AUTOLOAD:=$(call AutoLoad,32,qca-nss-drv)
@@ -147,7 +144,7 @@ define KernelPackage/qca-nss-drv/conffiles
 /etc/config/skb_recycler
 endef
 
-define KernelPackage/qca-nss-drv/Description
+define KernelPackage/qca-nss-drv/description
 This package contains a NSS driver for QCA chipset
 endef
 
@@ -175,12 +172,6 @@ EXTRA_CFLAGS += \
 	-Wno-empty-body \
 	-Wno-unused-variable
 
-ifdef CONFIG_NSS_MEM_PROFILE_MEDIUM
-EXTRA_CFLAGS += -DNSS_MEM_PROFILE_MEDIUM
-else ifdef CONFIG_NSS_MEM_PROFILE_LOW
-EXTRA_CFLAGS += -DNSS_MEM_PROFILE_LOW
-endif
-
 ifdef CONFIG_NSS_FIRMWARE_VERSION_12_5
 EXTRA_CFLAGS += -DNSS_FIRMWARE_VERSION_12_5
 endif
@@ -191,8 +182,8 @@ DRV_MAKE_OPTS:=
 # Keep unsupported or unpackaged common-path features disabled from this single
 # OpenWrt package entry.
 NSS_DRV_FORCE_DISABLED_FEATURES:= \
-	CAPWAP \
 	C2C \
+	CAPWAP \
 	CLMAP \
 	DTLS \
 	IPSEC \
@@ -248,8 +239,8 @@ $(eval $(call DisableNssDrvFeatureWithoutPackages,TUNIPIP6,kmod-qca-nss-drv-tuni
 $(eval $(call DisableNssDrvFeatureWithoutPackages,VIRT_IF,kmod-qca-nss-ecm))
 $(eval $(call DisableNssDrvFeatureWithoutPackages,VLAN,kmod-qca-nss-drv-vlan-mgr))
 $(eval $(call DisableNssDrvFeatureWithoutPackages,VXLAN,kmod-qca-nss-drv-vxlanmgr kmod-vxlan))
-$(eval $(call DisableNssDrvFeatureWithoutPackages,WIFIOFFLOAD,kmod-qca-nss-drv-match kmod-qca-nss-drv-netlink kmod-qca-nss-drv-wifi-meshmgr))
 $(eval $(call DisableNssDrvFeatureWithoutPackages,WIFI_MESH,kmod-qca-nss-drv-wifi-meshmgr))
+$(eval $(call DisableNssDrvFeatureWithoutPackages,WIFIOFFLOAD,kmod-qca-nss-drv-match kmod-qca-nss-drv-netlink kmod-qca-nss-drv-wifi-meshmgr))
 
 define Build/Configure
 	$(LN) arch/nss_$(SOC).h $(PKG_BUILD_DIR)/exports/nss_arch.h

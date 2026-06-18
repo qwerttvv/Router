@@ -23,7 +23,7 @@ define Package/qca-nss-phy
   BUILDONLY:=1
 endef
 
-define Package/qca-nss-phy/Description
+define Package/qca-nss-phy/description
   Build-only package exporting QSDK NSS PHY headers for SSDK consumers.
 endef
 
