@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=qca-nss-drv
-PKG_RELEASE:=17
+PKG_RELEASE:=18
 
 PKG_SOURCE_URL:=https://git.codelinaro.org/clo/qsdk/oss/lklm/nss-drv.git
 PKG_SOURCE_PROTO:=git
@@ -111,6 +111,7 @@ define KernelPackage/qca-nss-drv
 	+@(PACKAGE_kmod-qca-nss-drv-tunipip6):NSS_DRV_TUNIPIP6_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-vlan-mgr):NSS_DRV_VLAN_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-vxlanmgr):NSS_DRV_VXLAN_ENABLE \
+	+@(PACKAGE_kmod-qca-nss-drv-wifi-meshmgr):NSS_DRV_WIFI_EXT_VDEV_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-wifi-meshmgr):NSS_DRV_WIFI_MESH_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-drv-wifi-meshmgr):NSS_DRV_WIFIOFFLOAD_ENABLE \
 	+@(PACKAGE_kmod-qca-nss-ecm&&PACKAGE_kmod-pppoe):NSS_DRV_PPPOE_ENABLE \

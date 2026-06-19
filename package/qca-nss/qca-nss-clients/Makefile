@@ -44,7 +44,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_NSS_NLLSO_RX \
 	CONFIG_NSS_NLQRFS_ENABLE \
 	CONFIG_NSS_NLUDP_ST_ENABLE \
-	CONFIG_ATH11K_NSS_MESH_SUPPORT \
+	CONFIG_ATH11K_NSS_SUPPORT \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-eogremgr \
 	CONFIG_PACKAGE_kmod-qca-nss-drv-gre \
@@ -344,7 +344,7 @@ define KernelPackage/qca-nss-drv-wifi-meshmgr
   DEPENDS:=@TARGET_qualcommax \
 	+kmod-qca-nss-drv
   FILES:=$(PKG_BUILD_DIR)/wifi_meshmgr/qca-nss-wifi-meshmgr.ko
-ifneq ($(CONFIG_ATH11K_NSS_MESH_SUPPORT),)
+ifneq ($(CONFIG_ATH11K_NSS_SUPPORT),)
   AUTOLOAD:=$(call AutoLoad,52,qca-nss-wifi-meshmgr)
 endif
 endef
