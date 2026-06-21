@@ -761,6 +761,18 @@ local function to_mihomo_proxy(node)
 		proxy.sni = string_from_value(node.tls_host)
 		proxy["client-fingerprint"] = string_from_value(node.fingerprint)
 		proxy["skip-cert-verify"] = bool_from_flag(node.insecure)
+	elseif node.type == "v2ray" and node.v2ray_protocol == "snell" then
+		proxy.type = "snell"
+		proxy.psk = node.snell_psk
+		proxy.version = tonumber(node.snell_version) or nil
+		local obfs_mode = string_from_value(node.snell_obfs)
+		local obfs_host = string_from_value(node.snell_obfs_host)
+		if obfs_mode or obfs_host then
+			proxy["obfs-opts"] = {
+				mode = obfs_mode,
+				host = obfs_host
+			}
+		end
 	else
 		return nil
 	end
@@ -786,6 +798,7 @@ local function can_group_into_mihomo(node)
 		or node.v2ray_protocol == "trojan"
 		or node.v2ray_protocol == "hysteria2"
 		or node.v2ray_protocol == "hy2"
+		or node.v2ray_protocol == "snell"
 	) then
 		return true
 	end
@@ -932,6 +945,30 @@ local function processData(szType, content, cfgid)
 		if params.tfo then
 			-- 处理 fast open 参数
 			result.fast_open = params.tfo
+		end
+	elseif szType == "snell" then
+		if not has_mihomo then
+			log("跳过 Snell 节点：本地未安装 mihomo。")
+			return nil
+		end
+
+		local url = URL.parse("http://" .. content)
+		local params = url.query or {}
+		local raw_alias = url.fragment and UrlDecode(url.fragment) or nil
+		local psk = url.user and UrlDecode(url.user) or first_nonempty(params, {"psk", "password"})
+
+		result.type = "v2ray"
+		result.v2ray_protocol = "snell"
+		result.raw_alias = raw_alias
+		result.alias = raw_alias
+		result.server = normalize_host(url.host)
+		result.server_port = url.port
+		result.snell_psk = psk
+		result.snell_version = first_nonempty(params, {"version", "v"}) or "4"
+		result.snell_obfs = first_nonempty(params, {"obfs", "obfs-mode", "obfs_mode"})
+		result.snell_obfs_host = first_nonempty(params, {"obfs-host", "obfs_host", "host"})
+		if not result.snell_psk or result.snell_psk == "" then
+			result.server = nil
 		end
 	elseif szType == 'ssr' then
 		-- 去掉前后空白和#注释
@@ -2307,6 +2344,7 @@ local function is_mihomo_subscribe_node(section)
 		or section.v2ray_protocol == "trojan"
 		or section.v2ray_protocol == "hysteria2"
 		or section.v2ray_protocol == "hy2"
+		or section.v2ray_protocol == "snell"
 	) then
 		return true
 	end
@@ -2497,7 +2535,7 @@ local execute = function()
 									if dat[3] then
 										dat3 = "://" .. dat[3]
 									end
-									if dat[1] == 'ss' or dat[1] == 'trojan' or dat[1] == 'tuic' then
+									if dat[1] == 'ss' or dat[1] == 'trojan' or dat[1] == 'tuic' or dat[1] == 'snell' then
 										result = processData(dat[1], dat[2] .. dat3)
 									else
 										result = processData(dat[1], base64Decode(dat[2]))
