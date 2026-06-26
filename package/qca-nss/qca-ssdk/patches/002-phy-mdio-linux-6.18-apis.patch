@@ -1,17 +1,15 @@
 --- a/include/hsl/phy/hsl_phy.h
 +++ b/include/hsl/phy/hsl_phy.h
-@@ -17,6 +17,10 @@ extern "C" {
- #include <linux/phy.h>
- #include "qca-nss-phy/nss_phy.h"
- 
-+#ifndef MALIBU2PORT_PHY
-+#define MALIBU2PORT_PHY 0x004dd0b0
-+#endif
-+
- 	/** Phy function reset type */
- 	typedef enum {
- 		PHY_FIFO_RESET = 0,	/**< Phy fifo reset */
-@@ -1156,7 +1160,8 @@ struct hsl_phy_api *hsl_phy_api_get(a_ui
+@@ -576,6 +576,8 @@ typedef struct {
+ 	struct net_device *netdev[SW_MAX_NR_PORT];
+ } phy_info_t;
+ /*qca808x_end*/
++#define MALIBU5PORT_PHY         0x004DD0B1
++#define MALIBU2PORT_PHY         0x004DD0B2
+ #define QCA8030_PHY             0x004DD076
+ #define QCA8033_PHY             0x004DD074
+ #define QCA8035_PHY             0x004DD072
+@@ -1156,7 +1158,8 @@ struct hsl_phy_api *hsl_phy_api_get(a_ui
  			struct nss_phy_ptp_ops *ptp_ops = NULL;					\
  			struct nss_phy_device nss_phydev;					\
  			hsl_port_nss_phy_ops_get(dev_id, port_id, &nss_phydev, &nss_phy_ops);	\

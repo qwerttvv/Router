@@ -62,7 +62,7 @@
 -		debugfs_remove_recursive(ecm_conntrack_notifier_dentry);
 -		return result;
 -	}
-+   nf_conntrack_register_notifier(&init_net, &ecm_conntrack_notifier);
++	nf_conntrack_register_notifier(&init_net, &ecm_conntrack_notifier);
  
  	/*
  	 * Hold netns reference to keep the basic conntrack alive and
@@ -71,7 +71,7 @@
  	nf_ct_netns_put(&init_net, NFPROTO_IPV6);
  #endif
 -	nf_conntrack_unregister_notifier(&init_net, &ecm_conntrack_notifier);
-+   nf_conntrack_unregister_notifier(&init_net);
++	nf_conntrack_unregister_notifier(&init_net);
  #endif
  	/*
  	 * Remove the debugfs files recursively.
