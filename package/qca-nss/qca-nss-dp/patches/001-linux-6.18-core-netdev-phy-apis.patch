@@ -210,7 +210,15 @@
  		dp_priv->miibus = nss_dp_mdio_attach(pdev);
  		if (!dp_priv->miibus) {
  			netdev_dbg(netdev, "failed to find miibus\n");
-@@ -1115,6 +1157,7 @@ static int32_t nss_dp_probe(struct platf
+@@ -1049,6 +1091,7 @@ static int32_t nss_dp_probe(struct platf
+ 				&nss_dp_adjust_link,
+ 				dp_priv->phy_mii_type);
+ 		if (IS_ERR(dp_priv->phydev)) {
++			dp_priv->phydev = NULL;
+ 			netdev_dbg(netdev, "failed to connect to phy device\n");
+ 			goto phy_setup_fail;
+ 		}
+@@ -1115,6 +1158,7 @@ static int32_t nss_dp_probe(struct platf
  	return 0;
  
  phy_setup_fail:
@@ -218,7 +226,7 @@
  	dp_priv->data_plane_ops->deinit(dp_priv->dpc);
  data_plane_init_fail:
  	dp_priv->gmac_hal_ops->exit(dp_priv->gmac_hal_ctx);
-@@ -1130,7 +1173,7 @@ fail:
+@@ -1130,7 +1174,7 @@ fail:
   * Note: We only remove the physical ports here. Virtual
   * port devices are removed explicitly by the VP module.
   */
@@ -227,7 +235,7 @@
  {
  	uint32_t i;
  	struct nss_dp_dev *dp_priv;
-@@ -1145,10 +1188,7 @@ static int nss_dp_remove(struct platform
+@@ -1145,10 +1189,7 @@ static int nss_dp_remove(struct platform
  		dp_ops = dp_priv->data_plane_ops;
  		hal_ops = dp_priv->gmac_hal_ops;
  
@@ -239,7 +247,7 @@
  
  #if defined(NSS_DP_PPE_SUPPORT)
  		/*
-@@ -1176,8 +1216,6 @@ static int nss_dp_remove(struct platform
+@@ -1176,8 +1217,6 @@ static int nss_dp_remove(struct platform
  		free_netdev(dp_priv->netdev);
  		dp_global_ctx.nss_dp[i] = NULL;
  	}
@@ -248,7 +256,7 @@
  }
  
  static struct of_device_id nss_dp_dt_ids[] = {
-@@ -1260,7 +1298,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
+@@ -1260,7 +1299,7 @@ EXPORT_SYMBOL(nss_dp_nsm_sawf_sc_stats_r
  /*
   * nss_dp_init()
   */
@@ -257,7 +265,7 @@
  {
  	int ret, i;
  
-@@ -1348,7 +1386,7 @@ int __init nss_dp_init(void)
+@@ -1348,7 +1387,7 @@ int __init nss_dp_init(void)
  /*
   * nss_dp_exit()
   */
@@ -266,7 +274,7 @@
  {
  	/*
  	 * Ensure netdev remove is done before HAL cleanup.
-@@ -1366,3 +1404,4 @@ module_exit(nss_dp_exit);
+@@ -1366,3 +1405,4 @@ module_exit(nss_dp_exit);
  
  MODULE_LICENSE("Dual BSD/GPL");
  MODULE_DESCRIPTION("NSS Data Plane Network Driver");

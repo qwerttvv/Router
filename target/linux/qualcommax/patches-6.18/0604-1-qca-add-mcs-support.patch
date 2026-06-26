@@ -1,14 +1,10 @@
 --- a/include/linux/if_bridge.h
 +++ b/include/linux/if_bridge.h
-@@ -255,4 +255,17 @@ extern br_get_dst_hook_t __rcu *br_get_d
+@@ -255,4 +255,13 @@ extern br_get_dst_hook_t __rcu *br_get_d
  extern struct net_device *br_fdb_bridge_dev_get_and_hold(struct net_bridge *br);
  /* QCA NSS bridge-mgr support - End */
  
 +/* QCA qca-mcs support - Start */
-+typedef struct net_bridge_port *br_get_dst_hook_t(const struct net_bridge_port *src,
-+		struct sk_buff **skb);
-+extern br_get_dst_hook_t __rcu *br_get_dst_hook;
-+
 +typedef int (br_multicast_handle_hook_t)(const struct net_bridge_port *src,
 +		struct sk_buff *skb);
 +extern br_multicast_handle_hook_t __rcu *br_multicast_handle_hook;
@@ -105,26 +101,22 @@
  			goto out;
 --- a/net/bridge/br_input.c
 +++ b/net/bridge/br_input.c
-@@ -30,7 +30,17 @@ br_netif_receive_skb(struct net *net, st
- 	return netif_receive_skb(skb);
- }
+@@ -36,7 +36,13 @@ br_get_dst_hook_t __rcu *br_get_dst_hook
+ EXPORT_SYMBOL_GPL(br_get_dst_hook);
+ /* QCA NSS ECM support - End */
  
 -static int br_pass_frame_up(struct sk_buff *skb, bool promisc)
 +/* QCA qca-mcs support - Start */
 +/* Hook for external Multicast handler */
 +br_multicast_handle_hook_t __rcu *br_multicast_handle_hook __read_mostly;
 +EXPORT_SYMBOL_GPL(br_multicast_handle_hook);
-+
-+/* Hook for external forwarding logic */
-+br_get_dst_hook_t __rcu *br_get_dst_hook __read_mostly;
-+EXPORT_SYMBOL_GPL(br_get_dst_hook);
 +/* QCA qca-mcs support - End */
 +
 +int br_pass_frame_up(struct sk_buff *skb, bool promisc)
  {
  	struct net_device *indev, *brdev = BR_INPUT_SKB_CB(skb)->brdev;
  	struct net_bridge *br = netdev_priv(brdev);
-@@ -71,6 +81,7 @@ static int br_pass_frame_up(struct sk_bu
+@@ -77,6 +83,7 @@ static int br_pass_frame_up(struct sk_bu
  		       dev_net(indev), NULL, skb, indev, NULL,
  		       br_netif_receive_skb);
  }
@@ -132,7 +124,7 @@
  
  /* note: already called with rcu_read_lock */
  int br_handle_frame_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
-@@ -85,6 +96,11 @@ int br_handle_frame_finish(struct net *n
+@@ -91,6 +98,11 @@ int br_handle_frame_finish(struct net *n
  	struct net_bridge_mcast *brmctx;
  	struct net_bridge_vlan *vlan;
  	struct net_bridge *br;
@@ -144,7 +136,7 @@
  	bool promisc;
  	u16 vid = 0;
  	u8 state;
-@@ -185,6 +201,12 @@ int br_handle_frame_finish(struct net *n
+@@ -191,6 +203,12 @@ int br_handle_frame_finish(struct net *n
  
  	switch (pkt_type) {
  	case BR_PKT_MULTICAST:
@@ -157,7 +149,7 @@
  		mdst = br_mdb_entry_skb_get(brmctx, skb, vid);
  		if ((mdst || BR_INPUT_SKB_CB_MROUTERS_ONLY(skb)) &&
  		    br_multicast_querier_exists(brmctx, eth_hdr(skb), mdst)) {
-@@ -201,16 +223,23 @@ int br_handle_frame_finish(struct net *n
+@@ -207,16 +225,23 @@ int br_handle_frame_finish(struct net *n
  		}
  		break;
  	case BR_PKT_UNICAST:
@@ -190,7 +182,7 @@
  	default:
  		break;
  	}
-@@ -225,6 +254,13 @@ int br_handle_frame_finish(struct net *n
+@@ -231,6 +256,13 @@ int br_handle_frame_finish(struct net *n
  			WRITE_ONCE(dst->used, now);
  		br_forward(dst->dst, skb, local_rcv, false);
  	} else {
