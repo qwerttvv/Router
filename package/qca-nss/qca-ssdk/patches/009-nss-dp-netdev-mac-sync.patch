@@ -1,20 +1,6 @@
 --- a/src/init/ssdk_init.c
 +++ b/src/init/ssdk_init.c
-@@ -1006,11 +1006,9 @@ qca_mac_sw_sync_work_task(struct work_st
- 
- 	mutex_lock(&priv->mac_sw_sync_lock);
- 
--	 if((p_adpt_api = adpt_api_ptr_get(priv->device_id)) != NULL) {
--		if (NULL == p_adpt_api->adpt_port_polling_sw_sync_set)
--			return;
-+	p_adpt_api = adpt_api_ptr_get(priv->device_id);
-+	if (p_adpt_api && p_adpt_api->adpt_port_polling_sw_sync_set)
- 		p_adpt_api->adpt_port_polling_sw_sync_set(priv);
--	}
- 
- 	mutex_unlock(&priv->mac_sw_sync_lock);
- 
-@@ -1648,6 +1646,52 @@ static void ssdk_cfg_default_init(ssdk_i
+@@ -1646,6 +1646,52 @@ static void ssdk_cfg_default_init(ssdk_i
  }
  /*qca808x_end*/
  
@@ -65,17 +51,17 @@
 +}
 +
  #if IS_ENABLED(CONFIG_NET_DSA)
- static void ssdk_dsa_refresh_link_polling(struct net_device *dev)
+ static void ssdk_dsa_schedule_link_polling(struct net_device *dev)
  {
-@@ -1731,6 +1775,7 @@ static int ssdk_dev_event(struct notifie
+@@ -1729,6 +1775,7 @@ static int ssdk_dev_event(struct notifie
  			}
  			break;
  		case NETDEV_CHANGE:
 +			ssdk_netdev_refresh_mac_sw_sync(dev);
  #if IS_ENABLED(CONFIG_NET_DSA)
- 			ssdk_dsa_refresh_link_polling(dev);
+ 			ssdk_dsa_schedule_link_polling(dev);
  #endif
-@@ -1755,8 +1800,9 @@ static int ssdk_dev_event(struct notifie
+@@ -1753,8 +1800,9 @@ static int ssdk_dev_event(struct notifie
  #endif
  			break;
  		case NETDEV_REGISTER:

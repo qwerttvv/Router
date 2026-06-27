@@ -39,3 +39,23 @@
                 src/hsl/hsl_port_prop.o src/util/util.o src/sal/sd/sd.o \
                 src/sal/sd/linux/uk_interface/sw_api_ks_ioctl.o \
                 src/api/api_access.o
+--- a/src/init/ssdk_init.c
++++ b/src/init/ssdk_init.c
+@@ -62,6 +62,10 @@
+ #include <linux/of_net.h>
+ #include <linux/of_address.h>
+ #include <linux/reset.h>
++#ifndef SWITCH_TYPE_EXT
++#define SWITCH_TYPE_EXT SWITCH_TYPE_STRING
++#endif
++
+ #include "ssdk_plat.h"
+ /*qca808x_end*/
+ #include "ssdk_clk.h"
+@@ -2071,5 +2075,6 @@ module_init(regi_init);
+ module_exit(regi_exit);
+ 
+ MODULE_DESCRIPTION("QCA SSDK Driver");
++MODULE_INFO(description, "QCA SSDK Driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+ /*qca808x_end*/
