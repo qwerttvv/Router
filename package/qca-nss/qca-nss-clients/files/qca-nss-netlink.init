@@ -14,14 +14,14 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 # OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-START=29
+START=18
 
 start() {
 	modprobe qca-nss-netlink || return 1
 }
 
 stop() {
-	rmmod qca-nss-netlink.ko 2> /dev/null || true
+	rmmod qca-nss-netlink 2> /dev/null || true
 }
 
 restart() {

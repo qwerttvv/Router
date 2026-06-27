@@ -4,7 +4,7 @@
 # shellcheck disable=2155,3019,3043,3057,3060
 ######################################################################
 
-START=93
+START=29
 
 PROG=smp_affinity
 
@@ -80,7 +80,7 @@ enable_affinity() {
 	set_affinity 'edma_misc'   3
 }
 
-boot() {
+start() {
 	local enable
 
 	config_load smp_affinity
@@ -92,4 +92,8 @@ boot() {
 	[ "$enable_log" -eq 1 ] && enable_log=true || enable_log=false
 
 	$enable && enable_affinity
+}
+
+boot() {
+	start
 }

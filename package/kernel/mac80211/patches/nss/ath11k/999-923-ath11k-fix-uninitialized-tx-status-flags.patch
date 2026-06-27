@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: OpenWrt Build System <openwrt@localhost>
+Date: Sat, 27 Jun 2026 00:00:00 +0800
+Subject: [PATCH] ath11k: fix uninitialized tx status flags
+
+ath11k_dp_tx_complete_msdu() checks ATH11K_SKB_TX_STATUS while deciding
+whether it can drop completion processing when stats_disable is set, but
+the local flags variable is never initialized in that path.
+
+Use the skb control block flags, matching the HTT completion path.
+
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -720,6 +720,7 @@ static void ath11k_dp_tx_complete_msdu(s
+ 	rel_status = FIELD_GET(HAL_WBM_RELEASE_INFO0_TQM_RELEASE_REASON,
+ 			       tx_status->info0);
+ 
++	flags = skb_cb->flags;
+  	/* Free skb here if stats is disabled */
+ 	if (ab->stats_disable && !(flags & ATH11K_SKB_TX_STATUS)) {
+ 		if (msdu->destructor) {
