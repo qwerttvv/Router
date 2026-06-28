@@ -355,10 +355,6 @@ This module adds support for Qualcomm Technologies 802.11ax family of
 chipsets.
 endef
 
-define KernelPackage/ath11k/conffiles
-/etc/config/pbuf
-endef
-
 define KernelPackage/ath11k/config
 
        config ATH11K_THERMAL

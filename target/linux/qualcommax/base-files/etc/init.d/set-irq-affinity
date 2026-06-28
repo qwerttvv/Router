@@ -20,14 +20,10 @@ get_cpu_mask() {
 }
 
 start() {
-	local enable flow_cnt sock_flow_entries cpu_mask
+	local flow_cnt sock_flow_entries cpu_mask
 
-	config_load smp_affinity
-	config_get_bool enable "netdev" enable 1
-	[ "$enable" -eq 1 ] || return 0
-
-	config_get flow_cnt "netdev" rps_flow_cnt 8192
-	config_get sock_flow_entries "netdev" rps_sock_flow_entries 65535
+	flow_cnt=8192
+	sock_flow_entries=65535
 	cpu_mask="$(get_cpu_mask)"
 
 	for eth in $(jsonfilter -i "/etc/board.json" -e "@.network[*].device"); do

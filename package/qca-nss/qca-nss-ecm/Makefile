@@ -17,7 +17,6 @@ PKG_BUILD_FLAGS:=gc-sections lto
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_TARGET_SUBTARGET \
-	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_BRIDGE_VLAN_FILTERING \
 	CONFIG_IPV6 \
 	CONFIG_NSS_DRV_PPPOE_ENABLE \
@@ -66,13 +65,8 @@ define KernelPackage/qca-nss-ecm/description
 This package contains the QCA NSS Enhanced Connection Manager
 endef
 
-define KernelPackage/qca-nss-ecm/conffiles
-/etc/config/ecm
-endef
-
 define KernelPackage/qca-nss-ecm/install
 	$(INSTALL_DIR) \
-		$(1)/etc/config \
 		$(1)/etc/firewall.d \
 		$(1)/etc/hotplug.d/net \
 		$(1)/etc/init.d \
@@ -88,13 +82,13 @@ define KernelPackage/qca-nss-ecm/install
 	$(INSTALL_DATA) ./files/qca-nss-ecm.defaults $(1)/etc/uci-defaults/99-qca-nss-ecm
 	$(INSTALL_DATA) ./files/qca-nss-ecm.firewall $(1)/etc/firewall.d/qca-nss-ecm
 	$(INSTALL_DATA) ./files/qca-nss-ecm.sysctl $(1)/etc/sysctl.d/qca-nss-ecm.conf
-	$(INSTALL_DATA) ./files/qca-nss-ecm.uci $(1)/etc/config/ecm
 endef
 
 EXTRA_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include/qca-nss-drv \
 	-I$(STAGING_DIR)/usr/include/qca-mcs \
-	-I$(STAGING_DIR)/usr/include/nat46
+	-I$(STAGING_DIR)/usr/include/nat46 \
+	-DNSS_FIRMWARE_VERSION_12_5
 
 ECM_SUBTARGET:=$(subst ",,$(CONFIG_TARGET_SUBTARGET))
 ECM_MAKE_OPTS:=
@@ -180,10 +174,6 @@ endif
 
 ifneq ($(CONFIG_PACKAGE_kmod-qmi_wwan_q),)
 ECM_MAKE_OPTS += ECM_INTERFACE_RAWIP_ENABLE=y
-endif
-
-ifneq ($(CONFIG_NSS_FIRMWARE_VERSION_12_5),)
-EXTRA_CFLAGS += -DNSS_FIRMWARE_VERSION_12_5
 endif
 
 define Build/InstallDev

@@ -20,7 +20,6 @@ PKG_LICENSE_FILES:=LICENSE.md
 PKG_MAINTAINER:=Sean K <datapronix@protonmail.com>
 
 PKG_CONFIG_DEPENDS:= \
-	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_TARGET_SUBTARGET
 
 include $(INCLUDE_DIR)/package.mk
@@ -49,12 +48,6 @@ endef
 
 define Package/nss-firmware
 $(call Package/nss-firmware-common,$(1))
-endef
-
-define Package/nss-firmware/config
-  config NSS_FIRMWARE_VERSION_12_5
-	bool "NSS Firmware 12.5 Release 210"
-	default y
 endef
 
 define nss-firmware-version

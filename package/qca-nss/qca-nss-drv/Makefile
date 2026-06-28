@@ -16,7 +16,6 @@ PKG_FLAGS:=nonshared
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_TARGET_SUBTARGET \
-	CONFIG_NSS_FIRMWARE_VERSION_12_5 \
 	CONFIG_NSS_DRV_BRIDGE_ENABLE \
 	CONFIG_NSS_DRV_CRYPTO_ENABLE \
 	CONFIG_NSS_DRV_GRE_ENABLE \
@@ -127,7 +126,6 @@ define KernelPackage/qca-nss-drv/config
 endef
 
 define KernelPackage/qca-nss-drv/install
-	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/firmware
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/usr/bin
@@ -136,13 +134,6 @@ define KernelPackage/qca-nss-drv/install
 	$(INSTALL_BIN) ./files/qca-nss-drv.init $(1)/etc/init.d/qca-nss-drv
 	$(INSTALL_BIN) ./files/skb_recycler.init $(1)/etc/init.d/skb_recycler
 	$(INSTALL_DATA) ./files/qca-nss-drv.hotplug $(1)/etc/hotplug.d/firmware/10-qca-nss-fw
-	$(INSTALL_DATA) ./files/qca-nss-drv.uci $(1)/etc/config/nss
-	$(INSTALL_DATA) ./files/skb_recycler.uci $(1)/etc/config/skb_recycler
-endef
-
-define KernelPackage/qca-nss-drv/conffiles
-/etc/config/nss
-/etc/config/skb_recycler
 endef
 
 define KernelPackage/qca-nss-drv/description
@@ -168,14 +159,11 @@ NSS_DRV_INCLUDES:=$(patsubst %,-I%,$(NSS_DRV_INCLUDE_DIRS))
 
 EXTRA_CFLAGS += \
 	$(NSS_DRV_INCLUDES) \
+	-DNSS_FIRMWARE_VERSION_12_5 \
 	-Wno-missing-declarations \
 	-Wno-missing-prototypes \
 	-Wno-empty-body \
 	-Wno-unused-variable
-
-ifdef CONFIG_NSS_FIRMWARE_VERSION_12_5
-EXTRA_CFLAGS += -DNSS_FIRMWARE_VERSION_12_5
-endif
 
 DRV_MAKE_OPTS:=
 

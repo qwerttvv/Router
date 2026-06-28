@@ -2,51 +2,15 @@
 # shellcheck disable=3043
 
 START=40
-USE_PROCD=1
 NAME=skb_recycler
 
-ucidef_set_skb_recycler() {
-	uci import << EOF
-package $NAME
-config $NAME 'opt'
-EOF
-
-}
-
 skb_recycler_config() {
-
-	. /lib/config/uci.sh
-
-	local CFG
-	local max_skbs
-	local max_spare_skbs
-	local enable
-	local memtotal
-	CFG="$1"
-
-	config_get max_skbs "${CFG}" max_skbs
-	config_get max_spare_skbs "${CFG}" max_spare_skbs
-	config_get enable "${CFG}" enable
+	local max_skbs max_spare_skbs enable memtotal
 
 	memtotal=$(awk '/MemTotal/{print $2}' /proc/meminfo)
-
-	[ -z "$max_skbs" ] && {
-		[ $memtotal -le 512000 ] && max_skbs=512 || max_skbs=1024
-		uci_set $NAME "${CFG}" max_skbs "$max_skbs"
-		uci_commit "$NAME"
-	}
-
-	[ -z "$max_spare_skbs" ] && {
-		[ $memtotal -le 512000 ] && max_spare_skbs=128 || max_spare_skbs=256
-		uci_set $NAME "${CFG}" max_spare_skbs "$max_spare_skbs"
-		uci_commit "$NAME"
-	}
-
-	[ -z "$enable" ] && {
-		[ $memtotal -le 256000 ] && enable=0 || enable=1
-		uci_set $NAME "${CFG}" enable "$enable"
-		uci_commit "$NAME"
-	}
+	[ "$memtotal" -le 512000 ] && max_skbs=512 || max_skbs=1024
+	[ "$memtotal" -le 512000 ] && max_spare_skbs=128 || max_spare_skbs=256
+	[ "$memtotal" -le 256000 ] && enable=0 || enable=1
 
 	[ "$enable" -eq 0 ] && enable_disable="Disabling" || enable_disable="Enabling"
 
@@ -72,21 +36,8 @@ skb_recycler_config() {
 	[ "$enable" -eq 0 ] && echo 1 > /proc/net/$NAME/flush
 }
 
-check_config() {
-	config_load "$NAME" || {
-		touch /etc/config/$NAME
-		ucidef_set_skb_recycler
-	}
-}
-
-reload_service() {
+start() {
 	[ ! -r /proc/net/$NAME ] && logger -t "$NAME" -p user.warn "skb_recycler feature not available" && return
 
-	check_config
-	config_load $NAME
-	config_foreach skb_recycler_config $NAME
-}
-
-start_service() {
-	reload_service
+	skb_recycler_config
 }

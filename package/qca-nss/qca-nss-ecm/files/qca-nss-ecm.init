@@ -48,28 +48,7 @@ sysctl_update() {
 }
 
 get_front_end_mode() {
-	config_load "ecm"
-
-	config_get front_end global acceleration_engine "auto"
-
-	# shellcheck disable=2154
-	case $front_end in
-		auto)
-			echo '0'
-			;;
-		nss)
-			echo '1'
-			;;
-		sfe)
-			echo '2'
-			;;
-		both)
-			echo '4'
-			;;
-		*)
-			echo '0'
-			;;
-	esac
+	echo '0'
 }
 
 disable_packet_steering() {
@@ -88,22 +67,6 @@ disable_bridge_filtering() {
 	sysctl_update net.bridge.bridge-nf-call-arptables 0
 	sysctl_update net.bridge.bridge-nf-call-iptables 0
 	sysctl_update net.bridge.bridge-nf-call-ip6tables 0
-}
-
-enable_bridge_filtering() {
-
-	# If bridge filtering is enabled, apply and persist the sysctl flags
-	config_load ecm
-	config_get enable_bridge_filtering general enable_bridge_filtering 0
-
-	# shellcheck disable=2154
-	if [ "$enable_bridge_filtering" -eq 1 ]; then
-		sysctl_update net.bridge.bridge-nf-call-arptables 1
-		sysctl_update net.bridge.bridge-nf-call-iptables 1
-		sysctl_update net.bridge.bridge-nf-call-ip6tables 1
-	else
-		disable_bridge_filtering
-	fi
 }
 
 set_front_end() {
@@ -178,15 +141,6 @@ unload_ecm() {
 		sleep 1
 		rmmod ecm
 	fi
-}
-
-service_triggers() {
-	procd_add_reload_trigger "network"
-	procd_add_reload_trigger "packet_steering"
-}
-
-reload_service() {
-	disable_packet_steering
 }
 
 start_service() {

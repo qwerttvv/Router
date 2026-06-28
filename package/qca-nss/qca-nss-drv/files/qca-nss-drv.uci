@@ -1,3 +1,0 @@
-config nss 'general'
-	option enable_rps	'1'
-	option enable_log	'1'

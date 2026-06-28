@@ -136,12 +136,6 @@ enable_rps() {
 
 start() {
 
-	local enable_rps
-
-	config_load		 nss
-	config_get			enable_rps "general" enable_rps 1
-	config_get_bool enable_log "general" enable_log 1
-
-	[ "$enable_log" -eq 1 ] && enable_log=true || enable_log=false
-	[ "$enable_rps" -eq 1 ] && enable_rps
+	enable_log=true
+	enable_rps
 }

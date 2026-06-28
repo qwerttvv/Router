@@ -81,17 +81,8 @@ enable_affinity() {
 }
 
 start() {
-	local enable
-
-	config_load smp_affinity
-
-	config_get_bool enable "general" enable 1
-	config_get_bool enable_log "general" enable_log 1
-
-	[ "$enable" -eq 1 ] && enable=true || enable=false
-	[ "$enable_log" -eq 1 ] && enable_log=true || enable_log=false
-
-	$enable && enable_affinity
+	enable_log=true
+	enable_affinity
 }
 
 boot() {

@@ -41,30 +41,13 @@ select_nss_fw() {
 
 [ "$ACTION" != "add" ] && exit
 
-# dev name for UCI, since it doesn't let you use . or -
-SDEVNAME=$(echo "${DEVICENAME}" | sed s/[.-]/_/g)
-
-SELECTED_FW=$(uci get nss."${SDEVNAME}".firmware 2> /dev/null)
-[ -e "${SELECTED_FW}" ] && {
-	$select_or_load "${SELECTED_FW}"
-	exit
-}
-
 case $DEVICENAME in
 	qca-nss0* | qca-nss.0*)
-		if [ -e /lib/firmware/qca-nss0-enterprise.bin ]; then
-			$select_or_load /lib/firmware/qca-nss0-enterprise.bin
-		else
-			$select_or_load /lib/firmware/qca-nss0-retail.bin
-		fi
+		$select_or_load /lib/firmware/qca-nss0-retail.bin
 		exit
 		;;
 	qca-nss1* | qca-nss.1*)
-		if [ -e /lib/firmware/qca-nss1-enterprise.bin ]; then
-			$select_or_load /lib/firmware/qca-nss1-enterprise.bin
-		else
-			$select_or_load /lib/firmware/qca-nss1-retail.bin
-		fi
+		$select_or_load /lib/firmware/qca-nss1-retail.bin
 		exit
 		;;
 esac
