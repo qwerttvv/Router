@@ -51,7 +51,7 @@
  	struct ip6_tnl *tunnel = netdev_priv(dev);
 --- a/net/ipv6/sit.c
 +++ b/net/ipv6/sit.c
-@@ -1730,6 +1730,23 @@ nla_put_failure:
+@@ -1731,6 +1731,23 @@ nla_put_failure:
  	return -EMSGSIZE;
  }
  

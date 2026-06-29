@@ -125,7 +125,7 @@
  	const struct net_device_ops *netdev_ops;
  	const struct header_ops *header_ops;
  	struct netdev_queue	*_tx;
-@@ -3181,6 +3212,10 @@ enum netdev_cmd {
+@@ -3192,6 +3223,10 @@ enum netdev_cmd {
  	NETDEV_OFFLOAD_XSTATS_REPORT_USED,
  	NETDEV_OFFLOAD_XSTATS_REPORT_DELTA,
  	NETDEV_XDP_FEAT_CHANGE,
@@ -768,7 +768,7 @@
   */
 --- a/net/core/dev.c
 +++ b/net/core/dev.c
-@@ -1867,6 +1867,7 @@ const char *netdev_cmd_to_name(enum netd
+@@ -1868,6 +1868,7 @@ const char *netdev_cmd_to_name(enum netd
  	N(PRE_CHANGEADDR) N(OFFLOAD_XSTATS_ENABLE) N(OFFLOAD_XSTATS_DISABLE)
  	N(OFFLOAD_XSTATS_REPORT_USED) N(OFFLOAD_XSTATS_REPORT_DELTA)
  	N(XDP_FEAT_CHANGE)
@@ -776,7 +776,7 @@
  	}
  #undef N
  	return "UNKNOWN_NETDEV_EVENT";
-@@ -13018,7 +13019,7 @@ static void __init net_dev_struct_check(
+@@ -13019,7 +13020,7 @@ static void __init net_dev_struct_check(
  #ifdef CONFIG_NET_XGRESS
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_tx, tcx_egress);
  #endif
@@ -785,7 +785,7 @@
  
  	/* TXRX read-mostly hotpath */
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, lstats);
-@@ -13027,7 +13028,7 @@ static void __init net_dev_struct_check(
+@@ -13028,7 +13029,7 @@ static void __init net_dev_struct_check(
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, hard_header_len);
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, features);
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, ip6_ptr);
@@ -794,7 +794,7 @@
  
  	/* RX read-mostly hotpath */
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_rx, ptype_specific);
-@@ -13045,7 +13046,7 @@ static void __init net_dev_struct_check(
+@@ -13046,7 +13047,7 @@ static void __init net_dev_struct_check(
  #ifdef CONFIG_NET_XGRESS
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_rx, tcx_ingress);
  #endif
