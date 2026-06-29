@@ -280,9 +280,9 @@
  	if (err < 0) {
 -		DEBUG_ERROR("Failed to resolve the nl80211 generic netlink family err %d\n", err);
 +		if ((err == -ENOENT) || (err == -EINVAL)) {
-+			DEBUG_INFO("nl80211 generic netlink family is unavailable, disabling ECM WiFi event listener err %d\n", err);
++			pr_notice("qca-nss-ecm: no Wi-Fi/nl80211 detected; disabling ECM WiFi event listener\n");
 +		} else {
-+			DEBUG_ERROR("Failed to resolve the nl80211 generic netlink family err %d\n", err);
++			pr_err("qca-nss-ecm: failed to resolve the nl80211 generic netlink family err %d\n", err);
 +		}
  		goto exit2;
  	}

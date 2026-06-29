@@ -28,53 +28,13 @@ write_sysctl() {
 	sysctl -w "$1=$2" > /dev/null 2>&1
 }
 
-ath11k_of_device_available() {
-	local compatible node status
-
-	[ -d /proc/device-tree ] || return 1
-
-	for node in $(find /proc/device-tree -type d -name 'wifi*' 2> /dev/null); do
-		[ -r "$node/compatible" ] || continue
-		compatible=$(tr '\0' '\n' < "$node/compatible" 2> /dev/null)
-		case "$compatible" in
-			*qcom,ipq5018-wifi* | *qcom,ipq6018-wifi* | *qcom,ipq8074-wifi* | *qcom,qcn6122-wifi* | *pci17cb,1104*) ;;
-			*) continue ;;
-		esac
-
-		status=okay
-		[ -r "$node/status" ] && status=$(tr -d '\0' < "$node/status" 2> /dev/null)
-		case "$status" in
-			okay | ok | "") return 0 ;;
-		esac
-	done
-
-	return 1
-}
-
-ath11k_pci_device_available() {
-	local device devdir vendor
-
-	for vendor in /sys/bus/pci/devices/*/vendor; do
-		[ -r "$vendor" ] || continue
-		[ "$(cat "$vendor" 2> /dev/null)" = "0x17cb" ] || continue
-
-		devdir=${vendor%/vendor}
-		device="$devdir/device"
-		[ -r "$device" ] || continue
-		[ "$(cat "$device" 2> /dev/null)" = "0x1104" ] && return 0
-	done
-
-	return 1
-}
-
-ath11k_device_available() {
-	ath11k_of_device_available || ath11k_pci_device_available || [ -d /sys/kernel/debug/ath11k ]
+ath11k_runtime_available() {
+	[ -r /sys/module/ath11k/parameters/nss_offload ] || [ -d /sys/kernel/debug/ath11k ]
 }
 
 ath11k_nss_offload_enabled() {
 	local nss_offload
 
-	ath11k_device_available || return 1
 	[ -r /sys/module/ath11k/parameters/nss_offload ] || return 1
 	nss_offload=$(cat /sys/module/ath11k/parameters/nss_offload 2> /dev/null)
 	case "$nss_offload" in
@@ -219,7 +179,10 @@ start() {
 	local hash_bitmap num_cpus
 
 	pbuf_config_applied=0
-	ath11k_device_available || return 0
+	ath11k_runtime_available || {
+		logger -t "$NAME" -p user.notice "no Wi-Fi runtime detected. Skipping applying wifi nss configs"
+		return 0
+	}
 	ath11k_nss_offload_enabled || {
 		logger -t "$NAME" -p user.notice "ath11k NSS offload is unavailable or disabled. Skipping applying wifi nss configs"
 		return 0
