@@ -11,17 +11,12 @@ Mirror IPv4 multicast frontend behavior in the IPv6 path:
 Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
 ---
  frontends/cmn/ecm_multicast_ipv6.c     | 7 +++++--
- frontends/nss/ecm_nss_multicast_ipv6.c | 4 ++--
- 2 files changed, 7 insertions(+), 4 deletions(-)
+ frontends/nss/ecm_nss_multicast_ipv6.c | 3 ++-
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
 --- a/frontends/nss/ecm_nss_multicast_ipv6.c
 +++ b/frontends/nss/ecm_nss_multicast_ipv6.c
-@@ -1010,14 +1010,14 @@ static void ecm_nss_multicast_ipv6_conne
- 			create->ingress_vlan_tag[interface_type_counts[ii_type]] = ((vlan_info.vlan_tpid << 16) | vlan_info.vlan_tag);
- 			create->valid_flags |= NSS_IPV6_MC_RULE_CREATE_FLAG_INGRESS_VLAN_VALID;
- 			DEBUG_TRACE("%px: vlan tag: %x\n", feci, create->ingress_vlan_tag[interface_type_counts[ii_type]]);
--			fallthrough;
- #else
+@@ -1014,9 +1014,10 @@ static void ecm_nss_multicast_ipv6_conne
  			rule_invalid = true;
  			DEBUG_TRACE("%px: VLAN - unsupported\n", feci);
  #endif

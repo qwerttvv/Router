@@ -124,14 +124,6 @@
  #include <asm/uaccess.h>	/* for put_user */
  #include <net/ipv6.h>
  #include <linux/inet.h>
-@@ -1010,6 +1010,7 @@ static void ecm_nss_multicast_ipv6_conne
- 			create->ingress_vlan_tag[interface_type_counts[ii_type]] = ((vlan_info.vlan_tpid << 16) | vlan_info.vlan_tag);
- 			create->valid_flags |= NSS_IPV6_MC_RULE_CREATE_FLAG_INGRESS_VLAN_VALID;
- 			DEBUG_TRACE("%px: vlan tag: %x\n", feci, create->ingress_vlan_tag[interface_type_counts[ii_type]]);
-+			fallthrough;
- #else
- 			rule_invalid = true;
- 			DEBUG_TRACE("%px: VLAN - unsupported\n", feci);
 --- a/frontends/nss/ecm_nss_non_ported_ipv4.c
 +++ b/frontends/nss/ecm_nss_non_ported_ipv4.c
 @@ -32,7 +32,7 @@
