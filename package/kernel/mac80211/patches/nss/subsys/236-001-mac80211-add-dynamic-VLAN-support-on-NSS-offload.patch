@@ -66,7 +66,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	if (!check_sdata_in_driver(sdata))
  		return -EIO;
  
-@@ -506,7 +510,10 @@ int drv_set_key(struct ieee80211_local *
+@@ -510,7 +514,10 @@ int drv_set_key(struct ieee80211_local *
  	might_sleep();
  	lockdep_assert_wiphy(local->hw.wiphy);
  

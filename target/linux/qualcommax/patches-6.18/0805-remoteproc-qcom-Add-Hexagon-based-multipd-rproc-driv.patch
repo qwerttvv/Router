@@ -883,7 +883,7 @@ Signed-off-by: Manikanta Mylavarapu <quic_mmanikan@quicinc.com>
 +
 +static struct platform_driver q6_wcss_driver = {
 +	.probe = q6_wcss_probe,
-+	.remove_new = q6_wcss_remove,
++	.remove = q6_wcss_remove,
 +	.driver = {
 +		.name = "qcom-q6-mpd",
 +		.of_match_table = q6_wcss_of_match,
