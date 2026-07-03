@@ -178,7 +178,11 @@ local function update(url, file, type, file2)
 			apple = io.open("/tmp/ssr-update.tmp", "w")
 			apple:write(decode)
 			apple:close()
-			generate_apple(type)
+			if new_appledns and new_appledns ~= "" then
+				generate_apple(type)
+			else
+				os.remove("/tmp/ssr-update.tmp")
+			end
 		end
 		if type == "ad_data" then
 			local adblock = io.open("/tmp/ssr-update." .. type, "r")
