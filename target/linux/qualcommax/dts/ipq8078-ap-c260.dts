@@ -1,0 +1,217 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+/dts-v1/;
+
+#include "ipq8076-arista.dtsi"
+
+/ {
+	model = "Arista AP-C260";
+	compatible = "arista,c260", "qcom,ipq8074";
+
+	keys {
+		compatible = "gpio-keys";
+
+		reset {
+			label = "reset";
+			gpios = <&tlmm 52 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+			debounce-interval = <60>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_eth2_green: eth2-green {
+			label = "green:eth2";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_LAN;
+			gpios = <&led_gpio 0 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_eth2_red: eth2-red {
+			label = "red:eth2";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_LAN;
+			gpios = <&led_gpio 1 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_eth1_green: eth1-green {
+			label = "green:eth1";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_LAN;
+			gpios = <&led_gpio 2 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_eth1_red: eth1-red {
+			label = "red:eth1";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_LAN;
+			gpios = <&led_gpio 3 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan3_green: wlan3-green {
+			label = "green:wlan3";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WLAN;
+			gpios = <&led_gpio 4 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan3_red: wlan3-red {
+			label = "red:wlan3";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_WLAN;
+			gpios = <&led_gpio 5 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan5g_green: wlan5g-green {
+			label = "green:wlan5g";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WLAN_5GHZ;
+			gpios = <&led_gpio 8 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan5g_red: wlan5g-red {
+			label = "red:wlan5g";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_WLAN_5GHZ;
+			gpios = <&led_gpio 9 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan2g_green: wlan2g-green {
+			label = "green:wlan2g";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WLAN_2GHZ;
+			gpios = <&led_gpio 10 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan2g_red: wlan2g-red {
+			label = "red:wlan2g";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_WLAN_2GHZ;
+			gpios = <&led_gpio 11 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_power_green: power-green {
+			label = "green:power";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_POWER;
+			gpios = <&led_gpio 12 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		led_power_red: power-red {
+			label = "red:power";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_POWER;
+			gpios = <&led_gpio 13 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+	};
+};
+
+&flash_partitions {
+	partition@690000 {
+		label = "0:ART";
+		reg = <0x690000 0x40000>;
+		read-only;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			macaddr_lan: macaddr@0 {
+				compatible = "mac-base";
+				reg = <0x0 0x6>;
+			};
+
+			macaddr_wan: macaddr@6 {
+				compatible = "mac-base";
+				reg = <0x6 0x6>;
+			};
+		};
+	};
+
+	partition@6d0000 {
+		label = "0:ETHPHYFW";
+		reg = <0x6d0000 0x80000>;
+		read-only;
+	};
+
+	partition@750000 {
+		label = "0:HLOS";
+		reg = <0x750000 0x800000>;
+	};
+
+	partition@f50000 {
+		label = "0:HLOS_1";
+		reg = <0xf50000 0x800000>;
+	};
+
+	partition@1750000 {
+		label = "CONFIG";
+		reg = <0x1750000 0x400000>;
+	};
+
+	partition@1b50000 {
+		label = "LOGGING";
+		reg = <0x1b50000 0x100000>;
+	};
+
+	partition@1c50000 {
+		label = "RESERVED";
+		reg = <0x1c50000 0x3b0000>;
+	};
+};
+
+&qpic_nand {
+	status = "okay";
+
+	nand@0 {
+		reg = <0>;
+		nand-ecc-strength = <8>;
+		nand-ecc-step-size = <512>;
+		nand-bus-width = <8>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "rootfs";
+				reg = <0x0 0x10000000>;
+			};
+
+			partition@10000000 {
+				label = "rootfs_1";
+				reg = <0x10000000 0x10000000>;
+			};
+		};
+	};
+};
+
+&pcie0 {
+	status = "disabled";
+};
+
+&pcie_qmp0 {
+	status = "disabled";
+};
+
+&wifi {
+	status = "okay";
+	qcom,ath11k-fw-memory-mode = <1>;
+	qcom,ath11k-calibration-variant = "Arista-C260";
+};

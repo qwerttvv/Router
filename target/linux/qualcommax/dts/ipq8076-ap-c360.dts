@@ -1,0 +1,252 @@
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+
+/dts-v1/;
+
+#include "ipq8076-arista.dtsi"
+
+/ {
+	model = "Arista AP-C360";
+	compatible = "arista,c360", "qcom,ipq8074";
+
+	keys {
+		compatible = "gpio-keys";
+
+		reset {
+			label = "reset";
+			gpios = <&tlmm 42 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+			debounce-interval = <60>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_power_green: power-green {
+			label = "green:power";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_POWER;
+			gpios = <&led_gpio 0 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		led_power_red: power-red {
+			label = "red:power";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_POWER;
+			gpios = <&led_gpio 1 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan2g_green: wlan2g-green {
+			label = "green:wlan2g";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WLAN_2GHZ;
+			gpios = <&led_gpio 2 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan5g_green: wlan5g-green {
+			label = "green:wlan5g";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WLAN_5GHZ;
+			gpios = <&led_gpio 3 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wlan6g_green: wlan6g-green {
+			label = "green:wlan6g";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WLAN_6GHZ;
+			gpios = <&led_gpio 4 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_lan_green: lan-green {
+			label = "green:lan";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_LAN;
+			gpios = <&led_gpio 5 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_lan_red: lan-red {
+			label = "red:lan";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_LAN;
+			gpios = <&led_gpio 6 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wan_green: wan-green {
+			label = "green:wan";
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_WAN;
+			gpios = <&led_gpio 8 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		led_wan_red: wan-red {
+			label = "red:wan";
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_WAN;
+			gpios = <&led_gpio 9 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+	};
+
+	reg_usb_0p9: regulator-usb-0p9 {
+		compatible = "regulator-fixed";
+		regulator-name = "usb_0p9";
+		regulator-min-microvolt = <925000>;
+		regulator-max-microvolt = <925000>;
+		regulator-always-on;
+	};
+
+	reg_usb_1p8: regulator-usb-1p8 {
+		compatible = "regulator-fixed";
+		regulator-name = "usb_1p8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+
+	reg_usb_3p3: regulator-usb-3p3 {
+		compatible = "regulator-fixed";
+		regulator-name = "usb_3p3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+};
+
+&flash_partitions {
+	partition@690000 {
+		label = "0:ART";
+		reg = <0x690000 0x100000>;
+		read-only;
+
+		nvmem-layout {
+			compatible = "fixed-layout";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			macaddr_lan: macaddr@0 {
+				compatible = "mac-base";
+				reg = <0x0 0x6>;
+			};
+
+			macaddr_wan: macaddr@6 {
+				compatible = "mac-base";
+				reg = <0x6 0x6>;
+			};
+		};
+	};
+
+	partition@790000 {
+		label = "0:ETHPHYFW";
+		reg = <0x790000 0x80000>;
+		read-only;
+	};
+
+	partition@810000 {
+		label = "HLOS_BAK";
+		reg = <0x810000 0x1000000>;
+	};
+
+	partition@1810000 {
+		label = "CONFIG";
+		reg = <0x1810000 0x400000>;
+	};
+
+	partition@1c10000 {
+		label = "DEVCERT";
+		reg = <0x1c10000 0x20000>;
+	};
+
+	partition@1c30000 {
+		label = "RESERVED1";
+		reg = <0x1c30000 0x20000>;
+	};
+
+	partition@1c50000 {
+		label = "RESERVED2";
+		reg = <0x1c50000 0x3b0000>;
+	};
+};
+
+&qpic_nand {
+	status = "okay";
+
+	nand@0 {
+		reg = <0>;
+		nand-ecc-strength = <8>;
+		nand-ecc-step-size = <512>;
+		nand-bus-width = <8>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "0:HLOS";
+				reg = <0x0 0x1000000>;
+			};
+
+			partition@1000000 {
+				label = "rootfs";
+				reg = <0x1000000 0x3f000000>;
+			};
+		};
+	};
+};
+
+&qusb_phy_0 {
+	status = "okay";
+	vdd-supply = <&reg_usb_0p9>;
+	vdda-pll-supply = <&reg_usb_1p8>;
+	vdda-phy-dpdm-supply = <&reg_usb_3p3>;
+};
+
+&ssphy_0 {
+	status = "okay";
+	vdda-phy-supply = <&reg_usb_0p9>;
+	vdda-pll-supply = <&reg_usb_1p8>;
+};
+
+&pcie0 {
+	status = "okay";
+	perst-gpio = <&tlmm 58 GPIO_ACTIVE_LOW>;
+
+	pcie@0 {
+		wifi@0,0 {
+			status = "okay";
+			compatible = "pci17cb,1104";
+			qcom,ath11k-fw-memory-mode = <1>;
+			qcom,ath11k-calibration-variant = "Arista-C360-9074";
+			reg = <0x00010000 0 0 0 0>;
+		};
+	};
+};
+
+&pcie1 {
+	status = "okay";
+	perst-gpio = <&tlmm 61 GPIO_ACTIVE_LOW>;
+
+	pcie@0 {
+		wifi@0,0 {
+			status = "okay";
+			compatible = "pci17cb,1104";
+			qcom,ath11k-fw-memory-mode = <1>;
+			qcom,ath11k-calibration-variant = "Arista-C360-9072";
+			reg = <0x00010000 0 0 0 0>;
+		};
+	};
+};
+
+&wifi {
+	status = "okay";
+	qcom,ath11k-fw-memory-mode = <1>;
+	qcom,ath11k-calibration-variant = "Arista-C360";
+};
