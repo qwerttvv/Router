@@ -24,6 +24,7 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 --- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
 @@ -14,18 +14,24 @@
  					  NL80211_RRF_NO_IR)
  #define ATH11K_5GHZ_5725_5850    REG_RULE(5725 - 10, 5850 + 10, 80, 0, 30,\
@@ -33,11 +34,11 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 + */
 +#define ATH11K_6GHZ_5925_7125    REG_RULE(5925 - 10, 7125 + 10, 320, 0, 30,\
 +					  NL80211_RRF_NO_IR)
-
+ 
  #define ETSI_WEATHER_RADAR_BAND_LOW		5590
  #define ETSI_WEATHER_RADAR_BAND_HIGH		5650
  #define ETSI_WEATHER_RADAR_BAND_CAC_TIMEOUT	600000
-
+ 
  static const struct ieee80211_regdomain ath11k_world_regd = {
 -	.n_reg_rules = 3,
 +	.n_reg_rules = 4,
@@ -49,3 +50,4 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 +		ATH11K_6GHZ_5925_7125,
  	}
  };
+ 

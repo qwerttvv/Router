@@ -28,10 +28,11 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
  1 file changed, 56 insertions(+), 21 deletions(-)
 
 --- a/iwinfo_nl80211.c
-@@ -2554,10 +2554,15 @@
++++ b/iwinfo_nl80211.c
+@@ -2554,10 +2554,15 @@ static int nl80211_get_assoclist(const c
  	return -1;
  }
-
+ 
 +struct nl80211_txpwr_state {
 +	int ch_cur;   /* channel to look up (constant) */
 +	int dbm_max;  /* result: max power in dBm, or -1 */
@@ -43,13 +44,13 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 -	int ch_cur, ch_cmp, bands_remain, freqs_remain;
 +	struct nl80211_txpwr_state *st = arg;
 +	int ch_cmp, bands_remain, freqs_remain;
-
+ 
  	struct nlattr **attr = nl80211_parse(msg);
  	struct nlattr *bands[NL80211_BAND_ATTR_MAX + 1];
-@@ -2573,28 +2578,37 @@
+@@ -2573,28 +2578,37 @@ static int nl80211_get_txpwrlist_cb(stru
  		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U32  },
  	};
-
+ 
 -	ch_cur = *dbm_max; /* value int* is initialized with channel by caller */
 -	*dbm_max = -1;
 +	/* Already found in a previous partial message - nothing more to do. */
@@ -58,12 +59,12 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 +
 +	if (!attr[NL80211_ATTR_WIPHY_BANDS])
 +		return NL_SKIP;
-
+ 
  	nla_for_each_nested(band, attr[NL80211_ATTR_WIPHY_BANDS], bands_remain)
  	{
  		nla_parse(bands, NL80211_BAND_ATTR_MAX, nla_data(band),
  		          nla_len(band), NULL);
-
+ 
 +		if (!bands[NL80211_BAND_ATTR_FREQS])
 +			continue;
 +
@@ -71,13 +72,13 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
  		{
  			nla_parse(freqs, NL80211_FREQUENCY_ATTR_MAX,
  			          nla_data(freq), nla_len(freq), freq_policy);
-
+ 
 +			if (!freqs[NL80211_FREQUENCY_ATTR_FREQ])
 +				continue;
 +
  			ch_cmp = nl80211_freq2channel(nla_get_u32(
  				freqs[NL80211_FREQUENCY_ATTR_FREQ]));
-
+ 
 -			if ((!ch_cur || (ch_cmp == ch_cur)) &&
 +			if ((!st->ch_cur || (ch_cmp == st->ch_cur)) &&
  			    freqs[NL80211_FREQUENCY_ATTR_MAX_TX_POWER])
@@ -89,8 +90,8 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
  				break;
  			}
  		}
-@@ -2605,23 +2619,34 @@
-
+@@ -2605,23 +2619,34 @@ static int nl80211_get_txpwrlist_cb(stru
+ 
  static int nl80211_get_txpwrlist(const char *ifname, char *buf, int *len)
  {
 -	int err, ch_cur;
@@ -100,18 +101,18 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 +	uint32_t features;
 +	int err, dbm_cur, dbm_cnt, flags;
  	struct iwinfo_txpwrlist_entry entry;
-
+ 
 -	if (nl80211_get_channel(ifname, &ch_cur))
 -		ch_cur = 0;
 +	if (!nl80211_get_channel(ifname, &st.ch_cur))
 +		; /* ch_cur set */
-
+ 
 -	/* initialize the value pointer with channel for callback */
 -	dbm_max = ch_cur;
 +	/* Use split dump to include 6 GHz band (kernel omits it otherwise). */
 +	features = nl80211_get_protocol_features(ifname);
 +	flags = (features & NL80211_PROTOCOL_FEATURE_SPLIT_WIPHY_DUMP) ? NLM_F_DUMP : 0;
-
+ 
 -	err = nl80211_request(ifname, NL80211_CMD_GET_WIPHY, 0,
 -	                      nl80211_get_txpwrlist_cb, &dbm_max);
 +	cv = nl80211_msg(ifname, NL80211_CMD_GET_WIPHY, flags);
@@ -121,7 +122,7 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 +	NLA_PUT_FLAG(cv->msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
 +
 +	err = nl80211_send(cv, nl80211_get_txpwrlist_cb, &st);
-
+ 
  	if (!err)
  	{
 +		if (st.dbm_max < 0)
@@ -133,10 +134,10 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
  		     dbm_cur++, dbm_cnt++)
  		{
  			entry.dbm = dbm_cur;
-@@ -2630,9 +2655,8 @@
+@@ -2630,9 +2655,8 @@ static int nl80211_get_txpwrlist(const c
  			memcpy(&buf[dbm_cnt * sizeof(entry)], &entry, sizeof(entry));
  		}
-
+ 
 -		entry.dbm = dbm_max;
 -		entry.mw  = iwinfo_dbm2mw(dbm_max);
 -
@@ -144,13 +145,14 @@ Signed-off-by: OpenWrt Community <openwrt@example.com>
 +		entry.mw  = iwinfo_dbm2mw(st.dbm_max);
  		memcpy(&buf[dbm_cnt * sizeof(entry)], &entry, sizeof(entry));
  		dbm_cnt++;
-
-@@ -2640,6 +2664,9 @@
+ 
+@@ -2640,6 +2664,9 @@ static int nl80211_get_txpwrlist(const c
  		return 0;
  	}
-
+ 
 +nla_put_failure:
 +	nl80211_free(cv);
 +out:
  	return -1;
  }
+ 

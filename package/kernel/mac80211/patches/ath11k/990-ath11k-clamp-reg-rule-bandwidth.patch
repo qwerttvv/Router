@@ -11,7 +11,7 @@ country code and power data intact while preventing malformed host rules.
 
 --- a/drivers/net/wireless/ath/ath11k/reg.c
 +++ b/drivers/net/wireless/ath/ath11k/reg.c
-@@ -396,9 +396,16 @@ ath11k_reg_update_rule(struct ieee80211_
+@@ -402,9 +402,16 @@ ath11k_reg_update_rule(struct ieee80211_
  		       u32 end_freq, u32 bw, u32 ant_gain, u32 reg_pwr,
  		       s8 psd, u32 reg_flags)
  {
