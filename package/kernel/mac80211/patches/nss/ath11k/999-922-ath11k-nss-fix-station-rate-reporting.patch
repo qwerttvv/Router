@@ -14,7 +14,7 @@ which otherwise makes all RX rates look like non-data frames.
 
 --- a/drivers/net/wireless/ath/ath11k/nss.c
 +++ b/drivers/net/wireless/ath/ath11k/nss.c
-@@ -3475,7 +3475,9 @@ void ath11k_nss_update_sta_stats(struct
+@@ -3510,7 +3510,9 @@ void ath11k_nss_update_sta_stats(struct
  	struct sta_info *stainfo;
  	struct ath11k_peer *peer;
  	struct ath11k *ar = arvif->ar;
@@ -24,7 +24,7 @@ which otherwise makes all RX rates look like non-data frames.
  
  	if (!ab->nss.stats_enabled)
  		return;
-@@ -3532,6 +3534,18 @@ void ath11k_nss_update_sta_stats(struct
+@@ -3567,6 +3569,18 @@ void ath11k_nss_update_sta_stats(struct
  		peer->nss.nss_stats->rx_bytes;
  	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES);
  
@@ -43,7 +43,7 @@ which otherwise makes all RX rates look like non-data frames.
  	if (peer->nss.nss_stats->rxrate.legacy || peer->nss.nss_stats->rxrate.nss) {
  		if (peer->nss.nss_stats->rxrate.legacy) {
  			sinfo->rxrate.legacy = peer->nss.nss_stats->rxrate.legacy;
-@@ -3567,7 +3581,10 @@ void ath11k_nss_update_sta_rxrate(struct
+@@ -3602,7 +3616,10 @@ void ath11k_nss_update_sta_rxrate(struct
  	if (!ab->nss.enabled)
  		return;
  

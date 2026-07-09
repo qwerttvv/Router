@@ -58,7 +58,7 @@ Signed-off-by: Aishwarya R <quic_aisr@quicinc.com>
  
  	if (unlikely(!msdu)) {
  		ath11k_warn(ab, "htt tx completion for unknown msdu_id %d\n",
-@@ -893,12 +899,14 @@ void ath11k_dp_tx_completion_handler(str
+@@ -894,12 +900,14 @@ void ath11k_dp_tx_completion_handler(str
  			continue;
  		}
  

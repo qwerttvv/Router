@@ -359,9 +359,16 @@ define KernelPackage/ath11k/config
 
        config ATH11K_THERMAL
                bool "Enable thermal sensors and throttling support"
-			   depends on TARGET_qualcommax
+               depends on TARGET_qualcommax
                depends on PACKAGE_kmod-ath11k
                default y
+
+       config ATH11K_NSS_SUPPORT
+               bool "Enable NSS WiFi Mesh offload"
+               depends on TARGET_qualcommax
+               default y
+               help
+                  Say Y to enable NSS WiFi offload support
 
       config ATH11K_DEBUGFS_STA
                bool "Enable ath11k station statistics"
@@ -378,13 +385,6 @@ define KernelPackage/ath11k/config
                default y
                help
                   Say Y to enable access to the HTT statistics via debugfs.
-
-       config ATH11K_NSS_SUPPORT
-               bool "Enable NSS WiFi Mesh offload"
-               depends on TARGET_qualcommax
-               default y
-               help
-                  Say Y to enable NSS WiFi offload support
 
 endef
 

@@ -106,7 +106,7 @@ Signed-off-by: Yuvasree Sivasankaran <quic_ysivasan@quicinc.com>
  
  	multicast = is_multicast_ether_addr(ra);
  
-@@ -6591,9 +6601,12 @@ int ieee80211_tx_control_port(struct wip
+@@ -6604,9 +6614,12 @@ int ieee80211_tx_control_port(struct wip
  	}
  
  	if (!IS_ERR(sta)) {

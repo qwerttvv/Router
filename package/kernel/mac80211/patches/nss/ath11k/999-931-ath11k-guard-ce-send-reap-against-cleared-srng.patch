@@ -1,0 +1,35 @@
+From: Julius Bairaktaris <julius@bairaktaris.de>
+Subject: [PATCH] wifi: ath11k: guard CE send-completion reap against a cleared srng
+
+When a firmware assert storms the target and recovery fails to rebuild the
+copy-engine rings, ath11k_ce_cleanup_pipes() -> ath11k_ce_poll_send_completed()
+-> ath11k_ce_completed_send_next() runs on a CE source srng that
+hal_srng_clear() zeroed, and ath11k_hal_srng_access_begin() dereferences a NULL
+tp_addr:
+
+  Unable to handle kernel read from unreadable memory at virtual address 0
+  pc : ath11k_hal_srng_access_begin+0xc [ath11k]
+   ath11k_ce_cleanup_pipes
+
+Bail out of the reap when the srng has not been rebuilt, mirroring the existing
+empty-ring handling.
+
+Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+--- a/drivers/net/wireless/ath/ath11k/ce.c
++++ b/drivers/net/wireless/ath/ath11k/ce.c
+@@ -473,6 +473,15 @@ static struct sk_buff *ath11k_ce_complet
+ 
+ 	spin_lock_bh(&srng->lock);
+ 
++	/* During a firmware crash storm ath11k_ce_cleanup_pipes() can call this on a CE srng
++	 * that hal_srng_clear() zeroed and that recovery has not rebuilt;
++	 * ath11k_hal_srng_access_begin() would deref a NULL tp_addr. Bail as for an empty ring.
++	 */
++	if (unlikely(!srng->u.src_ring.tp_addr)) {
++		skb = ERR_PTR(-EIO);
++		goto err_unlock;
++	}
++
+ 	ath11k_hal_srng_access_begin(ab, srng);
+ 
+ 	desc = ath11k_hal_srng_src_reap_next(ab, srng);

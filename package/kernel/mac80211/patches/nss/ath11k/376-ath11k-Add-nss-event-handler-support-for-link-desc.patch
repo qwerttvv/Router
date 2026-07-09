@@ -61,8 +61,8 @@ Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
  {
  	struct ath11k_peer *peer;
 @@ -369,6 +406,10 @@ void ath11k_nss_wifili_event_receive(str
- 		ath11k_dbg(ab, ATH11K_DBG_NSS_MESH, "nss wifili mesh capability response %d\n",
- 			   ab->nss.mesh_nss_offload_enabled);
+ 		if (!ab->nss.mesh_nss_offload_enabled)
+ 			ath11k_info(ab, "NSS firmware reports no mesh capability, 802.11s stays on the host path\n");
  		break;
 +	case NSS_WIFILI_LINK_DESC_INFO_MSG:
 +		ath11k_nss_wifili_link_desc_return(ab,

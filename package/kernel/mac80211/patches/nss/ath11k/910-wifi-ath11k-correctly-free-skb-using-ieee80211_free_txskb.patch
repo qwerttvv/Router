@@ -26,7 +26,7 @@ Signed-off-by: Sarika Sharma <quic_sarishar@quicinc.com>
 -	dev_kfree_skb_any(msdu);
  
  	ar = ab->pdevs[mac_id].ar;
-+	if (ab->stats_disable)
++	if (ab->stats_disable && !(skb_cb->flags & ATH11K_SKB_TX_STATUS))
 +		dev_kfree_skb_any(msdu);
 +	else
 +		ieee80211_free_txskb(ar->hw, msdu);

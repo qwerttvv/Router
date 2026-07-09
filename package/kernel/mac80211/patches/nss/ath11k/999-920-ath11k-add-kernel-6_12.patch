@@ -36,7 +36,7 @@
  			struct htt_ppdu_user_stats* usr_stats)
  {
  	usr_stats->rate.reserved0 = peer->ppdu_stats_delayba.reserved0;
-@@ -6310,7 +6310,7 @@ static void ath11k_dp_rx_mon_dest_proces
+@@ -6312,7 +6312,7 @@ static void ath11k_dp_rx_mon_dest_proces
  	}
  }
  
@@ -111,7 +111,7 @@
  {
  	nss_wifi_mesh_msg_callback_t msg_cb;
  	struct arvif_nss *nss = timer_container_of(nss, timer, mpp_expiry_timer);
-@@ -2532,7 +2533,7 @@ static void ath11k_nss_mesh_vdev_free(st
+@@ -2546,7 +2547,7 @@ static void ath11k_nss_mesh_vdev_free(st
  }
  #endif
  
@@ -120,7 +120,7 @@
  {
  	struct ath11k_base *ab = arvif->ar->ab;
  	nss_tx_status_t status;
-@@ -2564,7 +2565,7 @@ void ath11k_nss_vdev_free(struct ath11k_
+@@ -2578,7 +2579,7 @@ void ath11k_nss_vdev_free(struct ath11k_
  }
  
  #ifdef CPTCFG_ATH11K_NSS_MESH_SUPPORT
@@ -129,7 +129,7 @@
  {
  	struct arvif_nss *nss;
  
-@@ -4551,7 +4552,7 @@ void ath11k_nss_peer_stats_enable(struct
+@@ -4565,7 +4566,7 @@ void ath11k_nss_peer_stats_enable(struct
  			     ATH11K_NSS_STATS_ENABLE);
  }
  
@@ -138,7 +138,7 @@
  {
  	struct ath11k *ar = ab->pdevs[radio_id].ar;
  	struct nss_wifili_pdev_init_msg *pdevmsg;
-@@ -4685,7 +4686,7 @@ dealloc:
+@@ -4699,7 +4700,7 @@ dealloc:
  /* TODO : Check if start, reset and stop messages can be done using single function as
   * body is similar, having it now for clarity */
  
@@ -147,7 +147,7 @@
  {
  	struct nss_wifili_msg *wlmsg = NULL;
  	nss_wifili_msg_callback_t msg_cb;
-@@ -4850,7 +4851,7 @@ free:
+@@ -4864,7 +4865,7 @@ free:
  	return ret;
  }
  

@@ -114,8 +114,8 @@ apply_nss_config() {
 	local board extra_pbuf_core0 memtotal n2h_high_water_core0 n2h_wifi_pool_buf
 
 	write_sysctl dev.nss.clock.auto_scale 0
-	write_sysctl dev.nss.n2hcfg.n2h_queue_limit_core0 256
-	write_sysctl dev.nss.n2hcfg.n2h_queue_limit_core1 256
+	write_sysctl dev.nss.n2hcfg.n2h_queue_limit_core0 2048
+	write_sysctl dev.nss.n2hcfg.n2h_queue_limit_core1 2048
 
 	board=$(board_name)
 	memtotal=$(awk '/MemTotal/{print $2}' /proc/meminfo)

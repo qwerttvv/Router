@@ -1371,11 +1371,11 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  			   msg_type, response, error);
  		break;
 +	case NSS_WIFILI_SEND_MESH_CAPABILITY_INFO:
-+		complete(&ab->nss.complete);
 +		if (response != NSS_CMN_RESPONSE_EMSG)
-+			ab->nss.mesh_nss_offload_enabled = true;
-+		ath11k_dbg(ab, ATH11K_DBG_NSS_MESH, "nss wifili mesh capability response %d\n",
-+			   ab->nss.mesh_nss_offload_enabled);
++			ab->nss.mesh_nss_offload_enabled = msg->msg.cap_info.mesh_enable;
++		complete(&ab->nss.complete);
++		if (!ab->nss.mesh_nss_offload_enabled)
++			ath11k_info(ab, "NSS firmware reports no mesh capability, 802.11s stays on the host path\n");
 +		break;
  	default:
  		ath11k_dbg(ab, ATH11K_DBG_NSS, "unhandled event %d\n", msg_type);
@@ -2473,7 +2473,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	vif = wdev_to_ieee80211_vif(wdev);
  	if (!vif) {
  		dev_kfree_skb_any(skb);
-@@ -906,23 +1941,81 @@ ath11k_nss_ext_vdev_data_receive(struct
+@@ -906,23 +1941,95 @@ ath11k_nss_ext_vdev_data_receive(struct
  	}
  
  	ab = arvif->ar->ab;
@@ -2495,6 +2495,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
 +	struct ath11k_skb_rxcb *rxcb;
 +	struct ath11k_vif *arvif;
 +	struct wireless_dev *wdev = (struct wireless_dev *)dev;
++	int metadata_len;
  
 -	/* log the original skb received from nss */
 -	ath11k_dbg_dump(ab, ATH11K_DBG_DP_RX, "", "dp rx msdu from nss ext : ",
@@ -2518,8 +2519,20 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
 -	ath11k_nss_deliver_rx(arvif->vif, skb, eth_decap, data_offs, napi);
 +	ab = arvif->ar->ab;
 +
-+	wifi_metadata = (struct nss_wifi_vdev_per_packet_metadata *)(skb->head +
-+			NSS_WIFI_VDEV_PER_PACKET_METADATA_OFFSET);
++	metadata_len = NSS_WIFI_VDEV_PER_PACKET_METADATA_OFFSET +
++		       sizeof(struct nss_wifi_vdev_per_packet_metadata);
++
++	/* Special frames from NSS must carry per-packet metadata in headroom. */
++	if (!(metadata_len < skb_headroom(skb))) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
++
++	dma_unmap_single(ab->dev, virt_to_phys(skb->head), metadata_len,
++			 DMA_FROM_DEVICE);
++
++	wifi_metadata = (struct nss_wifi_vdev_per_packet_metadata *)
++			(skb->head + NSS_WIFI_VDEV_PER_PACKET_METADATA_OFFSET);
 +
 +	ath11k_dbg(ab, ATH11K_DBG_NSS_MESH,
 +		   "dp special data from nss on mesh link vap: pkt_type %d\n",
@@ -2537,6 +2550,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
 +		dev_kfree_skb_any(skb);
 +		break;
 +	case NSS_WIFI_VDEV_EXT_DATA_PKT_TYPE_MCBC_RX:
++	case NSS_WIFI_VDEV_MESH_EXT_DATA_PKT_TYPE_RX_MCAST_EXC:
 +		ath11k_dbg_dump(ab, ATH11K_DBG_DP_RX, "",
 +				"mcast packet exception from nss on mesh link vdev: ",
 +				skb->data, skb->len);
@@ -2564,7 +2578,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  
  int ath11k_nss_tx(struct ath11k_vif *arvif, struct sk_buff *skb)
  {
-@@ -930,8 +2023,9 @@ int ath11k_nss_tx(struct ath11k_vif *arv
+@@ -930,8 +2037,9 @@ int ath11k_nss_tx(struct ath11k_vif *arv
  	nss_tx_status_t status;
  	int encap_type = ath11k_dp_tx_get_encap_type(arvif, skb);
  	struct ath11k_soc_dp_stats *soc_stats = &ar->ab->soc_stats;
@@ -2575,7 +2589,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  		ath11k_dbg(ar->ab, ATH11K_DBG_DP_TX, "encap mismatch in nss tx skb encap type %d" \
  			    " vif encap type %d\n", encap_type, arvif->nss.encap);
  		ath11k_dbg_dump(ar->ab, (ATH11K_DBG_NSS | ATH11K_DBG_DP_TX), "", "nss tx msdu: ",
-@@ -948,16 +2042,45 @@ int ath11k_nss_tx(struct ath11k_vif *arv
+@@ -948,16 +2056,45 @@ int ath11k_nss_tx(struct ath11k_vif *arv
  		ath11k_nss_tx_encap_nwifi(skb);
  
  send:
@@ -2629,7 +2643,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  
  	if (status != NSS_TX_SUCCESS) {
  		ath11k_dbg(ar->ab, (ATH11K_DBG_NSS | ATH11K_DBG_DP_TX),
-@@ -1060,6 +2183,9 @@ static int ath11k_nss_vdev_configure(str
+@@ -1060,6 +2197,9 @@ static int ath11k_nss_vdev_configure(str
  
  	vdev_cfg = &vdev_msg->msg.vdev_config;
  
@@ -2639,7 +2653,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	vdev_cfg->radio_ifnum = ar->nss.if_num;
  	vdev_cfg->vdev_id = arvif->vdev_id;
  
-@@ -1098,6 +2224,39 @@ free:
+@@ -1098,6 +2238,39 @@ free:
  	return ret;
  }
  
@@ -2679,7 +2693,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  static void ath11k_nss_vdev_unregister(struct ath11k_vif *arvif)
  {
  	struct ath11k_base *ab = arvif->ar->ab;
-@@ -1109,6 +2268,14 @@ static void ath11k_nss_vdev_unregister(s
+@@ -1109,6 +2282,14 @@ static void ath11k_nss_vdev_unregister(s
  		ath11k_dbg(ab, ATH11K_DBG_NSS, "unregistered nss vdev %d \n",
  			   arvif->nss.if_num);
  		break;
@@ -2694,7 +2708,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	default:
  		ath11k_warn(ab, "unsupported interface type %d for nss vdev unregister\n",
  			    arvif->vif->type);
-@@ -1116,6 +2283,78 @@ static void ath11k_nss_vdev_unregister(s
+@@ -1116,6 +2297,78 @@ static void ath11k_nss_vdev_unregister(s
  	}
  }
  
@@ -2773,7 +2787,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  static int ath11k_nss_vdev_register(struct ath11k_vif *arvif,
  				    struct net_device *netdev)
  {
-@@ -1143,6 +2382,15 @@ static int ath11k_nss_vdev_register(stru
+@@ -1143,6 +2396,15 @@ static int ath11k_nss_vdev_register(stru
  			   arvif->nss.if_num);
  
  		break;
@@ -2789,7 +2803,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	default:
  		ath11k_warn(ab, "unsupported interface type %d for nss vdev register\n",
  			    arvif->vif->type);
-@@ -1152,6 +2400,62 @@ static int ath11k_nss_vdev_register(stru
+@@ -1152,6 +2414,62 @@ static int ath11k_nss_vdev_register(stru
  	return 0;
  }
  
@@ -2852,7 +2866,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  void ath11k_nss_vdev_free(struct ath11k_vif *arvif)
  {
  	struct ath11k_base *ab = arvif->ar->ab;
-@@ -1171,6 +2475,11 @@ void ath11k_nss_vdev_free(struct ath11k_
+@@ -1171,6 +2489,11 @@ void ath11k_nss_vdev_free(struct ath11k_
  				   "nss vdev interface deallocated\n");
  
  		return;
@@ -2864,7 +2878,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	default:
  		ath11k_warn(ab, "unsupported interface type %d for nss vdev dealloc\n",
  			    arvif->vif->type);
-@@ -1178,11 +2487,96 @@ void ath11k_nss_vdev_free(struct ath11k_
+@@ -1178,11 +2501,96 @@ void ath11k_nss_vdev_free(struct ath11k_
  	}
  }
  
@@ -2962,7 +2976,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  
  	/* Initialize completion for verifying NSS message response */
  	init_completion(&arvif->nss.complete);
-@@ -1204,6 +2598,16 @@ static int ath11k_nss_vdev_alloc(struct
+@@ -1204,6 +2612,16 @@ static int ath11k_nss_vdev_alloc(struct
  			   arvif->nss.if_num);
  
  		break;
@@ -2979,7 +2993,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	default:
  		ath11k_warn(ab, "unsupported interface type %d for nss vdev alloc\n",
  			    arvif->vif->type);
-@@ -1241,7 +2645,7 @@ int ath11k_nss_vdev_create(struct ath11k
+@@ -1241,7 +2659,7 @@ int ath11k_nss_vdev_create(struct ath11k
  		return -EINVAL;
  	}
  
@@ -2988,7 +3002,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	if (ret)
  		return ret;
  
-@@ -1257,6 +2661,45 @@ int ath11k_nss_vdev_create(struct ath11k
+@@ -1257,6 +2675,45 @@ int ath11k_nss_vdev_create(struct ath11k
  			goto unregister_vdev;
  
  		break;
@@ -3034,7 +3048,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	default:
  		ret = -ENOTSUPP;
  		goto unregister_vdev;
-@@ -1313,6 +2756,15 @@ int ath11k_nss_vdev_up(struct ath11k_vif
+@@ -1313,6 +2770,15 @@ int ath11k_nss_vdev_up(struct ath11k_vif
  	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
  		return 0;
  
@@ -3050,7 +3064,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	vdev_msg = kzalloc(sizeof(struct nss_wifi_vdev_msg), GFP_ATOMIC);
  	if (!vdev_msg)
  		return -ENOMEM;
-@@ -1360,6 +2812,15 @@ int ath11k_nss_vdev_down(struct ath11k_v
+@@ -1360,6 +2826,15 @@ int ath11k_nss_vdev_down(struct ath11k_v
  	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
  		return 0;
  
@@ -3066,7 +3080,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  	vdev_msg = kzalloc(sizeof(struct nss_wifi_vdev_msg), GFP_ATOMIC);
  	if (!vdev_msg)
  		return -ENOMEM;
-@@ -2737,6 +4198,51 @@ static int ath11k_nss_get_dynamic_interf
+@@ -2737,6 +4212,51 @@ static int ath11k_nss_get_dynamic_interf
  	}
  }
  
@@ -3118,7 +3132,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
  static int ath11k_nss_init(struct ath11k_base *ab)
  {
  	struct nss_wifili_init_msg *wim = NULL;
-@@ -2869,6 +4375,17 @@ static int ath11k_nss_init(struct ath11k
+@@ -2869,6 +4389,17 @@ static int ath11k_nss_init(struct ath11k
  
  	kfree(wlmsg);
  

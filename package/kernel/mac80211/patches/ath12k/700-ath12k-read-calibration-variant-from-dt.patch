@@ -32,7 +32,7 @@ Changes in v2:
 
 --- a/drivers/net/wireless/ath/ath12k/core.c
 +++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -831,6 +831,28 @@ int ath12k_core_check_dt(struct ath12k_b
+@@ -806,6 +806,28 @@ int ath12k_core_check_smbios(struct ath1
  	return 0;
  }
  
@@ -63,9 +63,9 @@ Changes in v2:
  	int ret;
 --- a/drivers/net/wireless/ath/ath12k/qmi.c
 +++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -2911,6 +2911,10 @@ int ath12k_qmi_request_target_cap(struct
+@@ -2907,6 +2907,10 @@ int ath12k_qmi_request_target_cap(struct
  	if (r)
- 		ath12k_dbg(ab, ATH12K_DBG_QMI, "DT bdf variant name not set.\n");
+ 		ath12k_dbg(ab, ATH12K_DBG_QMI, "SMBIOS bdf variant name not set.\n");
  
 +	r = ath12k_core_check_dt(ab);
 +	if (r)
