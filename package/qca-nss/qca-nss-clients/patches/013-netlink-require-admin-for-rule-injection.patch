@@ -1,0 +1,35 @@
+netlink: require CAP_NET_ADMIN for IPv4/IPv6 rule injection
+
+The ipv4/ipv6 rule create/destroy genl ops push connection rules
+straight into the NSS firmware but carried no permission flag, so any
+unprivileged process could inject or tear down offload rules. Mark
+them GENL_ADMIN_PERM. The stats/notification ops stay open.
+
+Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+
+--- a/netlink/nss_nlipv4.c
++++ b/netlink/nss_nlipv4.c
+@@ -81,8 +81,8 @@ static const struct genl_multicast_group
+  * operation table called by the generic netlink layer based on the command
+  */
+ static struct genl_ops nss_nlipv4_ops[] = {
+-	{.cmd = NSS_IPV4_TX_CREATE_RULE_MSG, .doit = nss_nlipv4_ops_create_rule,},	/* rule create */
+-	{.cmd = NSS_IPV4_TX_DESTROY_RULE_MSG, .doit = nss_nlipv4_ops_destroy_rule,},	/* rule destroy */
++	{.cmd = NSS_IPV4_TX_CREATE_RULE_MSG, .doit = nss_nlipv4_ops_create_rule, .flags = GENL_ADMIN_PERM,},	/* rule create */
++	{.cmd = NSS_IPV4_TX_DESTROY_RULE_MSG, .doit = nss_nlipv4_ops_destroy_rule, .flags = GENL_ADMIN_PERM,},	/* rule destroy */
+ };
+ 
+ /*
+--- a/netlink/nss_nlipv6.c
++++ b/netlink/nss_nlipv6.c
+@@ -89,8 +89,8 @@ static struct genl_multicast_group nss_n
+  * operation table called by the generic netlink layer based on the command
+  */
+ static struct genl_ops nss_nlipv6_ops[] = {
+-	{.cmd = NSS_IPV6_TX_CREATE_RULE_MSG, .doit = nss_nlipv6_ops_create_rule,},	/* rule create */
+-	{.cmd = NSS_IPV6_TX_DESTROY_RULE_MSG, .doit = nss_nlipv6_ops_destroy_rule,},	/* rule destroy */
++	{.cmd = NSS_IPV6_TX_CREATE_RULE_MSG, .doit = nss_nlipv6_ops_create_rule, .flags = GENL_ADMIN_PERM,},	/* rule create */
++	{.cmd = NSS_IPV6_TX_DESTROY_RULE_MSG, .doit = nss_nlipv6_ops_destroy_rule, .flags = GENL_ADMIN_PERM,},	/* rule destroy */
+ };
+ 
+ /*
