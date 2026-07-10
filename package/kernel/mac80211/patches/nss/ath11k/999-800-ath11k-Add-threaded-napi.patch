@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath11k/ahb.c
 +++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -387,6 +387,7 @@ static void ath11k_ahb_ext_irq_enable(st
+@@ -390,6 +390,7 @@ static void ath11k_ahb_ext_irq_enable(st
  		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
  
  		if (!irq_grp->napi_enabled) {
@@ -8,7 +8,7 @@
  			napi_enable(&irq_grp->napi);
  			irq_grp->napi_enabled = true;
  		}
-@@ -538,6 +539,7 @@ static int ath11k_ahb_config_ext_irq(str
+@@ -541,6 +542,7 @@ static int ath11k_ahb_config_ext_irq(str
  	int irq;
  	int ret;
  	bool nss_offload;
@@ -16,7 +16,7 @@
  
  	/* TCL Completion, REO Dest, ERR, Exception and h2rxdma rings are offloaded
  	 * to nss when its enabled, hence don't enable these interrupts
-@@ -555,6 +557,9 @@ static int ath11k_ahb_config_ext_irq(str
+@@ -558,6 +560,9 @@ static int ath11k_ahb_config_ext_irq(str
  		if (!irq_grp->napi_ndev)
  			return -ENOMEM;
  
@@ -26,7 +26,7 @@
  		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
  			       ath11k_ahb_ext_grp_napi_poll);
  
-@@ -620,6 +625,8 @@ static int ath11k_ahb_config_ext_irq(str
+@@ -623,6 +628,8 @@ static int ath11k_ahb_config_ext_irq(str
  		}
  	}
  

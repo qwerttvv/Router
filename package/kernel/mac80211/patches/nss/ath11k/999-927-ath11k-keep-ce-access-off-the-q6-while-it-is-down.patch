@@ -36,7 +36,7 @@ Two paths reach CE registers inside that window:
 Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
 --- a/drivers/net/wireless/ath/ath11k/ahb.c
 +++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -371,6 +371,13 @@ static void ath11k_ahb_ce_irqs_disable(s
+@@ -374,6 +374,13 @@ static void ath11k_ahb_ce_irqs_disable(s
  	}
  }
  
@@ -50,7 +50,7 @@ Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
  static int ath11k_ahb_start(struct ath11k_base *ab)
  {
  	ath11k_ahb_ce_irqs_enable(ab);
-@@ -478,6 +485,10 @@ static void ath11k_ahb_free_irq(struct a
+@@ -481,6 +488,10 @@ static void ath11k_ahb_free_irq(struct a
  static void ath11k_ahb_ce_tasklet(struct tasklet_struct *t)
  {
  	struct ath11k_ce_pipe *ce_pipe = from_tasklet(ce_pipe, t, intr_tq);
@@ -61,7 +61,7 @@ Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
  
  	ath11k_ce_per_engine_service(ce_pipe->ab, ce_pipe->pipe_num);
  
-@@ -487,6 +498,15 @@ static void ath11k_ahb_ce_tasklet(struct
+@@ -490,6 +501,15 @@ static void ath11k_ahb_ce_tasklet(struct
  static irqreturn_t ath11k_ahb_ce_interrupt_handler(int irq, void *arg)
  {
  	struct ath11k_ce_pipe *ce_pipe = arg;
@@ -77,7 +77,7 @@ Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
  
  	/* last interrupt received for this CE */
  	ce_pipe->timestamp = jiffies;
-@@ -808,6 +828,8 @@ static const struct ath11k_hif_ops ath11
+@@ -811,6 +831,8 @@ static const struct ath11k_hif_ops ath11
  	.map_service_to_pipe = ath11k_ahb_map_service_to_pipe,
  	.power_down = ath11k_ahb_power_down,
  	.power_up = ath11k_ahb_power_up,

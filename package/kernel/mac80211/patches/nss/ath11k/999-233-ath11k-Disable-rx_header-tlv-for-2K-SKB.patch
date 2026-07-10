@@ -547,7 +547,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  		tlv_filter.rx_filter = HTT_RX_MON_FILTER_TLV_FLAGS_MON_BUF_RING;
 --- a/drivers/net/wireless/ath/ath11k/hw.c
 +++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -260,7 +260,11 @@ static u8 ath11k_hw_ipq8074_rx_desc_get_
+@@ -271,7 +271,11 @@ static u8 ath11k_hw_ipq8074_rx_desc_get_
  
  static u8 *ath11k_hw_ipq8074_rx_desc_get_hdr_status(struct hal_rx_desc *desc)
  {
@@ -559,7 +559,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  }
  
  static bool ath11k_hw_ipq8074_rx_desc_encrypt_valid(struct hal_rx_desc *desc)
-@@ -405,26 +409,132 @@ static void ath11k_hw_ipq8074_rx_desc_se
+@@ -416,26 +420,132 @@ static void ath11k_hw_ipq8074_rx_desc_se
  	desc->u.ipq8074.msdu_start.info1 = __cpu_to_le32(info);
  }
  
@@ -698,7 +698,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  }
  
  static bool ath11k_hw_qcn9074_rx_desc_get_first_msdu(struct hal_rx_desc *desc)
-@@ -447,7 +557,11 @@ static u8 ath11k_hw_qcn9074_rx_desc_get_
+@@ -458,7 +568,11 @@ static u8 ath11k_hw_qcn9074_rx_desc_get_
  
  static u8 *ath11k_hw_qcn9074_rx_desc_get_hdr_status(struct hal_rx_desc *desc)
  {
@@ -710,7 +710,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  }
  
  static bool ath11k_hw_qcn9074_rx_desc_encrypt_valid(struct hal_rx_desc *desc)
-@@ -634,7 +748,11 @@ static u8 ath11k_hw_wcn6855_rx_desc_get_
+@@ -645,7 +759,11 @@ static u8 ath11k_hw_wcn6855_rx_desc_get_
  
  static u8 *ath11k_hw_wcn6855_rx_desc_get_hdr_status(struct hal_rx_desc *desc)
  {
@@ -722,7 +722,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  }
  
  static bool ath11k_hw_wcn6855_rx_desc_encrypt_valid(struct hal_rx_desc *desc)
-@@ -784,6 +902,96 @@ static u8 *ath11k_hw_wcn6855_rx_desc_mpd
+@@ -795,6 +913,96 @@ static u8 *ath11k_hw_wcn6855_rx_desc_mpd
  {
  	return desc->u.wcn6855.mpdu_start.addr2;
  }
@@ -819,7 +819,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  
  static void ath11k_hw_wcn6855_reo_setup(struct ath11k_base *ab)
  {
-@@ -989,6 +1197,13 @@ const struct ath11k_hw_ops ipq8074_ops =
+@@ -1000,6 +1208,13 @@ const struct ath11k_hw_ops ipq8074_ops =
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq8074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
  	.rx_desc_get_hal_mpdu_len = ath11k_hw_ipq8074_rx_desc_get_hal_mpdu_len,
@@ -833,7 +833,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  };
  
  const struct ath11k_hw_ops ipq6018_ops = {
-@@ -1031,6 +1246,13 @@ const struct ath11k_hw_ops ipq6018_ops =
+@@ -1083,6 +1298,13 @@ const struct ath11k_hw_ops ipq9574_ops =
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq8074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
  	.rx_desc_get_hal_mpdu_len = ath11k_hw_ipq8074_rx_desc_get_hal_mpdu_len,
@@ -847,7 +847,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  };
  
  const struct ath11k_hw_ops qca6390_ops = {
-@@ -1073,6 +1295,13 @@ const struct ath11k_hw_ops qca6390_ops =
+@@ -1124,6 +1346,13 @@ const struct ath11k_hw_ops qca6390_ops =
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq8074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
  	.rx_desc_get_hal_mpdu_len = ath11k_hw_ipq8074_rx_desc_get_hal_mpdu_len,
@@ -861,7 +861,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  };
  
  const struct ath11k_hw_ops qcn9074_ops = {
-@@ -1111,10 +1340,17 @@ const struct ath11k_hw_ops qcn9074_ops =
+@@ -1162,10 +1391,17 @@ const struct ath11k_hw_ops qcn9074_ops =
  	.rx_desc_get_msdu_payload = ath11k_hw_qcn9074_rx_desc_get_msdu_payload,
  	.reo_setup = ath11k_hw_ipq8074_reo_setup,
  	.mpdu_info_get_peerid = ath11k_hw_qcn9074_mpdu_info_get_peerid,
@@ -930,7 +930,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
 +					  enum hal_encrypt_type enctype);
  };
  
- extern const struct ath11k_hw_ops ipq8074_ops;
+ extern const struct ath11k_hw_ops ipq9574_ops;
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
 @@ -6671,6 +6671,7 @@ static int ath11k_mac_config_mon_status_

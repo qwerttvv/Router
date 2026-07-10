@@ -29,7 +29,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  
  #define	ATH11K_QCN6122_USERPD_2		1
  #define	ATH11K_QCN6122_USERPD_3		2
-@@ -433,6 +435,17 @@ struct ath11k_vif_iter {
+@@ -434,6 +436,17 @@ struct ath11k_vif_iter {
  	struct ath11k_vif *arvif;
  };
  
@@ -47,7 +47,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  struct ath11k_rx_peer_stats {
  	u64 num_msdu;
  	u64 num_mpdu_fcs_ok;
-@@ -444,10 +457,6 @@ struct ath11k_rx_peer_stats {
+@@ -445,10 +458,6 @@ struct ath11k_rx_peer_stats {
  	u64 non_ampdu_msdu_count;
  	u64 stbc_count;
  	u64 beamformed_count;
@@ -58,7 +58,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  	u64 coding_count[HAL_RX_SU_MU_CODING_MAX];
  	u64 tid_count[IEEE80211_NUM_TIDS + 1];
  	u64 pream_cnt[HAL_RX_PREAMBLE_MAX];
-@@ -455,6 +464,8 @@ struct ath11k_rx_peer_stats {
+@@ -456,6 +465,8 @@ struct ath11k_rx_peer_stats {
  	u64 rx_duration;
  	u64 dcm_count;
  	u64 ru_alloc_cnt[HAL_RX_RU_ALLOC_TYPE_MAX];
@@ -584,7 +584,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  	u16 tcp_ack_msdu_count;
 --- a/drivers/net/wireless/ath/ath11k/hw.c
 +++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -900,6 +900,17 @@ static u32 ath11k_hw_wcn6750_get_tcl_rin
+@@ -911,6 +911,17 @@ static u32 ath11k_hw_wcn6750_get_tcl_rin
  	return skb_get_hash(skb);
  }
  
@@ -602,7 +602,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  const struct ath11k_hw_ops ipq8074_ops = {
  	.get_hw_mac_from_pdev_id = ath11k_hw_ipq8074_mac_from_pdev_id,
  	.wmi_init_config = ath11k_init_wmi_config_ipq8074,
-@@ -938,6 +949,7 @@ const struct ath11k_hw_ops ipq8074_ops =
+@@ -949,6 +960,7 @@ const struct ath11k_hw_ops ipq8074_ops =
  	.rx_desc_mac_addr2_valid = ath11k_hw_ipq8074_rx_desc_mac_addr2_valid,
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq8074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
@@ -610,7 +610,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  };
  
  const struct ath11k_hw_ops ipq6018_ops = {
-@@ -978,6 +990,7 @@ const struct ath11k_hw_ops ipq6018_ops =
+@@ -1029,6 +1041,7 @@ const struct ath11k_hw_ops ipq9574_ops =
  	.rx_desc_mac_addr2_valid = ath11k_hw_ipq8074_rx_desc_mac_addr2_valid,
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq8074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
@@ -618,7 +618,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  };
  
  const struct ath11k_hw_ops qca6390_ops = {
-@@ -1018,6 +1031,7 @@ const struct ath11k_hw_ops qca6390_ops =
+@@ -1069,6 +1082,7 @@ const struct ath11k_hw_ops qca6390_ops =
  	.rx_desc_mac_addr2_valid = ath11k_hw_ipq8074_rx_desc_mac_addr2_valid,
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq8074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
@@ -626,7 +626,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  };
  
  const struct ath11k_hw_ops qcn9074_ops = {
-@@ -1058,6 +1072,7 @@ const struct ath11k_hw_ops qcn9074_ops =
+@@ -1109,6 +1123,7 @@ const struct ath11k_hw_ops qcn9074_ops =
  	.rx_desc_mac_addr2_valid = ath11k_hw_ipq9074_rx_desc_mac_addr2_valid,
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq9074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
@@ -634,7 +634,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  };
  
  const struct ath11k_hw_ops wcn6855_ops = {
-@@ -1098,6 +1113,7 @@ const struct ath11k_hw_ops wcn6855_ops =
+@@ -1149,6 +1164,7 @@ const struct ath11k_hw_ops wcn6855_ops =
  	.rx_desc_mac_addr2_valid = ath11k_hw_wcn6855_rx_desc_mac_addr2_valid,
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_wcn6855_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
@@ -642,7 +642,7 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
  };
  
  const struct ath11k_hw_ops wcn6750_ops = {
-@@ -1179,6 +1195,7 @@ const struct ath11k_hw_ops ipq5018_ops =
+@@ -1230,6 +1246,7 @@ const struct ath11k_hw_ops ipq5018_ops =
  	.rx_desc_mac_addr2_valid = ath11k_hw_ipq9074_rx_desc_mac_addr2_valid,
  	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq9074_rx_desc_mpdu_start_addr2,
  	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
@@ -659,4 +659,4 @@ Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
 +	u32 (*rx_desc_get_hal_mpdu_len)(struct hal_rx_mpdu_info *mpdu_info);
  };
  
- extern const struct ath11k_hw_ops ipq8074_ops;
+ extern const struct ath11k_hw_ops ipq9574_ops;

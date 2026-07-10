@@ -40,7 +40,7 @@ Signed-off-by: Ziyang Huang <hzyitc@outlook.com>
  static int
  qca8k_setup_of_pws_reg(struct qca8k_priv *priv)
  {
-@@ -1957,15 +1939,9 @@ qca8k_setup(struct dsa_switch *ds)
+@@ -1958,15 +1940,9 @@ qca8k_setup(struct dsa_switch *ds)
  {
  	struct qca8k_priv *priv = ds->priv;
  	struct dsa_port *dp;
@@ -57,11 +57,7 @@ Signed-off-by: Ziyang Huang <hzyitc@outlook.com>
  	/* Parse CPU port config to be later used in phy_link mac_config */
  	ret = qca8k_parse_port_config(priv);
  	if (ret)
-<<<<<<<< HEAD:target/linux/qualcommax/patches-6.18/0754-net-dsa-qca8k-use-correct-CPU-port-when-having-multi.patch
-@@ -2050,17 +2026,12 @@ qca8k_setup(struct dsa_switch *ds)
-========
 @@ -2045,17 +2021,12 @@ qca8k_setup(struct dsa_switch *ds)
->>>>>>>> master:target/linux/generic/pending-6.12/711-07-net-dsa-qca8k-use-correct-CPU-port-when-having-multi.patch
  	if (ret)
  		return ret;
  

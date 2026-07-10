@@ -8,7 +8,7 @@
  
  static struct ath11k_hw_params ath11k_hw_params[] = {
  	{
-@@ -744,7 +745,7 @@ static struct ath11k_hw_params ath11k_hw
+@@ -829,7 +830,7 @@ static struct ath11k_hw_params ath11k_hw
  		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
  		.smp2p_wow_exit = false,
  		.support_fw_mac_sequence = false,
@@ -17,7 +17,7 @@
  		.support_dual_stations = false,
  		.pdev_suspend = false,
  	},
-@@ -988,8 +989,23 @@ static struct ath11k_hw_params ath11k_hw
+@@ -1073,8 +1074,23 @@ static struct ath11k_hw_params ath11k_hw
  		.support_off_channel_tx = false,
  		.tcl_ring_retry = true,
  		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
@@ -44,7 +44,7 @@
  static const struct dmi_system_id ath11k_pm_quirk_table[] = {
 --- a/drivers/net/wireless/ath/ath11k/hw.c
 +++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -1043,6 +1043,7 @@ static void ath11k_hw_wcn6855_reo_setup(
+@@ -1054,6 +1054,7 @@ static void ath11k_hw_wcn6855_reo_setup(
  
  static void ath11k_hw_ipq5018_reo_setup(struct ath11k_base *ab)
  {
@@ -52,7 +52,7 @@
  	u32 reo_base = HAL_SEQ_WCSS_UMAC_REO_REG;
  	u32 val;
  
-@@ -1056,11 +1057,14 @@ static void ath11k_hw_ipq5018_reo_setup(
+@@ -1067,11 +1068,14 @@ static void ath11k_hw_ipq5018_reo_setup(
  		HAL_HASH_ROUTING_RING_SW3 << 24 |
  		HAL_HASH_ROUTING_RING_SW4 << 28;
  
@@ -68,7 +68,7 @@
  		FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_LIST_ENABLE, 1) |
  		FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_FLUSH_ENABLE, 1);
  	ath11k_hif_write32(ab, reo_base + HAL_REO1_GEN_ENABLE, val);
-@@ -1074,6 +1078,10 @@ static void ath11k_hw_ipq5018_reo_setup(
+@@ -1085,6 +1089,10 @@ static void ath11k_hw_ipq5018_reo_setup(
  	ath11k_hif_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_3(ab),
  			   HAL_DEFAULT_REO_TIMEOUT_USEC);
  
