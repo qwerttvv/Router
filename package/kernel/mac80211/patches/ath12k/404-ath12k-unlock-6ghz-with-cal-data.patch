@@ -21,7 +21,7 @@ Signed-off-by: Percival <perceivalpercy@gmail.com>
 ---
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -13227,6 +13227,23 @@ static int ath12k_mac_setup_channels_rat
+@@ -13228,6 +13228,23 @@ static int ath12k_mac_setup_channels_rat
  		}
  	}
  

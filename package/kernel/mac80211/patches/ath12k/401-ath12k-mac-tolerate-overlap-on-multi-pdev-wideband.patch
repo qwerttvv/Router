@@ -30,7 +30,7 @@ Signed-off-by: Percival <perceivalpercy@gmail.com>
 ---
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -13143,12 +13143,19 @@ static int ath12k_mac_update_band(struct
+@@ -13144,12 +13144,19 @@ static int ath12k_mac_update_band(struct
  	for (i = 0; i < new_band->n_channels; i++) {
  		if (new_band->channels[i].flags & IEEE80211_CHAN_DISABLED)
  			continue;
