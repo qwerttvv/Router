@@ -1,5 +1,45 @@
 DTS_DIR := $(DTS_DIR)/qcom
 
+define Build/be7000-append-ubi
+	rm -f $@.tmp $@.ubinize.cfg
+	{ \
+		rootsize="$$(stat -c%s "$(IMAGE_ROOTFS)")"; \
+		rootsize="$$(( (($$rootsize + 1023) / 1024) * 1024 ))"; \
+		echo "[kernel]"; \
+		echo "mode=ubi"; \
+		echo "vol_id=0"; \
+		echo "vol_type=dynamic"; \
+		echo "vol_name=kernel"; \
+		echo "image=$(IMAGE_KERNEL)"; \
+		echo "[ubi_rootfs]"; \
+		echo "mode=ubi"; \
+		echo "vol_id=1"; \
+		echo "vol_type=dynamic"; \
+		echo "vol_name=ubi_rootfs"; \
+		echo "image=$(IMAGE_ROOTFS)"; \
+		echo "vol_size=$$rootsize"; \
+		echo "[rootfs_data]"; \
+		echo "mode=ubi"; \
+		echo "vol_id=2"; \
+		echo "vol_type=dynamic"; \
+		echo "vol_name=rootfs_data"; \
+		echo "vol_size=1MiB"; \
+		echo "vol_flags=autoresize"; \
+	} > $@.ubinize.cfg
+	$(STAGING_DIR_HOST)/bin/ubinize \
+		$(if $(SOURCE_DATE_EPOCH),-Q $(SOURCE_DATE_EPOCH)) \
+		-o $@.tmp \
+		-p $(BLOCKSIZE:%k=%KiB) -m $(PAGESIZE) \
+		$(if $(SUBPAGESIZE),-s $(SUBPAGESIZE)) \
+		$(if $(VID_HDR_OFFSET),-O $(VID_HDR_OFFSET)) \
+		$(UBINIZE_OPTS) \
+		$@.ubinize.cfg
+	cat $@.tmp >> $@
+	rm -f $@.tmp $@.ubinize.cfg
+	$(if $(and $(IMAGE_SIZE),$(NAND_SIZE)),\
+		$(call Build/check-size,$(UBI_NAND_SIZE_LIMIT)))
+endef
+
 define Device/8devices_kiwi-dvk
 	$(call Device/FitImage)
 	$(call Device/EmmcImage)
@@ -19,14 +59,15 @@ define Device/xiaomi_be7000
 	$(call Device/UbiFit)
 	DEVICE_VENDOR := Xiaomi
 	DEVICE_MODEL := BE7000
-	DEVICE_DTS_CONFIG := config@be7000
+	DEVICE_DTS_CONFIG := config@al02-c6
 	BLOCKSIZE := 128k
 	PAGESIZE := 2048
 	SOC := ipq9574
 	KERNEL_SIZE := 6096k
 	IMAGE_SIZE := 32116k
-	DEVICE_PACKAGES := kmod-ath12k
-	IMAGE/sysupgrade.bin := append-kernel | pad-to 64k | append-rootfs | pad-rootfs | check-size | append-metadata
+	DEVICE_PACKAGES := ath11k-firmware-ipq9574 kmod-ath12k ath12k-firmware-qcn9274 kmod-qrtr-smd kmod-usb-storage \
+		be7000-nfc-i2ctransfer luci-app-be7000-nfc
+	IMAGE/factory.ubi := be7000-append-ubi
 endef
 TARGET_DEVICES += xiaomi_be7000
 
@@ -43,7 +84,7 @@ define Device/askey_sbe1v1k
 	KERNEL_LOADADDR := 0x42080000
 	SOC := ipq9570
 	DEVICE_PACKAGES := ath12k-firmware-qcn9274 f2fsck ipq-wifi-askey_sbe1v1k kmod-ath12k \
-		kmod-hwmon-pwmfan kmod-phy-realtek mkf2fs rtl8261n-firmware
+		kmod-hwmon-pwmfan kmod-phy-realtek mkf2fs rtl826x-firmware
 endef
 TARGET_DEVICES += askey_sbe1v1k
 

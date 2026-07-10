@@ -28,7 +28,7 @@ define Device/ubnt_u7-pro-xgs
 	DEVICE_PACKAGES := e2fsprogs f2fsck fitblk mkf2fs \
 		kmod-ath12k ath12k-firmware-qcn9274 \
 		ipq-wifi-ubnt_u7-pro-xgs kmod-leds-pwm \
-		kmod-phy-realtek rtl8261n-firmware
+		kmod-phy-realtek rtl826x-firmware
 	KERNEL := kernel-bin | lzma
 	KERNEL_INITRAMFS := kernel-bin | lzma | \
 		fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k

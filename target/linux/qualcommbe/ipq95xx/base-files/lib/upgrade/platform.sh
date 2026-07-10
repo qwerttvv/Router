@@ -16,7 +16,14 @@ platform_do_upgrade() {
 		emmc_do_upgrade "$1"
 		;;
 	xiaomi,be7000)
-		nand_do_upgrade "$1"
+		sync
+		be7000_do_upgrade "$1" && {
+			echo "sysupgrade successful"
+			umount -a
+			reboot -f
+		}
+		echo "sysupgrade failed"
+		return 1
 		;;
 	askey,sbe1v1k)
 		CI_KERNPART="0:HLOS"
