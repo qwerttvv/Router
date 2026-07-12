@@ -1086,19 +1086,29 @@ start_crontab() {
 
 	build_time() {
 		local w="$1"
-		local h="$2"
-		local expr="0 $h * * $w"
-		[ "$w" = "7" ] && expr="0 $h * * *"
+		local t="$2"
+		local h m
+		if echo "$t" | grep -q ':'; then
+			h="${t%%:*}"
+			m="${t##*:}"
+		else
+			h="$t"
+			m=0
+		fi
+		h=$(printf '%d' "$h")
+		m=$(printf '%d' "$m")
+		local expr="$m $h * * $w"
+		[ "$w" = "7" ] && expr="$m $h * * *"
 		echo "$expr"
 	}
 
 	add_service_cron() {
 		local week="$1"
-		local hour="$2"
+		local time="$2"
 		local action="$3"
 		local logmsg="$4"
 		[ -z "$week" ] && return
-		local svr_t=$(build_time "$week" "$hour")
+		local svr_t=$(build_time "$week" "$time")
 		if [ "$week" = "8" ]; then
 			update_loop=1
 		else
@@ -1115,12 +1125,11 @@ start_crontab() {
 	add_service_cron "$(config_t_get global_delay restart_week_mode)" "$(config_t_get global_delay restart_time_mode)" "restart" "配置定时任务：自动重启服务。"
 
 	# ===== rule update =====
-	local autoupdate=$(config_t_get global_rules auto_update)
-	local weekupdate=$(config_t_get global_rules week_update)
-	local dayupdate=$(config_t_get global_rules time_update)
-	if [ "$autoupdate" = "1" ]; then
-		local rule_t=$(build_time "$weekupdate" "$dayupdate")
-		if [ "$weekupdate" = "8" ]; then
+	local rules_update_week_mode=$(config_t_get global_rules update_week_mode)
+	local rules_update_time_mode=$(config_t_get global_rules update_time_mode)
+	if [ -n "$rules_update_week_mode" ]; then
+		local rule_t=$(build_time "$rules_update_week_mode" "$rules_update_time_mode")
+		if [ "$rules_update_week_mode" = "8" ]; then
 			update_loop=1
 		else
 			echo "$rule_t lua $APP_PATH/rule_update.lua log all cron > /dev/null 2>&1 &" >>/etc/crontabs/root
@@ -1131,25 +1140,25 @@ start_crontab() {
 	# ===== subscribe =====
 	local TMP_SUB_PATH=$TMP_PATH/sub_crontabs
 	mkdir -p "$TMP_SUB_PATH"
-	local item cfgid remark week_update time_update
+	local item cfgid remark sub_update_week_mode sub_update_time_mode
 	for item in $(uci show ${CONFIG} | grep "=subscribe_list" | cut -d '.' -sf 2 | cut -d '=' -sf 1); do
-		if [ "$(config_n_get "$item" auto_update 0)" = "1" ]; then
+		sub_update_week_mode=$(config_n_get $item update_week_mode)
+		if [ -n "$sub_update_week_mode" ]; then
 			cfgid=$(uci show ${CONFIG}.$item | head -n 1 | cut -d '.' -sf 2 | cut -d '=' -sf 1)
 			remark=$(config_n_get "$item" remark)
-			week_update=$(config_n_get "$item" week_update)
-			time_update=$(config_n_get "$item" time_update)
-			echo "$cfgid" >> "$TMP_SUB_PATH/${week_update}_${time_update}"
+			sub_update_time_mode=$(config_n_get $item update_time_mode)
+			echo "$cfgid" >> "$TMP_SUB_PATH/${sub_update_week_mode}_${sub_update_time_mode}"
 			echolog "配置定时任务：自动更新【$remark】订阅。"
 		fi
 	done
 	if [ -d "$TMP_SUB_PATH" ]; then
 		local name cfgids
 		for name in $(ls "$TMP_SUB_PATH"); do
-			week_update=${name%_*}
-			time_update=${name#*_}
+			sub_update_week_mode=${name%_*}
+			sub_update_time_mode=${name#*_}
 			cfgids=$(tr '\n' ',' < "$TMP_SUB_PATH/$name" | sed 's/,$//')
-			local sub_t=$(build_time "$week_update" "$time_update")
-			if [ "$week_update" = "8" ]; then
+			local sub_t=$(build_time "$sub_update_week_mode" "$sub_update_time_mode")
+			if [ "$sub_update_week_mode" = "8" ]; then
 				update_loop=1
 			else
 				echo "$sub_t lua $APP_PATH/subscribe.lua start $cfgids cron > /dev/null 2>&1 &" >>/etc/crontabs/root
