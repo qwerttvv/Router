@@ -63,7 +63,7 @@ Changes in v2:
  	int ret;
 --- a/drivers/net/wireless/ath/ath12k/qmi.c
 +++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -3016,6 +3016,10 @@ int ath12k_qmi_request_target_cap(struct
+@@ -2903,6 +2903,10 @@ int ath12k_qmi_request_target_cap(struct
  	if (r)
  		ath12k_dbg(ab, ATH12K_DBG_QMI, "SMBIOS bdf variant name not set.\n");
  
