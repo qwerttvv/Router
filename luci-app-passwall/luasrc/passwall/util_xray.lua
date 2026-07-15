@@ -820,7 +820,8 @@ function gen_config_server(node)
 				serverNames = node.reality_serverNames or {},
 				privateKey = node.reality_private_key,
 				shortIds = node.reality_shortId or "",
-				mldsa65Seed = (node.use_mldsa65Seed == "1") and node.reality_mldsa65Seed or nil
+				mldsa65Seed = (node.use_mldsa65Seed == "1") and node.reality_mldsa65Seed or nil,
+				minClientVer = "1.0.0"
 			} or nil
 		end
 	end
