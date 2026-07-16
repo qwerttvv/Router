@@ -12,10 +12,10 @@ index f4548ac..9bf0209 100644
  config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy
  	bool "Include Haproxy"
 diff --git a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-index ebbf339..40a70e9 100644
+index 7a01213..4b4a0f7 100644
 --- a/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
 +++ b/luci-app-passwall/luasrc/model/cbi/passwall/client/global.lua
-@@ -445,6 +445,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
+@@ -447,6 +447,12 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9)")
  o:value("149.112.112.112", "149.112.112.112 (Quad9)")
  o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
  o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
@@ -28,7 +28,7 @@ index ebbf339..40a70e9 100644
  o:depends({dns_mode = "dns2socks"})
  o:depends({dns_mode = "tcp"})
  o:depends({dns_mode = "udp"})
-@@ -542,7 +548,7 @@ if api.is_finded("smartdns") then
+@@ -544,7 +550,7 @@ if api.is_finded("smartdns") then
  end
  
  o = s:taboption("DNS", Flag, "dns_redirect", translate("DNS Redirect"), translate("Force special DNS server to need proxy devices."))
