@@ -36,10 +36,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: Initialization environment
-        run: |
-          sudo timedatectl set-timezone "$TZ"
-
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@main
         with:
@@ -239,7 +235,6 @@ jobs:
       - name: Initialization environment
         run: |
           cd && mkdir -p packages && cd packages
-          sudo timedatectl set-timezone "$TZ"
 
       - name: Check ${{ matrix.pakcages }}
         id: check
