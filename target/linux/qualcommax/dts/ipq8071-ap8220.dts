@@ -189,6 +189,29 @@
 	};
 };
 
+&blsp1_uart5 {
+	status = "okay";
+};
+
+&prng {
+	status = "okay";
+};
+
+&qpic_bam {
+	status = "okay";
+};
+
+&qusb_phy_0 {
+	status = "okay";
+};
+
+&ssphy_0 {
+	status = "okay";
+};
+
+&usb_0 {
+	status = "okay";
+};
 &qpic_nand {
 	status = "okay";
 

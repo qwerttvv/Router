@@ -48,6 +48,77 @@
 	};
 };
 
+&tlmm {
+	button_pins: button-state {
+		pins = "gpio54", "gpio67";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	mdio_pins: mdio-state {
+		mdc-pins {
+			pins = "gpio68";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+
+		mdio-pins {
+			pins = "gpio69";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	/*
+	 * QCA4024 is not currently supported, keep for documentation purposes
+	 *spi_3_pins: spi-3-state {
+	 *	spi-pins {
+	 *		pins = "gpio50", "gpio52", "gpio53";
+	 *		function = "blsp3_spi";
+	 *		drive-strength = <8>;
+	 *		bias-disable;
+	 *	};
+	 *
+	 *	cs-pins {
+	 *		pins = "gpio22";
+	 *		function = "blsp3_spi2";
+	 *		drive-strength = <8>;
+	 *		bias-disable;
+	 *	};
+	 *};
+	 *
+	 *quartz_pins: quartz-state {
+	 *	interrupt-pins {
+	 *		pins = "gpio48";
+	 *		function = "gpio";
+	 *		bias-disable;
+	 *		input;
+	 *	};
+	 *
+	 *	reset-pins {
+	 *		pins = "gpio21";
+	 *		function = "gpio";
+	 *		bias-disable;
+	 *		output-high;
+	 *	};
+	 *};
+	 */
+};
+
+&blsp1_uart5 {
+	status = "okay";
+};
+
+&prng {
+	status = "okay";
+};
+
+&qpic_bam {
+	status = "okay";
+};
 &qpic_nand {
 	status = "okay";
 

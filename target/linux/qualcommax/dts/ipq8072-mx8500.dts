@@ -58,6 +58,46 @@
 	};
 };
 
+&tlmm {
+	button_pins: button-state {
+		pins = "gpio64", "gpio67";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	mdio_pins: mdio-state {
+		mdc-pins {
+			pins = "gpio68";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+
+		mdio-pins {
+			pins = "gpio69";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+};
+
+&blsp1_uart3 {
+	status = "okay";
+};
+
+&blsp1_uart5 {
+	status = "okay";
+};
+
+&prng {
+	status = "okay";
+};
+
+&qpic_bam {
+	status = "okay";
+};
 &qpic_nand {
 	status = "okay";
 

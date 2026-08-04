@@ -385,6 +385,23 @@ define Device/airpi_ap3000m
 endef
 TARGET_DEVICES += airpi_ap3000m
 
+define Device/airtel_aap4221zy
+  DEVICE_VENDOR := Airtel
+  DEVICE_MODEL := AirFiber AAP4221ZY
+  DEVICE_ALT0_VENDOR := Zyxel
+  DEVICE_ALT0_MODEL := EX3310-T0
+  DEVICE_DTS := mt7981b-airtel-aap4221zy
+  DEVICE_DTS_DIR := ../dts
+  DEVICE_PACKAGES := kmod-ledtrig-network kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 256k
+  PAGESIZE := 4096
+  IMAGE_SIZE := 131072k
+  KERNEL_IN_UBI := 1
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+endef
+TARGET_DEVICES += airtel_aap4221zy
+
 define Device/arcadyan_mozart
   DEVICE_VENDOR := Arcadyan
   DEVICE_MODEL := Mozart
@@ -1072,9 +1089,25 @@ define Device/comfast_cf-wr632ax
 endef
 TARGET_DEVICES += comfast_cf-wr632ax
 
+define Device/comfast_cf-wr632ax-ubi
+  DEVICE_VARIANT := (UBI)
+  DEVICE_DTS := mt7981b-comfast-cf-wr632ax-ubi
+  ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ubi-ddr3-1866
+  ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot comfast_cf-wr632ax-ubi
+  $(call Device/comfast_cf-wr632ax-ubootmod-common)
+endef
+TARGET_DEVICES += comfast_cf-wr632ax-ubi
+
 define Device/comfast_cf-wr632ax-ubootmod
   DEVICE_VARIANT := (OpenWrt U-Boot layout)
   DEVICE_DTS := mt7981b-comfast-cf-wr632ax-ubootmod
+  ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3-1866
+  ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot comfast_cf-wr632ax
+  $(call Device/comfast_cf-wr632ax-ubootmod-common)
+endef
+TARGET_DEVICES += comfast_cf-wr632ax-ubootmod
+
+define Device/comfast_cf-wr632ax-ubootmod-common
   UBOOTENV_IN_UBI := 1
   IMAGES := sysupgrade.itb
   KERNEL_INITRAMFS_SUFFIX := -recovery.itb
@@ -1084,11 +1117,8 @@ define Device/comfast_cf-wr632ax-ubootmod
   IMAGE/sysupgrade.itb := append-kernel | \
 	fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | append-metadata
   ARTIFACTS := preloader.bin bl31-uboot.fip
-  ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3-1866
-  ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot comfast_cf-wr632ax
   $(call Device/comfast_cf-wr632ax-common)
 endef
-TARGET_DEVICES += comfast_cf-wr632ax-ubootmod
 
 define Device/comfast_cf-xr186
   DEVICE_VENDOR := COMFAST
@@ -1590,6 +1620,23 @@ define Device/cudy_wr3000p-v1-ubootmod
 endef
 TARGET_DEVICES += cudy_wr3000p-v1-ubootmod
 
+define Device/cudy_wr3000u-v1
+  DEVICE_VENDOR := Cudy
+  DEVICE_MODEL := WR3000U
+  DEVICE_VARIANT := v1
+  DEVICE_DTS := mt7981b-cudy-wr3000u-v1
+  DEVICE_DTS_DIR := ../dts
+  SUPPORTED_DEVICES += R138
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  IMAGE_SIZE := 235520k
+  KERNEL_IN_UBI := 1
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  DEVICE_PACKAGES := kmod-usb3 kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware automount
+endef
+TARGET_DEVICES += cudy_wr3000u-v1
+
 define Device/cudy_wbr3000uax-v1
   DEVICE_VENDOR := Cudy
   DEVICE_MODEL := WBR3000UAX
@@ -1992,11 +2039,7 @@ define Device/huasifei_wh3000-pro-nand
   DEVICE_VARIANT := NAND
   DEVICE_DTS := mt7981b-huasifei-wh3000-pro-nand
   DEVICE_DTS_DIR := ../dts
-  UBINIZE_OPTS := -E 5
-  BLOCKSIZE := 128k
-  PAGESIZE := 2048
-  IMAGE_SIZE := 229376k
-  KERNEL_IN_UBI := 1
+  IMAGE_SIZE := 231936k
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware \
 	kmod-usb3 kmod-hwmon-pwmfan automount
@@ -2852,6 +2895,32 @@ define Device/netis_eap930-v1
 endef
 TARGET_DEVICES += netis_eap930-v1
 
+define Device/netis_n6-v2
+  DEVICE_VENDOR := netis
+  DEVICE_MODEL := N6 V2
+  DEVICE_DTS := mt7981b-netis-n6-v2
+  DEVICE_DTS_DIR := ../dts
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  KERNEL_IN_UBI := 1
+  UBOOTENV_IN_UBI := 1
+  IMAGES := sysupgrade.itb
+  KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+  KERNEL := kernel-bin | libdeflate-gzip
+  KERNEL_INITRAMFS := kernel-bin | lzma | \
+	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | pad-to 64k
+  IMAGE/sysupgrade.itb := append-kernel | \
+	fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-static-with-rootfs | \
+	append-metadata
+  DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware \
+	kmod-usb3 kmod-usb-ledtrig-usbport automount
+  ARTIFACTS := preloader.bin bl31-uboot.fip
+  ARTIFACT/preloader.bin := mt7981-bl2 spim-nand-ddr3-1866
+  ARTIFACT/bl31-uboot.fip := mt7981-bl31-uboot netis_n6-v2
+endef
+TARGET_DEVICES += netis_n6-v2
+
 define Device/netis_nx30v2
   DEVICE_VENDOR := netis
   DEVICE_MODEL := NX30
@@ -3328,6 +3397,36 @@ define Device/tplink_be450
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
 endef
 TARGET_DEVICES += tplink_be450
+
+define Device/tplink_be450-ubi
+  DEVICE_VENDOR := TP-Link
+  DEVICE_MODEL := BE450 (UBI)
+  DEVICE_DTS := mt7988d-tplink-be450-ubi
+  DEVICE_DTS_DIR := ../dts
+  DEVICE_DTC_FLAGS := --pad 4096
+  DEVICE_DTS_LOADADDR := 0x45f00000
+  DEVICE_PACKAGES := kmod-mt7992-firmware kmod-usb3 automount \
+	    mt7988-2p5g-phy-firmware mt7988-wo-firmware \
+	    kmod-phy-realtek rtl826x-firmware
+  UBINIZE_OPTS := -E 5
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  KERNEL_IN_UBI := 1
+  UBOOTENV_IN_UBI := 1
+  IMAGES := sysupgrade.itb
+  KERNEL_INITRAMFS_SUFFIX := -recovery.itb
+  KERNEL := kernel-bin | gzip
+  KERNEL_INITRAMFS := kernel-bin | lzma | \
+	fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb with-initrd | \
+	pad-to 64k
+  IMAGE/sysupgrade.itb := append-kernel | \
+	fit gzip $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb external-with-rootfs | \
+	pad-rootfs | append-metadata
+  ARTIFACTS := bl31-uboot.fip preloader.bin
+  ARTIFACT/bl31-uboot.fip := mt7988-bl31-uboot tplink_be450
+  ARTIFACT/preloader.bin := mt7988-bl2 spim-nand-ubi-ddr4
+endef
+TARGET_DEVICES += tplink_be450-ubi
 
 define Device/tplink_eap683-lr
   DEVICE_VENDOR := TP-Link

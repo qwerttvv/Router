@@ -38,11 +38,18 @@
 
 #define NOTIFY_EVENTS			10
 #define NOTIFY_BLOCKS			10
+
 #define RX_TRUNCATE_EN_93XX		BIT(6)
 #define RX_TRUNCATE_EN_83XX		BIT(4)
 #define TX_PAD_EN_838X			BIT(5)
 
-#define SKB_MTU				1600
+/* Ethernet header, two stacked VLAN tags (802.1ad QinQ) and FCS */
+#define RTETH_FRAME_OVERHEAD		(ETH_HLEN + 2 * VLAN_HLEN + ETH_FCS_LEN)
+/* Largest frame each family switches, as its datasheet and DSA rmon range have it */
+#define RTETH_838X_MAX_FRAME		10000
+#define RTETH_839X_MAX_FRAME		12288
+#define RTETH_930X_MAX_FRAME		12288
+#define RTETH_931X_MAX_FRAME		12288
 /* TODO: change this to 1568 after fragment handling has been tested in the wild */
 #define SKB_FRAG_SIZE			400
 #define SKB_PAD				MAX(32, L1_CACHE_BYTES)
@@ -89,7 +96,8 @@ struct rteth_rx_info {
 };
 
 struct rteth_tx_info {
-	int			slot;
+	unsigned int		send_count;  /* skbs handed to the hardware */
+	unsigned int		clean_count; /* skbs released after completion */
 	struct sk_buff		*skb[RTETH_TX_RING_SIZE];
 };
 
@@ -437,12 +445,15 @@ static void rteth_nic_reset(struct rteth_ctrl *ctrl, int reset_mask)
 	msleep(100);
 }
 
+static void rteth_83xx_set_hol(struct rteth_ctrl *ctrl)
+{
+	/* Free floating rings without space tracking */
+	regmap_write(ctrl->map, ctrl->r->dma_if_rx_ring_size, 0);
+}
+
 static void rteth_838x_hw_reset(struct rteth_ctrl *ctrl)
 {
 	rteth_nic_reset(ctrl, 0xc);
-
-	/* Free floating rings without space tracking */
-	regmap_write(ctrl->map, ctrl->r->dma_if_rx_ring_size, 0);
 }
 
 static void rteth_839x_hw_reset(struct rteth_ctrl *ctrl)
@@ -468,32 +479,36 @@ static void rteth_839x_hw_reset(struct rteth_ctrl *ctrl)
 	/* Restore notification settings: on RTL838x these bits are null */
 	regmap_update_bits(ctrl->map, ctrl->r->dma_if_intr_msk, 7 << 20, int_saved & (7 << 20));
 	regmap_write(ctrl->map, RTL839X_DMA_IF_NBUF_BASE_DESC_ADDR_CTRL, nbuf);
-
-	/* Free floating rings without space tracking */
-	regmap_write(ctrl->map, ctrl->r->dma_if_rx_ring_size, 0);
 }
 
-static void rteth_93xx_hw_reset(struct rteth_ctrl *ctrl)
+static void rteth_93xx_set_hol(struct rteth_ctrl *ctrl)
 {
 	/*
 	 * The counter registers track the number of packets that are allowed to be appended to
 	 * the ring buffer. On RTL93xx a ring overflow must be avoided at all cost. Defensively
 	 * calculate the space by anticipating that only fully filled packets are received.
 	 */
-	int max_frame_size = SKB_MTU + ETH_HLEN + ETH_FCS_LEN + VLAN_HLEN + 4;
+	int max_frame_size = ctrl->dev->mtu + RTETH_FRAME_OVERHEAD;
 	int frags_per_pkt = DIV_ROUND_UP(max_frame_size, SKB_FRAG_SIZE);
 	int cnt = min(RTETH_RX_RING_SIZE / frags_per_pkt, 0x3ff);
 
-	rteth_nic_reset(ctrl, 0x6);
-
-	/* Setup Head of Line */
 	for (int ring = 0; ring < RTETH_RX_RINGS; ring++) {
 		int shift = (ring % 3) * 10;
 		int reg = (ring / 3) * 4;
-		u32 v;
 
 		regmap_update_bits(ctrl->map, ctrl->r->dma_if_rx_ring_size + reg,
 				   0x3ff << shift, cnt << shift);
+	}
+}
+
+static void rteth_93xx_hw_reset(struct rteth_ctrl *ctrl)
+{
+	rteth_nic_reset(ctrl, 0x6);
+
+	for (int ring = 0; ring < RTETH_RX_RINGS; ring++) {
+		int reg = (ring / 3) * 4;
+		u32 v;
+
 		/* clear counters by simply writing the current register values back */
 		regmap_read(ctrl->map, ctrl->r->dma_if_rx_ring_cntr + reg, &v);
 		regmap_write(ctrl->map, ctrl->r->dma_if_rx_ring_cntr + reg, v);
@@ -558,11 +573,63 @@ static void rteth_hw_ring_setup(struct rteth_ctrl *ctrl)
 			     offsetof(struct rteth_tx_data, ring));
 }
 
+/*
+ * Three limits bound the frames exchanged with the CPU port, and each family spreads them
+ * over registers of its own, whose length fields are named after the block holding them:
+ * what the driver receives is transmitted by the switch, but received by the NIC.
+ *
+ * - the DMA truncation length cuts a frame short. It still reaches the CPU, carrying only
+ *   as many bytes as the field allows, so switch it off and leave the length to the others.
+ * - the largest frame the switch hands to the CPU, which drops the longer ones. Both
+ *   measured on an RTL9303 by lowering one at a time while frames of growing size were
+ *   sent into a user port.
+ * - the largest frame the switch takes from the CPU. Longan keeps it in the port register
+ *   of the CPU port, Maple in a register of its own, the others in a second field of the
+ *   register above.
+ */
+static void rteth_838x_set_max_packet_length(struct rteth_ctrl *ctrl, int len)
+{
+	regmap_update_bits(ctrl->map, RTETH_838X_DMA_IF_PKT_RX_FLTR_CTRL, GENMASK(13, 0), len);
+	regmap_update_bits(ctrl->map, RTETH_838X_DMA_IF_PKT_TX_FLTR_CTRL, GENMASK(13, 0), len);
+	regmap_clear_bits(ctrl->map, ctrl->r->dma_if_ctrl, RX_TRUNCATE_EN_83XX);
+}
+
+static void rteth_839x_set_max_packet_length(struct rteth_ctrl *ctrl, int len)
+{
+	regmap_update_bits(ctrl->map, RTETH_839X_DMA_IF_PKT_FLTR_CTRL,
+			   GENMASK(27, 14) | GENMASK(13, 0),
+			   FIELD_PREP(GENMASK(27, 14), len) | FIELD_PREP(GENMASK(13, 0), len));
+	regmap_clear_bits(ctrl->map, ctrl->r->dma_if_ctrl, RX_TRUNCATE_EN_83XX);
+}
+
+static void rteth_930x_set_max_packet_length(struct rteth_ctrl *ctrl, int len)
+{
+	regmap_update_bits(ctrl->map, RTETH_930X_MAC_L2_CPU_MAX_LEN_CTRL, GENMASK(13, 0), len);
+	regmap_update_bits(ctrl->map, RTETH_930X_MAC_L2_PORT_MAX_LEN_CTRL,
+			   GENMASK(27, 14) | GENMASK(13, 0),
+			   FIELD_PREP(GENMASK(27, 14), len) | FIELD_PREP(GENMASK(13, 0), len));
+	regmap_clear_bits(ctrl->map, ctrl->r->dma_if_ctrl, RX_TRUNCATE_EN_93XX);
+}
+
+static void rteth_931x_set_max_packet_length(struct rteth_ctrl *ctrl, int len)
+{
+	regmap_update_bits(ctrl->map, RTETH_931X_MAC_L2_CPU_MAX_LEN_CTRL,
+			   GENMASK(27, 14) | GENMASK(13, 0),
+			   FIELD_PREP(GENMASK(27, 14), len) | FIELD_PREP(GENMASK(13, 0), len));
+	regmap_clear_bits(ctrl->map, ctrl->r->dma_if_ctrl, RX_TRUNCATE_EN_93XX);
+}
+
+static void rteth_set_max_packet_length(struct rteth_ctrl *ctrl)
+{
+	ctrl->r->set_max_packet_length(ctrl, ctrl->dev->mtu + RTETH_FRAME_OVERHEAD);
+}
+
 static void rteth_838x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 {
-	/* Truncate RX buffer to SKB_MTU bytes, pad TX */
-	regmap_write(ctrl->map, ctrl->r->dma_if_ctrl,
-		     (SKB_MTU << 16) | RX_TRUNCATE_EN_83XX | TX_PAD_EN_838X);
+	/* Pad TX */
+	regmap_write(ctrl->map, ctrl->r->dma_if_ctrl, TX_PAD_EN_838X);
+
+	rteth_set_max_packet_length(ctrl);
 
 	rteth_enable_all_rx_irqs(ctrl);
 
@@ -585,8 +652,7 @@ static void rteth_838x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 
 static void rteth_839x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 {
-	/* Setup CPU-Port: RX Buffer */
-	regmap_write(ctrl->map, ctrl->r->dma_if_ctrl, (SKB_MTU << 5) | RX_TRUNCATE_EN_83XX);
+	rteth_set_max_packet_length(ctrl);
 
 	rteth_enable_all_rx_irqs(ctrl);
 
@@ -609,8 +675,7 @@ static void rteth_839x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 
 static void rteth_930x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 {
-	/* Setup CPU-Port: RX Buffer truncated at SKB_MTU Bytes */
-	regmap_write(ctrl->map, ctrl->r->dma_if_ctrl, (SKB_MTU << 16) | RX_TRUNCATE_EN_93XX);
+	rteth_set_max_packet_length(ctrl);
 
 	rteth_enable_all_rx_irqs(ctrl);
 
@@ -626,8 +691,7 @@ static void rteth_930x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 
 static void rteth_931x_hw_en_rxtx(struct rteth_ctrl *ctrl)
 {
-	/* Setup CPU-Port: RX Buffer truncated at SKB_MTU Bytes */
-	regmap_write(ctrl->map, ctrl->r->dma_if_ctrl, (SKB_MTU << 16) | RX_TRUNCATE_EN_93XX);
+	rteth_set_max_packet_length(ctrl);
 
 	rteth_enable_all_rx_irqs(ctrl);
 
@@ -657,6 +721,49 @@ static void rteth_free_tx_buffers(struct rteth_ctrl *ctrl)
 					 tx_info->skb[i]->len, DMA_TO_DEVICE);
 			rteth_free_skb(&tx_info->skb[i]);
 		}
+		tx_info->send_count = 0;
+		tx_info->clean_count = 0;
+	}
+}
+
+static void rteth_reclaim_tx_ring(struct rteth_ctrl *ctrl, int r)
+{
+	struct rteth_tx_info *tx_info = &ctrl->tx_info[r];
+
+	BUILD_BUG_ON(RTETH_TX_RING_SIZE & (RTETH_TX_RING_SIZE - 1));
+
+	while (tx_info->send_count != tx_info->clean_count) {
+		int i = tx_info->clean_count & (RTETH_TX_RING_SIZE - 1);
+
+		if (ctrl->tx_data[r].ring[i] & RING_OWN_HW)
+			break;
+
+		dma_unmap_single(&ctrl->pdev->dev, ctrl->tx_data[r].frag[i].dma,
+				 tx_info->skb[i]->len, DMA_TO_DEVICE);
+		dev_consume_skb_any(tx_info->skb[i]);
+		tx_info->skb[i] = NULL;
+		tx_info->clean_count++;
+	}
+}
+
+static void rteth_reclaim_tx_rings(struct rteth_ctrl *ctrl)
+{
+	for (int r = 0; r < RTETH_TX_RINGS; r++) {
+		struct netdev_queue *txq;
+
+		/* Cached-memory fast path, made stable by the lock below */
+		if (READ_ONCE(ctrl->tx_info[r].send_count) ==
+		    READ_ONCE(ctrl->tx_info[r].clean_count))
+			continue;
+
+		txq = netdev_get_tx_queue(ctrl->dev, r);
+
+		__netif_tx_lock(txq, smp_processor_id());
+
+		if (!netif_xmit_frozen_or_stopped(txq))
+			rteth_reclaim_tx_ring(ctrl, r);
+
+		__netif_tx_unlock(txq);
 	}
 }
 
@@ -735,7 +842,8 @@ static int rteth_setup_ring_buffer(struct rteth_ctrl *ctrl)
 		}
 
 		ctrl->tx_data[r].ring[RTETH_TX_RING_SIZE - 1] |= RING_WRAP;
-		ctrl->tx_info[r].slot = 0;
+		ctrl->tx_info[r].send_count = 0;
+		ctrl->tx_info[r].clean_count = 0;
 	}
 
 	if (highmem)
@@ -810,29 +918,25 @@ static int rteth_open(struct net_device *dev)
 	struct rteth_ctrl *ctrl = netdev_priv(dev);
 	int ret;
 
-	pr_debug("%s called: RX rings %d(length %d), TX rings %d(length %d)\n",
-		 __func__, RTETH_RX_RINGS, RTETH_RX_RING_SIZE, RTETH_TX_RINGS, RTETH_TX_RING_SIZE);
+	ctrl->r->hw_reset(ctrl);
+	ctrl->r->set_hol(ctrl);
+	rteth_setup_cpu_rx_rings(ctrl);
+	ret = rteth_setup_ring_buffer(ctrl);
+	if (ret)
+		return ret;
 
-	scoped_guard(spinlock_irqsave, &ctrl->lock) {
-		ctrl->r->hw_reset(ctrl);
-		rteth_setup_cpu_rx_rings(ctrl);
-		ret = rteth_setup_ring_buffer(ctrl);
-		if (ret)
-			return ret;
+	if (ctrl->r->setup_notify_ring_buffer)
+		ctrl->r->setup_notify_ring_buffer(ctrl);
 
-		if (ctrl->r->setup_notify_ring_buffer)
-			ctrl->r->setup_notify_ring_buffer(ctrl);
+	rteth_hw_ring_setup(ctrl);
+	phylink_start(ctrl->phylink);
 
-		rteth_hw_ring_setup(ctrl);
-		phylink_start(ctrl->phylink);
+	for (int i = 0; i < RTETH_RX_RINGS; i++)
+		napi_enable(&ctrl->rx_info[i].napi);
 
-		for (int i = 0; i < RTETH_RX_RINGS; i++)
-			napi_enable(&ctrl->rx_info[i].napi);
-
-		ctrl->r->hw_init(ctrl);
-		ctrl->r->hw_en_rxtx(ctrl);
-		netif_tx_start_all_queues(dev);
-	}
+	ctrl->r->hw_init(ctrl);
+	ctrl->r->hw_en_rxtx(ctrl);
+	netif_tx_start_all_queues(dev);
 
 	return 0;
 }
@@ -925,6 +1029,41 @@ static int rteth_stop(struct net_device *dev)
 	rteth_free_tx_buffers(ctrl);
 	rteth_free_rx_buffers(ctrl);
 	netif_tx_stop_all_queues(dev);
+
+	return 0;
+}
+
+static int rteth_change_mtu(struct net_device *dev, int mtu)
+{
+	struct rteth_ctrl *ctrl = netdev_priv(dev);
+	bool grow = mtu > dev->mtu;
+
+	/* A frame of that size must still fit into the linear part and fragments of a single skb */
+	if (mtu + RTETH_FRAME_OVERHEAD > (MAX_SKB_FRAGS + 1) * SKB_FRAG_SIZE)
+		return -EINVAL;
+
+	WRITE_ONCE(dev->mtu, mtu);
+
+	/* Opening the interface programs both limits from the MTU, so leave the hardware alone */
+	if (!netif_running(dev))
+		return 0;
+
+	netdev_warn(dev, "changing the MTU may have unexpected effects under high receive load\n");
+
+	/*
+	 * A larger MTU buys a smaller budget, so hand the rings their new limit before the
+	 * switch may deliver larger frames, and the other way around when the MTU shrinks.
+	 * Hold the lock, so rteth_tx_timeout() cannot reprogram the same registers in between.
+	 */
+	scoped_guard(spinlock_irqsave, &ctrl->lock) {
+		if (grow)
+			ctrl->r->set_hol(ctrl);
+
+		rteth_set_max_packet_length(ctrl);
+
+		if (!grow)
+			ctrl->r->set_hol(ctrl);
+	}
 
 	return 0;
 }
@@ -1073,7 +1212,7 @@ static int rteth_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		return NETDEV_TX_OK;
 	}
 
-	slot = ctrl->tx_info[ring].slot;
+	slot = ctrl->tx_info[ring].send_count & (RTETH_TX_RING_SIZE - 1);
 	frag = &ctrl->tx_data[ring].frag[slot];
 	packet_dma = ctrl->tx_data[ring].ring[slot];
 	packet_skb = &ctrl->tx_info[ring].skb[slot];
@@ -1086,11 +1225,8 @@ static int rteth_start_xmit(struct sk_buff *skb, struct net_device *dev)
 		return NETDEV_TX_BUSY;
 	}
 
-	if (likely(*packet_skb)) {
-		/* cleanup old data of this slot */
-		dma_unmap_single(&ctrl->pdev->dev, frag->dma, (*packet_skb)->len, DMA_TO_DEVICE);
-		dev_consume_skb_any(*packet_skb);
-	}
+	if (unlikely(*packet_skb))
+		rteth_reclaim_tx_ring(ctrl, ring);
 
 	*packet_skb = skb;
 	frag->len = len;
@@ -1106,7 +1242,7 @@ static int rteth_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	/* Hand frag over to switch */
 	dma_wmb();
 	ctrl->tx_data[ring].ring[slot] = packet_dma | RING_OWN_HW;
-	ctrl->tx_info[ring].slot = (slot + 1) % RTETH_TX_RING_SIZE;
+	ctrl->tx_info[ring].send_count++;
 	wmb();
 
 	spin_lock(&ctrl->tx_lock);
@@ -1296,6 +1432,8 @@ static int rteth_poll_rx(struct napi_struct *napi, int budget)
 	struct rteth_rx_info *rx_q = container_of(napi, struct rteth_rx_info, napi);
 	struct rteth_ctrl *ctrl = rx_q->ctrl;
 	int work_done, ring = rx_q->id;
+
+	rteth_reclaim_tx_rings(ctrl);
 
 	work_done = rteth_hw_receive(ctrl->dev, ring, budget);
 	if (work_done < budget && napi_complete_done(napi, work_done))
@@ -1515,6 +1653,7 @@ static int rteth_setup_tc(struct net_device *dev, enum tc_setup_type type, void 
 static const struct net_device_ops rteth_838x_netdev_ops = {
 	.ndo_open = rteth_open,
 	.ndo_stop = rteth_stop,
+	.ndo_change_mtu = rteth_change_mtu,
 	.ndo_start_xmit = rteth_start_xmit,
 	.ndo_set_mac_address = rteth_set_mac_address,
 	.ndo_validate_addr = eth_validate_addr,
@@ -1527,6 +1666,7 @@ static const struct net_device_ops rteth_838x_netdev_ops = {
 
 static const struct rteth_config rteth_838x_cfg = {
 	.cpu_port = RTETH_838X_CPU_PORT,
+	.max_mtu = RTETH_838X_MAX_FRAME - RTETH_FRAME_OVERHEAD,
 	.rx_rings = 8,
 	.tx_rx_enable = 0xc,
 	.tx_trigger_mask = BIT(1),
@@ -1556,12 +1696,15 @@ static const struct rteth_config rteth_838x_cfg = {
 	.hw_stop = &rteth_838x_hw_stop,
 	.hw_reset = &rteth_838x_hw_reset,
 	.init_mac = &rteth_838x_init_mac,
+	.set_hol = rteth_83xx_set_hol,
+	.set_max_packet_length = rteth_838x_set_max_packet_length,
 	.netdev_ops = &rteth_838x_netdev_ops,
 };
 
 static const struct net_device_ops rteth_839x_netdev_ops = {
 	.ndo_open = rteth_open,
 	.ndo_stop = rteth_stop,
+	.ndo_change_mtu = rteth_change_mtu,
 	.ndo_start_xmit = rteth_start_xmit,
 	.ndo_set_mac_address = rteth_set_mac_address,
 	.ndo_validate_addr = eth_validate_addr,
@@ -1574,6 +1717,7 @@ static const struct net_device_ops rteth_839x_netdev_ops = {
 
 static const struct rteth_config rteth_839x_cfg = {
 	.cpu_port = RTETH_839X_CPU_PORT,
+	.max_mtu = RTETH_839X_MAX_FRAME - RTETH_FRAME_OVERHEAD,
 	.rx_rings = 8,
 	.tx_rx_enable = 0xc,
 	.tx_trigger_mask = BIT(1),
@@ -1601,6 +1745,8 @@ static const struct rteth_config rteth_839x_cfg = {
 	.hw_stop = &rteth_839x_hw_stop,
 	.hw_reset = &rteth_839x_hw_reset,
 	.init_mac = &rteth_839x_init_mac,
+	.set_hol = rteth_83xx_set_hol,
+	.set_max_packet_length = rteth_839x_set_max_packet_length,
 	.setup_notify_ring_buffer = &rteth_839x_setup_notify_ring_buffer,
 	.netdev_ops = &rteth_839x_netdev_ops,
 };
@@ -1608,6 +1754,7 @@ static const struct rteth_config rteth_839x_cfg = {
 static const struct net_device_ops rteth_930x_netdev_ops = {
 	.ndo_open = rteth_open,
 	.ndo_stop = rteth_stop,
+	.ndo_change_mtu = rteth_change_mtu,
 	.ndo_start_xmit = rteth_start_xmit,
 	.ndo_set_mac_address = rteth_set_mac_address,
 	.ndo_validate_addr = eth_validate_addr,
@@ -1620,6 +1767,7 @@ static const struct net_device_ops rteth_930x_netdev_ops = {
 
 static const struct rteth_config rteth_930x_cfg = {
 	.cpu_port = RTETH_930X_CPU_PORT,
+	.max_mtu = RTETH_930X_MAX_FRAME - RTETH_FRAME_OVERHEAD,
 	.rx_rings = 32,
 	.tx_rx_enable = 0x30,
 	.tx_trigger_mask = GENMASK(3, 2),
@@ -1648,12 +1796,15 @@ static const struct rteth_config rteth_930x_cfg = {
 	.hw_stop = &rteth_930x_hw_stop,
 	.hw_reset = &rteth_93xx_hw_reset,
 	.init_mac = &rteth_930x_init_mac,
+	.set_hol = rteth_93xx_set_hol,
+	.set_max_packet_length = rteth_930x_set_max_packet_length,
 	.netdev_ops = &rteth_930x_netdev_ops,
 };
 
 static const struct net_device_ops rteth_931x_netdev_ops = {
 	.ndo_open = rteth_open,
 	.ndo_stop = rteth_stop,
+	.ndo_change_mtu = rteth_change_mtu,
 	.ndo_start_xmit = rteth_start_xmit,
 	.ndo_set_mac_address = rteth_set_mac_address,
 	.ndo_validate_addr = eth_validate_addr,
@@ -1666,6 +1817,7 @@ static const struct net_device_ops rteth_931x_netdev_ops = {
 
 static const struct rteth_config rteth_931x_cfg = {
 	.cpu_port = RTETH_931X_CPU_PORT,
+	.max_mtu = RTETH_931X_MAX_FRAME - RTETH_FRAME_OVERHEAD,
 	.rx_rings = 32,
 	.tx_rx_enable = 0x30,
 	.tx_trigger_mask = GENMASK(3, 2),
@@ -1694,6 +1846,8 @@ static const struct rteth_config rteth_931x_cfg = {
 	.hw_stop = &rteth_931x_hw_stop,
 	.hw_reset = &rteth_93xx_hw_reset,
 	.init_mac = &rteth_931x_init_mac,
+	.set_hol = rteth_93xx_set_hol,
+	.set_max_packet_length = rteth_931x_set_max_packet_length,
 	.netdev_ops = &rteth_931x_netdev_ops,
 };
 
@@ -1792,7 +1946,7 @@ static int rteth_probe(struct platform_device *pdev)
 
 	dev->ethtool_ops = &rteth_ethtool_ops;
 	dev->min_mtu = ETH_ZLEN;
-	dev->max_mtu = SKB_MTU;
+	dev->max_mtu = ctrl->r->max_mtu;
 	dev->features = NETIF_F_RXCSUM;
 	dev->hw_features = NETIF_F_RXCSUM;
 	dev->netdev_ops = ctrl->r->netdev_ops;
