@@ -117,7 +117,7 @@
  #define QUEUE_STATE_DRV_XOFF	(1 << __QUEUE_STATE_DRV_XOFF)
  #define QUEUE_STATE_STACK_XOFF	(1 << __QUEUE_STATE_STACK_XOFF)
  #define QUEUE_STATE_FROZEN	(1 << __QUEUE_STATE_FROZEN)
-@@ -2104,6 +2134,7 @@ struct net_device {
+@@ -2106,6 +2136,7 @@ struct net_device {
  		unsigned long		lltx:1;
  		unsigned long		netmem_tx:1;
  	);
@@ -125,7 +125,7 @@
  	const struct net_device_ops *netdev_ops;
  	const struct header_ops *header_ops;
  	struct netdev_queue	*_tx;
-@@ -3192,6 +3223,10 @@ enum netdev_cmd {
+@@ -3196,6 +3227,10 @@ enum netdev_cmd {
  	NETDEV_OFFLOAD_XSTATS_REPORT_USED,
  	NETDEV_OFFLOAD_XSTATS_REPORT_DELTA,
  	NETDEV_XDP_FEAT_CHANGE,
@@ -461,7 +461,7 @@
  /*
   * Determine initial path cost based on speed.
   * using recommendations from 802.1d standard
-@@ -699,6 +705,8 @@ int br_add_if(struct net_bridge *br, str
+@@ -702,6 +708,8 @@ int br_add_if(struct net_bridge *br, str
  
  	kobject_uevent(&p->kobj, KOBJ_ADD);
  
@@ -470,7 +470,7 @@
  	return 0;
  
  err6:
-@@ -734,6 +742,8 @@ int br_del_if(struct net_bridge *br, str
+@@ -737,6 +745,8 @@ int br_del_if(struct net_bridge *br, str
  	if (!p || p->br != br)
  		return -EINVAL;
  
@@ -479,7 +479,7 @@
  	/* Since more than one interface can be attached to a bridge,
  	 * there still maybe an alternate path for netconsole to use;
  	 * therefore there is no reason for a NETDEV_RELEASE event.
-@@ -777,3 +787,97 @@ bool br_port_flag_is_set(const struct ne
+@@ -780,3 +790,97 @@ bool br_port_flag_is_set(const struct ne
  	return p->flags & flag;
  }
  EXPORT_SYMBOL_GPL(br_port_flag_is_set);
@@ -745,7 +745,7 @@
  out:
  	fib6_info_release(rt);
  	return err;
-@@ -6532,6 +6542,20 @@ static int ip6_route_dev_notify(struct n
+@@ -6535,6 +6545,20 @@ static int ip6_route_dev_notify(struct n
  	return NOTIFY_OK;
  }
  
@@ -776,7 +776,7 @@
  	}
  #undef N
  	return "UNKNOWN_NETDEV_EVENT";
-@@ -13019,7 +13020,7 @@ static void __init net_dev_struct_check(
+@@ -13020,7 +13021,7 @@ static void __init net_dev_struct_check(
  #ifdef CONFIG_NET_XGRESS
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_tx, tcx_egress);
  #endif
@@ -785,7 +785,7 @@
  
  	/* TXRX read-mostly hotpath */
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, lstats);
-@@ -13028,7 +13029,7 @@ static void __init net_dev_struct_check(
+@@ -13029,7 +13030,7 @@ static void __init net_dev_struct_check(
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, hard_header_len);
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, features);
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_txrx, ip6_ptr);
@@ -794,7 +794,7 @@
  
  	/* RX read-mostly hotpath */
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_rx, ptype_specific);
-@@ -13046,7 +13047,7 @@ static void __init net_dev_struct_check(
+@@ -13047,7 +13048,7 @@ static void __init net_dev_struct_check(
  #ifdef CONFIG_NET_XGRESS
  	CACHELINE_ASSERT_GROUP_MEMBER(struct net_device, net_device_read_rx, tcx_ingress);
  #endif
@@ -805,7 +805,7 @@
  /*
 --- a/net/ipv6/addrconf.c
 +++ b/net/ipv6/addrconf.c
-@@ -999,6 +999,7 @@ void inet6_ifa_finish_destroy(struct ine
+@@ -1005,6 +1005,7 @@ void inet6_ifa_finish_destroy(struct ine
  
  	kfree_rcu(ifp, rcu);
  }

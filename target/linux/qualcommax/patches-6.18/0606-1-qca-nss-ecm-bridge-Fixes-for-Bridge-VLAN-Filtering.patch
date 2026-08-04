@@ -84,7 +84,7 @@ Signed-off-by: Vishnu Vardhan Bantanahal <quic_vishvard@quicinc.com>
  			if (err)
 --- a/net/bridge/br_if.c
 +++ b/net/bridge/br_if.c
-@@ -802,9 +802,12 @@ struct net_device *br_port_dev_get(struc
+@@ -805,9 +805,12 @@ struct net_device *br_port_dev_get(struc
  				   struct sk_buff *skb,
  				   unsigned int cookie)
  {
@@ -97,7 +97,7 @@ Signed-off-by: Vishnu Vardhan Bantanahal <quic_vishvard@quicinc.com>
  
  	/* Is this a bridge? */
  	if (!(dev->priv_flags & IFF_EBRIDGE))
-@@ -833,14 +836,20 @@ struct net_device *br_port_dev_get(struc
+@@ -836,14 +839,20 @@ struct net_device *br_port_dev_get(struc
  	 * determine the port to use - fall back to using FDB
  	 */
  

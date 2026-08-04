@@ -51,7 +51,7 @@
 		bias-pull-up;
 	};
 
-	mdio_pins: mdio-state {
+	mx4x00_mdio_pins: mdio-state {
 		mdc-pins {
 			pins = "gpio68";
 			function = "mdc";
@@ -112,7 +112,7 @@
 &mdio {
 	status = "okay";
 
-	pinctrl-0 = <&mdio_pins>;
+	pinctrl-0 = <&mx4x00_mdio_pins>;
 	pinctrl-names = "default";
 	reset-gpios = <&tlmm 37 GPIO_ACTIVE_LOW>;
 

@@ -53,7 +53,7 @@
  
  /* ================= api to bonding and kernel code ================== */
  
-@@ -1185,7 +1231,31 @@ static void ad_mux_machine(struct port *
+@@ -1200,7 +1246,31 @@ static void ad_mux_machine(struct port *
  			ad_disable_collecting_distributing(port,
  							   update_slave_arr);
  			port->ntt = true;
@@ -85,8 +85,8 @@
  		case AD_MUX_COLLECTING_DISTRIBUTING:
  			port->actor_oper_port_state |= LACP_STATE_COLLECTING;
  			port->actor_oper_port_state |= LACP_STATE_DISTRIBUTING;
-@@ -2138,6 +2208,17 @@ static void ad_disable_collecting_distri
- 		__disable_port(port);
+@@ -2157,6 +2227,17 @@ static void ad_disable_collecting_distri
+ 		bond_3ad_set_carrier(port->slave->bond);
  		/* Slave array needs an update */
  		*update_slave_arr = true;
 +
@@ -651,7 +651,7 @@
  #ifdef CONFIG_NET_POLL_CONTROLLER
  extern atomic_t netpoll_block_tx;
  
-@@ -679,6 +681,7 @@ struct bond_net {
+@@ -680,6 +682,7 @@ struct bond_net {
  
  int bond_rcv_validate(const struct sk_buff *skb, struct bonding *bond, struct slave *slave);
  netdev_tx_t bond_dev_queue_xmit(struct bonding *bond, struct sk_buff *skb, struct net_device *slave_dev);
@@ -659,7 +659,7 @@
  int bond_create(struct net *net, const char *name);
  int bond_create_sysfs(struct bond_net *net);
  void bond_destroy_sysfs(struct bond_net *net);
-@@ -712,6 +715,13 @@ struct bond_vlan_tag *bond_verify_device
+@@ -713,6 +716,13 @@ struct bond_vlan_tag *bond_verify_device
  					      int level);
  int bond_update_slave_arr(struct bonding *bond, struct slave *skipslave);
  void bond_slave_arr_work_rearm(struct bonding *bond, unsigned long delay);
@@ -673,7 +673,7 @@
  void bond_work_init_all(struct bonding *bond);
  void bond_work_cancel_all(struct bonding *bond);
  
-@@ -817,4 +827,18 @@ static inline netdev_tx_t bond_tx_drop(s
+@@ -818,4 +828,18 @@ static inline netdev_tx_t bond_tx_drop(s
  	return NET_XMIT_DROP;
  }
  

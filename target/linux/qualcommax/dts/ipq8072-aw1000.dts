@@ -167,7 +167,7 @@
 };
 
 &tlmm {
-	mdio_pins: mdio-pins {
+	aw1000_mdio_pins: mdio-pins {
 		mdc {
 			pins = "gpio68";
 			function = "mdc";
@@ -219,7 +219,7 @@
 &mdio {
 	status = "okay";
 
-	pinctrl-0 = <&mdio_pins>;
+	pinctrl-0 = <&aw1000_mdio_pins>;
 	pinctrl-names = "default";
 	reset-gpios = <&tlmm 37 GPIO_ACTIVE_LOW>;
 

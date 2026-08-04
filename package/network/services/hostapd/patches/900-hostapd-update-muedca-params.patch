@@ -1,9 +1,8 @@
 --- a/hostapd/ctrl_iface.c
 +++ b/hostapd/ctrl_iface.c
-@@ -1291,6 +1291,11 @@ static int hostapd_ctrl_iface_set(struct
+@@ -1300,5 +1300,10 @@
  		} else if (os_strncmp(cmd, "wme_ac_", 7) == 0 ||
  			   os_strncmp(cmd, "wmm_ac_", 7) == 0) {
- 			hapd->parameter_set_count++;
 +			 /* Incrementing MU-EDCA Parameter Set Update Count*/
 +			 hapd->iface->conf->he_mu_edca.he_qos_info =
 +			  (hapd->iface->conf->he_mu_edca.he_qos_info & 0xf0) |
