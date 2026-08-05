@@ -1,0 +1,47 @@
+From: VIKINGYFY <VIKINGYFY@users.noreply.github.com>
+Subject: [PATCH] qca-mcs: quiet unconfigured Wi-Fi leave events
+
+QCA MCS creates a bridge context only after userspace sends
+MC_MSG_SET_ENABLE.  Wi-Fi station events are received independently, so a
+missing MC_DEV is expected while QCA MCS is not enabled for that bridge.
+
+QSDK commit a8468ef87923 moved this per-event chatter to KERN_DEBUG, but
+printk() still stores those records in the kernel log.  Use pr_debug() for
+the station-leave path so the diagnostics remain available to debug builds
+without filling the normal ring buffer.
+
+--- a/mc_wifi_events.c
++++ b/mc_wifi_events.c
+@@ -97,20 +97,20 @@ static void mc_sta_leave_event(struct ne
+ 	pdev = netdev_master_upper_dev_get(dev);
+ 	if (!pdev) {
+ 		rtnl_unlock();
+-		printk(KERN_DEBUG "%s: STA leave received for interface without a master \n", __func__);
++		pr_debug("%s: STA leave received for interface without a master\n", __func__);
+ 		return;
+ 	}
+ 
+ 	if (!netif_is_bridge_master(pdev)) {
+ 		rtnl_unlock();
+-		printk(KERN_DEBUG "%s: pdev is not a bridge netdevice\n", __func__);
++		pr_debug("%s: pdev is not a bridge netdevice\n", __func__);
+ 		return;
+ 	}
+ 
+ 	mc = MC_DEV(pdev);
+ 	if (!mc) {
+ 		rtnl_unlock();
+-		printk(KERN_DEBUG "%s: MC_DEV returned NULL for device %s\n", __func__, pdev->name);
++		pr_debug("%s: MC_DEV returned NULL for device %s\n", __func__, pdev->name);
+ 		return;
+ 	}
+ 
+@@ -537,7 +537,7 @@ static int mc_event_handler(void *buf, i
+ 		hdr = NLMSG_DATA(nlh);
+ 		switch (hdr->cmd) {
+ 		case NL80211_CMD_DEL_STATION:
+-			printk(KERN_DEBUG "MCS: Processing station leave event\n");
++			pr_debug("MCS: Processing station leave event\n");
+ 			mc_process_sta_leave_event(nlh, hdr->cmd);
+ 			break;
+ 

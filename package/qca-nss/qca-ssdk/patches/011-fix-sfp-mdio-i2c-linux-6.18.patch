@@ -1,0 +1,55 @@
+From: VIKINGYFY <VIKINGYFY@users.noreply.github.com>
+Subject: [PATCH] qca-ssdk: fix SFP MDIO-I2C setup on Linux 6.18
+
+The r35 source changed MDIO_I2C_NONE to the QSDK-specific
+MIDO_I2C_QCOM value in commit 2d01f21eed56.  Linux 6.18 does not provide
+that protocol value, while the earlier MDIO_I2C_NONE behavior remains
+available and supports the default Clause 22 and Clause 45 operations.
+
+Also follow the upstream mdio_i2c_alloc() ERR_PTR contract, retain the OF
+node until registration has finished, and do not add an invalid bus when
+allocation or registration fails.
+
+--- a/src/init/ssdk_dts.c
++++ b/src/init/ssdk_dts.c
+@@ -729,20 +729,24 @@ static struct mii_bus *ssdk_mdio_i2c_bus
+ 	}
+ 
+ 	i2c_adpt = of_find_i2c_adapter_by_node(i2c_node);
+-	of_node_put(i2c_node);
+ 	if(!i2c_adpt) {
+ 		SSDK_ERROR("i2c adpt was not found\n");
++		of_node_put(i2c_node);
+ 		return NULL;
+ 	}
+-	mdio_i2c = mdio_i2c_alloc(&(i2c_adpt->dev), i2c_adpt, MIDO_I2C_QCOM);
+-	if (!mdio_i2c) {
+-		SSDK_ERROR("mdio_i2c bus alloc failed\n");
++	mdio_i2c = mdio_i2c_alloc(&(i2c_adpt->dev), i2c_adpt,
++		MDIO_I2C_NONE);
++	if (IS_ERR(mdio_i2c)) {
++		SSDK_ERROR("mdio_i2c bus alloc failed: %ld\n",
++			PTR_ERR(mdio_i2c));
++		of_node_put(i2c_node);
+ 		return NULL;
+ 	}
+ 	mdio_i2c->name = SFP_I2C_BUS;
+ 	ret = of_mdiobus_register(mdio_i2c, i2c_node);
++	of_node_put(i2c_node);
+ 	if (ret < 0) {
+-		SSDK_ERROR("mdio_i2c bus register failed\n");
++		SSDK_ERROR("mdio_i2c bus register failed: %d\n", ret);
+ 		mdiobus_free(mdio_i2c);
+ 		return NULL;
+ 	}
+@@ -817,7 +821,9 @@ static sw_error_t ssdk_dt_parse_phy_info
+ 		i2c_node = of_parse_phandle(port_node, "i2c-bus", 0);
+ 		if(i2c_node) {
+ 			mdio_i2c = ssdk_mdio_i2c_bus_register(dev_id, port_node);
+-			ssdk_miibus_add(dev_id, mdio_i2c, &miibus_index);
++			of_node_put(i2c_node);
++			if (mdio_i2c)
++				ssdk_miibus_add(dev_id, mdio_i2c, &miibus_index);
+ 		}
+ #endif
+ 		phy_addr = 0xff;
