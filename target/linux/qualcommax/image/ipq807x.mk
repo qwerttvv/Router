@@ -85,7 +85,7 @@ define Device/asus_rt-ax89x
 	PAGESIZE := 2048
 	DEVICE_DTS_CONFIG := config@hk01
 	SOC := ipq8074
-	DEVICE_PACKAGES := kmod-hwmon-gpiofan ipq-wifi-asus_rt-ax89x
+	DEVICE_PACKAGES := kmod-hwmon-gpiofan kmod-sfp ipq-wifi-asus_rt-ax89x
 	KERNEL_NAME := vmlinux
 	KERNEL := kernel-bin | libdeflate-gzip
 	KERNEL_IN_UBI := 1
@@ -470,6 +470,22 @@ define Device/tplink_deco-x80-5g
 	DEVICE_PACKAGES := kmod-hwmon-gpiofan ipq-wifi-tplink_deco-x80-5g kmod-usb-serial-option kmod-usb-net-qmi-wwan kmod-mhi-pci-generic kmod-mhi-wwan-ctrl kmod-mhi-wwan-mbim
 endef
 TARGET_DEVICES += tplink_deco-x80-5g
+
+define Device/tplink_tl-er2260t
+	$(call Device/FitImage)
+	$(call Device/UbiFit)
+	DEVICE_VENDOR := TP-Link
+	DEVICE_MODEL := TL-ER2260T
+	BLOCKSIZE := 128k
+	PAGESIZE := 2048
+	NAND_SIZE := 64m
+	DEVICE_DTS_CONFIG := config@hk07
+	SOC := ipq8070
+	DEVICE_PACKAGES := -kmod-ath -kmod-ath11k -kmod-ath11k-ahb \
+		-kmod-ath11k-pci -ath11k-firmware-ipq8074-ddwrt \
+		kmod-sfp kmod-usb-ledtrig-usbport
+endef
+TARGET_DEVICES += tplink_tl-er2260t
 
 define Device/tplink_eap620-hd-v1
 	$(call Device/FitImage)

@@ -1,18 +1,74 @@
 From: VIKINGYFY <VIKINGYFY@users.noreply.github.com>
-Subject: [PATCH] qca-ssdk: fix SFP MDIO-I2C setup on Linux 6.18
+Subject: [PATCH] qca-ssdk: fix optional SFP I2C bridge on Linux 6.18
 
 The r35 source changed MDIO_I2C_NONE to the QSDK-specific
-MIDO_I2C_QCOM value in commit 2d01f21eed56.  Linux 6.18 does not provide
+MIDO_I2C_QCOM value in commit 2d01f21eed56. Linux 6.18 does not provide
 that protocol value, while the earlier MDIO_I2C_NONE behavior remains
 available and supports the default Clause 22 and Clause 45 operations.
 
-Also follow the upstream mdio_i2c_alloc() ERR_PTR contract, retain the OF
-node until registration has finished, and do not add an invalid bus when
-allocation or registration fails.
+Linux mdio-i2c stores the I2C adapter directly in mii_bus->priv. Do not
+interpret it as the private QSDK wrapper when reading SFP EEPROMs.
 
+The SFP I2C bridge is optional in DTS. Resolve mdio_i2c_alloc() only when
+such a bridge is requested so enabling kmod-sfp for an SFP device does not
+give qca-ssdk a permanent mdio-i2c module dependency. Retain the symbol
+reference for the lifetime of each registered bridge and release it on all
+error and teardown paths.
+
+--- a/src/hsl/phy/sfp_phy.c
++++ b/src/hsl/phy/sfp_phy.c
+@@ -45,7 +45,7 @@ static int sfp_eeprom_i2c_read(struct ph
+ 	u8 dev_addr, void *buf, size_t len)
+ {
+ 	struct mii_bus *miibus;
+-	struct qcom_mdio_i2c_data *bus_priv;
++	struct i2c_adapter *i2c;
+ 	struct i2c_msg msgs[2];
+ 	size_t this_len;
+ 	int ret;
+@@ -70,11 +70,11 @@ static int sfp_eeprom_i2c_read(struct ph
+ 	msgs[1].len = len;
+ 	msgs[1].buf = buf;
+ 
+-	bus_priv = miibus->priv;
++	i2c = miibus->priv;
+ 	while (len) {
+ 		this_len = len;
+ 		msgs[1].len = this_len;
+-		ret = i2c_transfer(bus_priv->i2c, msgs, ARRAY_SIZE(msgs));
++		ret = i2c_transfer(i2c, msgs, ARRAY_SIZE(msgs));
+ 		if (ret < 0)
+ 			return ret;
+ 
+@@ -810,6 +810,8 @@ sw_error_t sfp_phy_exit(a_uint32_t dev_i
+ 			if (miibus &&
+ 				!strncmp(miibus->name, SFP_I2C_BUS, strlen(miibus->name))) {
+ 				mdiobus_unregister(miibus);
++				mdiobus_free(miibus);
++				symbol_put(mdio_i2c_alloc);
+ 			}
+ 		}
+ 	}
 --- a/src/init/ssdk_dts.c
 +++ b/src/init/ssdk_dts.c
-@@ -729,20 +729,24 @@ static struct mii_bus *ssdk_mdio_i2c_bus
+@@ -41,6 +41,7 @@
+ #if IS_ENABLED(CONFIG_MDIO_I2C)
+ #include <linux/mdio/mdio-i2c.h>
+ #include <linux/i2c.h>
++#include <linux/module.h>
+ #endif
+ #if defined(IN_SFP_PHY)
+ #include "sfp_phy.h"
+@@ -720,6 +721,8 @@ static struct mii_bus *ssdk_mdio_i2c_bus
+ 	int ret;
+ 	struct i2c_adapter *i2c_adpt;
+ 	struct mii_bus *mdio_i2c;
++	struct mii_bus *(*mdio_i2c_alloc_fn)(struct device *parent,
++		struct i2c_adapter *i2c, enum mdio_i2c_proto protocol);
+ 	struct device_node *i2c_node;
+ 
+ 	i2c_node = of_parse_phandle(port_node, "i2c-bus", 0);
+@@ -729,21 +732,33 @@ static struct mii_bus *ssdk_mdio_i2c_bus
  	}
  
  	i2c_adpt = of_find_i2c_adapter_by_node(i2c_node);
@@ -20,16 +76,23 @@ allocation or registration fails.
  	if(!i2c_adpt) {
  		SSDK_ERROR("i2c adpt was not found\n");
 +		of_node_put(i2c_node);
++		return NULL;
++	}
++	mdio_i2c_alloc_fn = symbol_get(mdio_i2c_alloc);
++	if (!mdio_i2c_alloc_fn) {
++		SSDK_ERROR("mdio_i2c bridge is not available\n");
++		of_node_put(i2c_node);
  		return NULL;
  	}
 -	mdio_i2c = mdio_i2c_alloc(&(i2c_adpt->dev), i2c_adpt, MIDO_I2C_QCOM);
 -	if (!mdio_i2c) {
 -		SSDK_ERROR("mdio_i2c bus alloc failed\n");
-+	mdio_i2c = mdio_i2c_alloc(&(i2c_adpt->dev), i2c_adpt,
++	mdio_i2c = mdio_i2c_alloc_fn(&(i2c_adpt->dev), i2c_adpt,
 +		MDIO_I2C_NONE);
 +	if (IS_ERR(mdio_i2c)) {
 +		SSDK_ERROR("mdio_i2c bus alloc failed: %ld\n",
 +			PTR_ERR(mdio_i2c));
++		symbol_put(mdio_i2c_alloc);
 +		of_node_put(i2c_node);
  		return NULL;
  	}
@@ -40,9 +103,11 @@ allocation or registration fails.
 -		SSDK_ERROR("mdio_i2c bus register failed\n");
 +		SSDK_ERROR("mdio_i2c bus register failed: %d\n", ret);
  		mdiobus_free(mdio_i2c);
++		symbol_put(mdio_i2c_alloc);
  		return NULL;
  	}
-@@ -817,7 +821,9 @@ static sw_error_t ssdk_dt_parse_phy_info
+ 
+@@ -817,7 +832,9 @@ static sw_error_t ssdk_dt_parse_phy_info
  		i2c_node = of_parse_phandle(port_node, "i2c-bus", 0);
  		if(i2c_node) {
  			mdio_i2c = ssdk_mdio_i2c_bus_register(dev_id, port_node);
