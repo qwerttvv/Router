@@ -8,4 +8,4 @@ nss_load="$(awk 'NR == 6 { print $2; exit }' /sys/kernel/debug/qca-nss-drv/stats
 nss_freq="$(awk 'NF { printf "%.1fMHz", $1 / 1000000; exit }' /proc/sys/dev/nss/clock/current_freq 2>/dev/null)"
 nss_ecm="$(cat /sys/kernel/debug/ecm/ecm_db/connection_count_simple 2>/dev/null)"
 
-echo -n "${cpu_load} NSS: load ${nss_load:-N/A} freq ${nss_freq:-N/A} ECM: ${nss_ecm:-N/A}"
+echo -n "${cpu_load} NSS: load ${nss_load:-N/A} freq ${nss_freq:-N/A} ${nss_ecm:-N/A}"
