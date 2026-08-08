@@ -146,7 +146,7 @@ end
 s:append(Template(appname .. "/rule/rule_version"))
 
 if has_xray or has_singbox then
-	s:append(Template(appname .. "/rule/shunt_rule_list"))
+	m:append(Template(appname .. "/rule/shunt_rule_list"))
 end
 
 return api.return_map(m)

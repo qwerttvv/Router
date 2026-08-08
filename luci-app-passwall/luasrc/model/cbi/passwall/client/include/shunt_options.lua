@@ -100,7 +100,7 @@ o = add_option(Flag, "fakedns", '<a style="color:#FF8C00">FakeDNS</a>' .. " " ..
 	translate("Suitable scenarios for let the node servers get the target domain names.") .. "<br>" ..
 	translate("Such as: DNS unlocking of streaming media, reducing DNS query latency, etc."))
 
-shunt_group = add_option(ListValue, "shunt_group", translate("Group Name"))
+shunt_group = add_option(ListValue, "shunt_group", translate("Shunt Rule Group"))
 shunt_group:value("", translate("default"))
 for k, v in pairs(groups) do
 	shunt_group:value(k)
