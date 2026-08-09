@@ -459,7 +459,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 			local dns_key = dns_proto .. "|" .. config_address .. "|" .. tostring(config_port)
 			if not GLOBAL.DNS_SERVER[dns_key] then
 				GLOBAL.DNS_SERVER[dns_key] = {
-					tag = "dns-node-" .. api.gen_short_uuid(),
+					tag = "dns-node-" .. api.gen_random_char(),
 					-- queryStrategy = node.domain_strategy or "UseIP",
 					address = config_address,
 					port = config_port,

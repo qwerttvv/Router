@@ -194,7 +194,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 			if not GLOBAL.DNS_SERVER[dns_key] then
 				GLOBAL.DNS_SERVER[dns_key] = {
 					server = {
-						tag = "dns-node-" .. api.gen_short_uuid(),
+						tag = "dns-node-" .. api.gen_random_char(),
 						type = dns_proto,
 						server = server_address,
 						server_port = server_port,
