@@ -420,14 +420,10 @@
 
 		partitions {
 			compatible = "qcom,smem-part";
-			#address-cells = <1>;
-			#size-cells = <1>;
 
 			partition-0-devinfo {
 				label = "devinfo";
 				read-only;
-				#address-cells = <1>;
-				#size-cells = <1>;
 
 				nvmem-layout {
 					compatible = "ascii-eq-delim-env";

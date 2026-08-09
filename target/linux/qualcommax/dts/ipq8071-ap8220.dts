@@ -100,91 +100,8 @@
 		reg = <0>;
 
 		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-			partition@0 {
-				label = "0:sbl1";
-				reg = <0x0 0x50000>;
-				read-only;
-			};
-
-			partition@50000 {
-				label = "0:mibib";
-				reg = <0x50000 0x10000>;
-				read-only;
-			};
-
-			partition@60000 {
-				label = "0:qsee";
-				reg = <0x60000 0x180000>;
-				read-only;
-			};
-
-			partition@1e0000 {
-				label = "0:devcfg";
-				reg = <0x1e0000 0x10000>;
-				read-only;
-			};
-
-			partition@1f0000 {
-				label = "0:apdp";
-				reg = <0x1f0000 0x10000>;
-				read-only;
-			};
-
-			partition@200000 {
-				label = "0:rpm";
-				reg = <0x200000 0x40000>;
-				read-only;
-			};
-
-			partition@240000 {
-				label = "0:cdt";
-				reg = <0x240000 0x10000>;
-				read-only;
-			};
-
-			partition@250000 {
-				label = "0:appsblenv";
-				reg = <0x250000 0x10000>;
-			};
-
-			partition@260000 {
-				label = "0:appsbl";
-				reg = <0x260000 0xa0000>;
-				read-only;
-			};
-
-			partition@300000 {
-				label = "0:art";
-				reg = <0x300000 0x40000>;
-				read-only;
-			};
-
-			partition@340000 {
-				label = "0:ethphyfw";
-				reg = <0x340000 0x80000>;
-				read-only;
-			};
-
-			partition@3c0000 {
-				label = "product_info";
-				reg = <0x3c0000 0x10000>;
-				read-only;
-			};
-
-			partition@3d0000 {
-				label = "mtdoops";
-				reg = <0x3d0000 0x20000>;
-			};
-
-			partition@3f0000 {
-				label = "priv_data1";
-				reg = <0x3f0000 0x10000>;
-				read-only;
-			};
+			compatible = "qcom,smem-part";
+			qcom,smem-flash-id = <0>;
 		};
 	};
 };
@@ -215,10 +132,6 @@
 &qpic_nand {
 	status = "okay";
 
-	partitions {
-		status = "disabled";
-	};
-
 	nand@0 {
 		reg = <0>;
 
@@ -227,14 +140,8 @@
 		nand-bus-width = <8>;
 
 		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-			partition@0 {
-				label = "rootfs";
-				reg = <0x0 0x0>;
-			};
+			compatible = "qcom,smem-part";
+			qcom,smem-flash-id = <1>;
 		};
 	};
 };

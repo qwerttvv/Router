@@ -1,16 +1,15 @@
 From: VIKINGYFY <viking.yfy@qq.com>
 Subject: [PATCH] mtd: parsers: qcomsmem: support multiple flash devices
 
-Qualcomm SMEM partition entries contain a physical flash identifier in the
-last byte of each 28-byte system partition entry. The current parser treats
-that byte as alignment padding and therefore registers every partition on
-every MTD device using the parser.
+Qualcomm SMEM partition entries contain a which_flash selector in the last
+byte of each 28-byte system partition entry. The parser treats this
+byte as alignment padding and registers every partition on every MTD
+device.
 
 Describe all four trailing bytes explicitly and add the optional
-qcom,smem-flash-id property. When the property is present, only entries
-with the matching physical flash identifier are registered. When it is
-absent, keep the existing behavior for backwards compatibility with
-existing boards.
+qcom,smem-flash-id property. When it is present, only matching entries are
+registered. When it is absent, keep the existing behavior for backwards
+compatibility with existing boards.
 
 This allows a single Qualcomm SMEM/MIBIB partition table to describe
 layouts such as SPI NOR plus QPIC NAND without relying on bootloader DT
@@ -38,12 +37,12 @@ Signed-off-by: VIKINGYFY <viking.yfy@qq.com>
 +  Qualcomm SoCs use a Shared Memory (SMEM) based flash partition table scheme.
 +  The maximum number of partitions varies between table revisions. V3 supports
 +  up to 16 partitions and V4 supports up to 48 partitions. On platforms with
-+  more than one flash device, each partition entry also identifies the physical
-+  flash device containing that partition.
++  more than one flash device, each partition entry also identifies the
++  underlying flash device containing that partition.
  
  select: false
  
-@@ -21,6 +22,13 @@ properties:
+@@ -21,6 +22,15 @@ properties:
    compatible:
      const: qcom,smem-part
  
@@ -51,13 +50,15 @@ Signed-off-by: VIKINGYFY <viking.yfy@qq.com>
 +    $ref: /schemas/types.yaml#/definitions/uint32
 +    maximum: 255
 +    description:
-+      Physical flash identifier to select from the SMEM partition table. When
-+      omitted, all entries are parsed for backwards compatibility.
++      Value of the SMEM partition entry which_flash selector. On IPQ60xx and
++      IPQ807x platforms, 0 selects the primary SPI NOR flash and 1 selects the
++      secondary QPIC NAND flash. When omitted, all entries are parsed for
++      backwards compatibility.
 +
  patternProperties:
    "^partition-[0-9a-z]+$":
      $ref: nvmem-cells.yaml
-@@ -35,6 +43,7 @@ examples:
+@@ -35,6 +45,7 @@ examples:
      flash {
          partitions {
              compatible = "qcom,smem-part";
@@ -83,7 +84,7 @@ Signed-off-by: VIKINGYFY <viking.yfy@qq.com>
 + * @attr1: First attribute byte for this partition
 + * @attr2: Second attribute byte for this partition
 + * @attr3: Third attribute byte for this partition
-+ * @which_flash: Physical flash identifier containing this partition
++ * @which_flash: Flash selector stored in this partition entry
   */
  struct smem_flash_pentry {
  	char name[SMEM_FLASH_PTABLE_NAME_SIZE];
@@ -97,20 +98,7 @@ Signed-off-by: VIKINGYFY <viking.yfy@qq.com>
  } __packed __aligned(4);
  
  /**
-@@ -54,6 +61,12 @@ struct smem_flash_ptable {
- 	struct smem_flash_pentry pentry[SMEM_FLASH_PTABLE_MAX_PARTS_V4];
- } __packed __aligned(4);
- 
-+static bool qcomsmem_part_matches_flash(const struct smem_flash_pentry *pentry,
-+					bool filter_by_flash, u32 flash_id)
-+{
-+	return !filter_by_flash || pentry->which_flash == flash_id;
-+}
-+
- static int parse_qcomsmem_part(struct mtd_info *mtd,
- 			       const struct mtd_partition **pparts,
- 			       struct mtd_part_parser_data *data)
-@@ -63,6 +76,9 @@ static int parse_qcomsmem_part(struct mt
+@@ -63,6 +70,9 @@ static int parse_qcomsmem_part(struct mt
  	struct smem_flash_pentry *pentry;
  	struct smem_flash_ptable *ptable;
  	struct mtd_partition *parts;
@@ -120,7 +108,7 @@ Signed-off-by: VIKINGYFY <viking.yfy@qq.com>
  	char *name, *c;
  
  	if (IS_ENABLED(CONFIG_MTD_SPI_NOR_USE_4K_SECTORS)
-@@ -72,7 +88,26 @@ static int parse_qcomsmem_part(struct mt
+@@ -72,7 +82,26 @@ static int parse_qcomsmem_part(struct mt
  		return -EINVAL;
  	}
  
@@ -148,36 +136,37 @@ Signed-off-by: VIKINGYFY <viking.yfy@qq.com>
  	ptable = qcom_smem_get(SMEM_APPS, SMEM_AARM_PARTITION_TABLE, &len);
  	if (IS_ERR(ptable)) {
  		if (PTR_ERR(ptable) != -EPROBE_DEFER)
-@@ -119,10 +154,18 @@ static int parse_qcomsmem_part(struct mt
+@@ -119,8 +148,17 @@ static int parse_qcomsmem_part(struct mt
  
  	for (i = 0; i < tmpparts; i++) {
  		pentry = &ptable->pentry[i];
 -		if (pentry->name[0] != '\0')
-+		if (pentry->name[0] != '\0' &&
-+		    qcomsmem_part_matches_flash(pentry, filter_by_flash, flash_id))
- 			numparts++;
- 	}
- 
+-			numparts++;
++		if (!pentry->name[0] ||
++		    (filter_by_flash && pentry->which_flash != flash_id))
++			continue;
++		numparts++;
++	}
++
 +	if (filter_by_flash && !numparts) {
 +		pr_warn("%s: no SMEM partitions found for flash id %u\n",
 +			mtd->name, flash_id);
 +		*pparts = NULL;
 +		return 0;
-+	}
-+
+ 	}
+ 
  	parts = kcalloc(numparts, sizeof(*parts), GFP_KERNEL);
- 	if (!parts)
- 		return -ENOMEM;
-@@ -131,6 +174,8 @@ static int parse_qcomsmem_part(struct mt
+@@ -129,7 +167,8 @@ static int parse_qcomsmem_part(struct mt
+ 
+ 	for (i = 0, j = 0; i < tmpparts; i++) {
  		pentry = &ptable->pentry[i];
- 		if (pentry->name[0] == '\0')
+-		if (pentry->name[0] == '\0')
++		if (!pentry->name[0] ||
++		    (filter_by_flash && pentry->which_flash != flash_id))
  			continue;
-+		if (!qcomsmem_part_matches_flash(pentry, filter_by_flash, flash_id))
-+			continue;
  
  		name = kstrdup(pentry->name, GFP_KERNEL);
- 		if (!name) {
-@@ -144,11 +189,12 @@ static int parse_qcomsmem_part(struct mt
+@@ -144,11 +183,12 @@ static int parse_qcomsmem_part(struct mt
  
  		parts[j].name = name;
  		parts[j].offset = le32_to_cpu(pentry->offset) * mtd->erasesize;

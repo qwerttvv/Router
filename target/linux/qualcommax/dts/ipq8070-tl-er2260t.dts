@@ -3,9 +3,10 @@
 
 /dts-v1/;
 
-#include "ipq8074-nowifi.dtsi"
+#include "ipq8074.dtsi"
 #include "ipq8074-ess.dtsi"
 #include "ipq8074-nss.dtsi"
+#include "ipq8074-common.dtsi"
 #include "ipq8074-hk-cpu.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
@@ -115,22 +116,6 @@
 };
 
 &tlmm {
-	mdio_pins: mdio-state {
-		mdc-pins {
-			pins = "gpio68";
-			function = "mdc";
-			drive-strength = <8>;
-			bias-pull-up;
-		};
-
-		mdio-pins {
-			pins = "gpio69";
-			function = "mdio";
-			drive-strength = <8>;
-			bias-pull-up;
-		};
-	};
-
 	i2c_0_pins: i2c-0-state {
 		pins = "gpio42", "gpio43";
 		function = "blsp1_i2c";
@@ -199,124 +184,24 @@
 	};
 };
 
-&blsp1_uart5 {
-	status = "okay";
-};
-
 &blsp1_i2c2 {
 	pinctrl-0 = <&i2c_0_pins>;
 	pinctrl-names = "default";
 	status = "okay";
 };
 
-&blsp1_spi1 {
-	pinctrl-0 = <&spi_0_pins>;
-	pinctrl-names = "default";
-	status = "okay";
-
-	flash@0 {
-		compatible = "jedec,spi-nor";
-		reg = <0>;
-		spi-max-frequency = <50000000>;
-		use-default-sizes;
-	};
-};
-
-&qpic_bam {
-	status = "okay";
-};
-
 &qpic_nand {
 	status = "okay";
 
-	/* Ignore the legacy partition nodes injected by the bootloader. */
-	partitions {
-		status = "disabled";
-	};
-
 	nand@0 {
 		reg = <0>;
-		#address-cells = <1>;
-		#size-cells = <1>;
+
 		nand-ecc-strength = <4>;
 		nand-ecc-step-size = <512>;
 		nand-bus-width = <8>;
 
 		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-			partition@0 {
-				label = "0:sbl1";
-				reg = <0x0000000 0x080000>;
-				read-only;
-			};
-
-			partition@80000 {
-				label = "0:mibib";
-				reg = <0x0080000 0x080000>;
-				read-only;
-			};
-
-			partition@100000 {
-				label = "0:qsee";
-				reg = <0x0100000 0x200000>;
-				read-only;
-			};
-
-			partition@300000 {
-				label = "0:devcfg";
-				reg = <0x0300000 0x020000>;
-				read-only;
-			};
-
-			partition@320000 {
-				label = "0:rpm";
-				reg = <0x0320000 0x040000>;
-				read-only;
-			};
-
-			partition@360000 {
-				label = "0:cdt";
-				reg = <0x0360000 0x020000>;
-				read-only;
-			};
-
-			partition@380000 {
-				label = "0:appsbl";
-				reg = <0x0380000 0x180000>;
-				read-only;
-			};
-
-			partition@500000 {
-				label = "0:ethphyfw";
-				reg = <0x0500000 0x080000>;
-				read-only;
-			};
-
-			partition@580000 {
-				label = "0:appsblenv";
-				reg = <0x0580000 0x080000>;
-				read-only;
-			};
-
-			partition@600000 {
-				label = "0:art";
-				reg = <0x0600000 0x020000>;
-				read-only;
-			};
-
-			partition@620000 {
-				label = "rootfs";
-				reg = <0x0620000 0x2e00000>;
-			};
-
-			partition@3420000 {
-				label = "0:wififw";
-				reg = <0x3420000 0x0900000>;
-				read-only;
-			};
+			compatible = "qcom,smem-part";
 		};
 	};
 };
@@ -459,28 +344,4 @@
 	phy-handle = <&sfp2>;
 	qcom,phy-mdio-addr = <30>;
 	label = "10ge2";
-};
-
-&qusb_phy_0 {
-	status = "okay";
-};
-
-&ssphy_0 {
-	status = "okay";
-};
-
-&usb_0 {
-	status = "okay";
-};
-
-&cryptobam {
-	status = "okay";
-};
-
-&crypto {
-	status = "okay";
-};
-
-&prng {
-	status = "okay";
 };

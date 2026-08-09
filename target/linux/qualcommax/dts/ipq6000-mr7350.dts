@@ -140,13 +140,8 @@
 
 		partitions {
 			compatible = "qcom,smem-part";
-			#address-cells = <1>;
-			#size-cells = <1>;
 
 			partition-0-devinfo {
-				#address-cells = <1>;
-				#size-cells = <1>;
-
 				label = "devinfo";
 				read-only;
 

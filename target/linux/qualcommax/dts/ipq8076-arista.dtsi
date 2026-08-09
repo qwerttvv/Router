@@ -56,109 +56,46 @@
 		spi-max-frequency = <50000000>;
 		reg = <0>;
 
-		flash_partitions: partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
+		partitions {
+			compatible = "qcom,smem-part";
+			qcom,smem-flash-id = <0>;
 
-			partition@0 {
-				label = "0:SBL1";
-				reg = <0x0 0x50000>;
+			partition-0-art {
+				label = "0:art";
 				read-only;
-			};
 
-			partition@50000 {
-				label = "0:MIBIB";
-				reg = <0x50000 0x10000>;
-				read-only;
-			};
+				nvmem-layout {
+					compatible = "fixed-layout";
+					#address-cells = <1>;
+					#size-cells = <1>;
 
-			partition@60000 {
-				label = "0:BOOTCONFIG";
-				reg = <0x60000 0x20000>;
-			};
+					macaddr_lan: macaddr@0 {
+						compatible = "mac-base";
+						reg = <0x0 0x6>;
+					};
 
-			partition@80000 {
-				label = "0:BOOTCONFIG1";
-				reg = <0x80000 0x20000>;
+					macaddr_wan: macaddr@6 {
+						compatible = "mac-base";
+						reg = <0x6 0x6>;
+					};
+				};
 			};
+		};
+	};
+};
 
-			partition@a0000 {
-				label = "0:QSEE";
-				reg = <0xa0000 0x180000>;
-				read-only;
-			};
+&qpic_nand {
+	status = "okay";
 
-			partition@220000 {
-				label = "0:QSEE_1";
-				reg = <0x220000 0x180000>;
-				read-only;
-			};
+	nand@0 {
+		reg = <0>;
+		nand-ecc-strength = <8>;
+		nand-ecc-step-size = <512>;
+		nand-bus-width = <8>;
 
-			partition@3a0000 {
-				label = "0:DEVCFG";
-				reg = <0x3a0000 0x10000>;
-				read-only;
-			};
-
-			partition@3b0000 {
-				label = "0:DEVCFG_1";
-				reg = <0x3b0000 0x10000>;
-				read-only;
-			};
-
-			partition@3c0000 {
-				label = "0:APDP";
-				reg = <0x3c0000 0x10000>;
-				read-only;
-			};
-
-			partition@3d0000 {
-				label = "0:APDP_1";
-				reg = <0x3d0000 0x10000>;
-				read-only;
-			};
-
-			partition@3e0000 {
-				label = "0:RPM";
-				reg = <0x3e0000 0x40000>;
-				read-only;
-			};
-
-			partition@420000 {
-				label = "0:RPM_1";
-				reg = <0x420000 0x40000>;
-				read-only;
-			};
-
-			partition@460000 {
-				label = "0:CDT";
-				reg = <0x460000 0x10000>;
-				read-only;
-			};
-
-			partition@470000 {
-				label = "0:CDT_1";
-				reg = <0x470000 0x10000>;
-				read-only;
-			};
-
-			partition@480000 {
-				label = "0:APPSBLENV";
-				reg = <0x480000 0x10000>;
-			};
-
-			partition@490000 {
-				label = "0:APPSBL";
-				reg = <0x490000 0x100000>;
-				read-only;
-			};
-
-			partition@590000 {
-				label = "0:APPSBL_1";
-				reg = <0x590000 0x100000>;
-				read-only;
-			};
+		partitions {
+			compatible = "qcom,smem-part";
+			qcom,smem-flash-id = <1>;
 		};
 	};
 };

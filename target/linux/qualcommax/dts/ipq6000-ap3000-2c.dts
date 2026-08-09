@@ -12,6 +12,10 @@
 	compatible = "dptech,ap3000-2c", "qcom,ipq6018";
 
 	aliases {
+		ethernet2 = &dp3;
+		ethernet3 = &dp4;
+		ethernet4 = &dp5;
+
 		label-mac-device = &dp4;
 		serial0 = &blsp1_uart3;
 
@@ -65,9 +69,6 @@
 	status = "okay";
 
 	flash@0 {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		reg = <0>;
 		/*
 		 * U-boot looks for "n25q128a11" node,
 		 * if we don't have it, it will spit out the following warning:
@@ -76,102 +77,14 @@
 		linux,modalias = "m25p80", "n25q128a11";
 		compatible = "micron,n25q128a11", "jedec,spi-nor";
 		spi-max-frequency = <50000000>;
+		reg = <0>;
 
 		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
+			compatible = "qcom,smem-part";
+			qcom,smem-flash-id = <0>;
 
-			partition@0 {
-				label = "0:SBL1";
-				reg = <0x0 0xc0000>;
-				read-only;
-			};
-
-			partition@c0000 {
-				label = "0:MIBIB";
-				reg = <0xc0000 0x10000>;
-				read-only;
-			};
-
-			partition@d0000 {
-				label = "0:BOOTCONFIG";
-				reg = <0xd0000 0x20000>;
-			};
-
-			partition@f0000 {
-				label = "0:BOOTCONFIG1";
-				reg = <0xf0000 0x20000>;
-			};
-
-			partition@110000 {
-				label = "0:QSEE";
-				reg = <0x110000 0x1a0000>;
-				read-only;
-			};
-
-			partition@2b0000 {
-				label = "0:QSEE_1";
-				reg = <0x2b0000 0x1a0000>;
-				read-only;
-			};
-
-			partition@450000 {
-				label = "0:DEVCFG";
-				reg = <0x450000 0x10000>;
-				read-only;
-			};
-
-			partition@460000 {
-				label = "0:DEVCFG_1";
-				reg = <0x460000 0x10000>;
-				read-only;
-			};
-
-			partition@470000 {
-				label = "0:RPM";
-				reg = <0x470000 0x40000>;
-				read-only;
-			};
-
-			partition@4b0000 {
-				label = "0:RPM_1";
-				reg = <0x4b0000 0x40000>;
-				read-only;
-			};
-
-			partition@4f0000 {
-				label = "0:CDT";
-				reg = <0x4f0000 0x10000>;
-				read-only;
-			};
-
-			partition@500000 {
-				label = "0:CDT_1";
-				reg = <0x500000 0x10000>;
-				read-only;
-			};
-
-			partition@510000 {
-				label = "0:APPSBLENV";
-				reg = <0x510000 0x10000>;
-			};
-
-			partition@520000 {
-				label = "0:APPSBL";
-				reg = <0x520000 0xa0000>;
-				read-only;
-			};
-
-			partition@5c0000 {
-				label = "0:APPSBL_1";
-				reg = <0x5c0000 0xa0000>;
-				read-only;
-			};
-
-			partition@660000 {
-				label = "0:ART";
-				reg = <0x660000 0x40000>;
+			partition-0-art {
+				label = "0:art";
 				read-only;
 
 				nvmem-layout {
@@ -195,10 +108,6 @@
 &qpic_nand {
 	status = "okay";
 
-	partitions {
-		status = "disabled";
-	};
-
 	nand@0 {
 		reg = <0>;
 
@@ -207,14 +116,8 @@
 		nand-bus-width = <8>;
 
 		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-			partition@0 {
-				label = "rootfs";
-				reg = <0x0 0x0>;
-			};
+			compatible = "qcom,smem-part";
+			qcom,smem-flash-id = <1>;
 		};
 	};
 };

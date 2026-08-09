@@ -107,19 +107,6 @@
 	};
 };
 
-&partitions {
-	partition@a00000 {
-		label = "rootfs";
-		reg = <0x0a00000 0x7280000>;
-		linux,rootfs;
-	};
-
-	partition@7c80000 {
-		label = "log";
-		reg = <0x7c80000 0x0080000>;
-	};
-};
-
 &pwm {
 	status = "okay";
 	pinctrl-0 = <&pwm_pins>;
