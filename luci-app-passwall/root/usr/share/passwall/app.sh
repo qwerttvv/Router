@@ -1050,9 +1050,6 @@ socks_node_switch() {
 		LOG_FILE="/dev/null"
 		run_socks flag=$flag node=$new_node bind=$bind socks_port=$port config_file=$config_file http_port=$http_port http_config_file=$http_config_file log_file=$log_file
 		set_cache_var "${flag}" "$new_node"
-		local ENABLED_DEFAULT_ACL=$(get_cache_var "ENABLED_DEFAULT_ACL")
-		local ENABLED_ACLS=$(get_cache_var "ENABLED_ACLS")
-		[ "$ENABLED_DEFAULT_ACL" != "1" ] && [ "$ENABLED_ACLS" != "1" ] && return
 		local USE_TABLES=$(get_cache_var "USE_TABLES")
 		[ -n "$USE_TABLES" ] && source $APP_PATH/${USE_TABLES}.sh filter_direct_node_list
 	}
@@ -1511,8 +1508,13 @@ start_haproxy() {
 
 acl_app() {
 	local items=$(uci show ${CONFIG} | grep "=acl_rule" | cut -d '.' -sf 2 | cut -d '=' -sf 1)
-	[ -n "$items" ] && {
-		local item
+	if [ -z "$items" ]; then
+		ENABLED_ACLS=0
+		set_cache_var ENABLED_ACLS $ENABLED_ACLS
+		return
+	else
+		local has_enabled
+		local sid
 		local socks_port redir_port dns_port dnsmasq_port chinadns_port
 		local msg msg2
 		socks_port=11100
@@ -1520,10 +1522,10 @@ acl_app() {
 		dns_port=11300
 		dnsmasq_port=${GLOBAL_DNSMASQ_PORT:-11400}
 		chinadns_port=11500
-		for item in $items; do
-			local sid=$(uci -q show "${CONFIG}.${item}" | grep "=acl_rule" | awk -F '=' '{print $1}' | awk -F '.' '{print $2}')
+		for sid in $items; do
 			[ "$(config_n_get $sid enabled)" = "1" ] || continue
-			eval $(uci -q show "${CONFIG}.${item}" | cut -d'.' -sf 3-)
+			has_enabled=1
+			eval $(uci -q show "${CONFIG}.${sid}" | cut -d'.' -sf 3-)
 
 			log=${log:-0}
 			loglevel=${loglevel:-warning}
@@ -1846,7 +1848,11 @@ acl_app() {
 			unset _china_ng_listen _chinadns_local_dns _direct_dns_mode chinadns_ng_default_tag dnsmasq_filter_proxy_ipv6 remote_fakedns force_https_soa use_fakedns
 		done
 		unset socks_port redir_port dns_port dnsmasq_port chinadns_port
-	}
+		[ -n "${has_enabled}" ] || {
+			ENABLED_ACLS=0
+			set_cache_var ENABLED_ACLS $ENABLED_ACLS
+		}
+	fi
 }
 
 start() {
@@ -1994,9 +2000,6 @@ get_config() {
 		done
 	}
 	ENABLED_ACLS=$(config_t_get global acl_enable 0)
-	[ "$ENABLED_ACLS" = 1 ] && {
-		[ "$(uci show ${CONFIG} | grep "@acl_rule" | grep "enabled='1'" | wc -l)" = 0 ] && ENABLED_ACLS=0
-	}
 	set_cache_var ENABLED_DEFAULT_ACL $ENABLED_DEFAULT_ACL
 	set_cache_var ENABLED_ACLS $ENABLED_ACLS
 
