@@ -1631,6 +1631,9 @@ msgstr "日志"
 msgid "Log"
 msgstr "日志"
 
+msgid "Enable Node Log"
+msgstr "启用节点日志"
+
 msgid "%s Node Log"
 msgstr "%s 节点日志"
 

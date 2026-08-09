@@ -31,6 +31,11 @@ local function get_domain_excluded()
 	return hosts
 end
 
+local function get_log_level(s)
+	if s == "warn" then s = "warning" end
+	return s
+end
+
 function gen_outbound(flag, node, tag, proxy_table)
 	local result = nil
 	if node then
@@ -636,7 +641,7 @@ function gen_config_server(node)
 	local config = {
 		log = {
 			-- error = "/tmp/etc/passwall_server/log/" .. user[".name"] .. ".log",
-			loglevel = ("1" == node.log) and node.loglevel or "none"
+			loglevel = ("1" == node.log) and get_log_level(node.loglevel) or "none"
 		},
 		-- 传入连接
 		inbounds = {
@@ -1967,7 +1972,7 @@ function gen_config(var)
 			end)(),
 			log = {
 				-- error = string.format("/tmp/etc/%s/%s.log", appname, node[".name"]),
-				loglevel = loglevel
+				loglevel = get_log_level(loglevel)
 			},
 			-- DNS
 			dns = dns,

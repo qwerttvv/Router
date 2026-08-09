@@ -180,9 +180,9 @@ do
 				local flag = "Socks节点列表[" .. i .. "]备用节点的列表"
 				local currentNodes = {}
 				local newNodes = {}
-				for k, asb_node in ipairs(t.autoswitch_backup_node) do
-					if asb_node then
-						local currentNode = uci:get_all(appname, asb_node) or {}
+				for k, asb_node_id in ipairs(t.autoswitch_backup_node) do
+					if asb_node_id then
+						local currentNode = uci:get_all(appname, asb_node_id) or {}
 						if currentNode[".type"] == "nodes" then
 							currentNodes[#currentNodes + 1] = {
 								log = true,

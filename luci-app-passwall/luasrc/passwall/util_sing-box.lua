@@ -87,6 +87,11 @@ local function convert_geofile()
 	convert(GEO_VAR.IP_PATH, "geoip", GEO_VAR.IP_TAGS)
 end
 
+local function get_log_level(s)
+	if s == "warning" then s = "warn" end
+	return s
+end
+
 function gen_outbound(flag, node, tag, proxy_table)
 	local result = nil
 	if node then
@@ -1042,7 +1047,7 @@ function gen_config_server(node)
 	local config = {
 		log = {
 			disabled = (not node or node.log == "0") and true or false,
-			level = node.loglevel or "info",
+			level = get_log_level(node.loglevel) or "info",
 			timestamp = true,
 			--output = logfile,
 		},
@@ -2169,7 +2174,7 @@ function gen_config(var)
 		local config = {
 			log = {
 				disabled = log == "0" and true or false,
-				level = loglevel,
+				level = get_log_level(loglevel),
 				timestamp = true,
 				output = logfile,
 			},
