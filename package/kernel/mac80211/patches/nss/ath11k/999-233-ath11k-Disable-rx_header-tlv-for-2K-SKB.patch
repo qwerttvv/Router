@@ -375,7 +375,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  	hdr = (struct ieee80211_hdr *)first_hdr;
  	hdr_len = ieee80211_hdrlen(hdr->frame_control);
  
-@@ -3093,6 +3200,20 @@ static int ath11k_dp_rx_process_msdu(str
+@@ -3092,6 +3199,20 @@ static int ath11k_dp_rx_process_msdu(str
  		goto free_out;
  	}
  
@@ -396,7 +396,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  	rxcb = ATH11K_SKB_RXCB(msdu);
  	rxcb->rx_desc = rx_desc;
  	msdu_len = ath11k_dp_rx_h_msdu_start_msdu_len(ab, rx_desc);
-@@ -3105,8 +3226,9 @@ static int ath11k_dp_rx_process_msdu(str
+@@ -3104,8 +3225,9 @@ static int ath11k_dp_rx_process_msdu(str
  			hdr_status = ath11k_dp_rx_h_80211_hdr(ab, rx_desc);
  			ret = -EINVAL;
  			ath11k_warn(ab, "invalid msdu len %u\n", msdu_len);
@@ -408,7 +408,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  			ath11k_dbg_dump(ab, ATH11K_DBG_DATA, NULL, "", rx_desc,
  					sizeof(struct hal_rx_desc));
  			goto free_out;
-@@ -4058,6 +4180,7 @@ static int ath11k_dp_rx_h_verify_tkip_mi
+@@ -4057,6 +4179,7 @@ static int ath11k_dp_rx_h_verify_tkip_mi
  
  	hdr = (struct ieee80211_hdr *)(msdu->data + hal_rx_desc_sz);
  	hdr_len = ieee80211_hdrlen(hdr->frame_control);
@@ -416,7 +416,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  	head_len = hdr_len + hal_rx_desc_sz + IEEE80211_TKIP_IV_LEN;
  	tail_len = IEEE80211_CCMP_MIC_LEN + IEEE80211_TKIP_ICV_LEN + FCS_LEN;
  
-@@ -4338,8 +4461,8 @@ static void ath11k_dp_rx_h_sort_frags(st
+@@ -4337,8 +4460,8 @@ static void ath11k_dp_rx_h_sort_frags(st
  
  static u64 ath11k_dp_rx_h_get_pn(struct ath11k *ar, struct sk_buff *skb)
  {
@@ -426,7 +426,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  	u8 *ehdr;
  	u32 hal_rx_desc_sz = ar->ab->hw_params.hal_desc_sz;
  
-@@ -4569,8 +4692,9 @@ ath11k_dp_process_rx_err_buf(struct ath1
+@@ -4568,8 +4691,9 @@ ath11k_dp_process_rx_err_buf(struct ath1
  	if ((msdu_len + hal_rx_desc_sz) > DP_RX_BUFFER_SIZE) {
  		hdr_status = ath11k_dp_rx_h_80211_hdr(ar->ab, rx_desc);
  		ath11k_warn(ar->ab, "invalid msdu leng %u", msdu_len);
@@ -438,7 +438,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  		ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "", rx_desc,
  				sizeof(struct hal_rx_desc));
  		dev_kfree_skb_any(msdu);
-@@ -5196,6 +5320,47 @@ void ath11k_dp_rx_pdev_free(struct ath11
+@@ -5195,6 +5319,47 @@ void ath11k_dp_rx_pdev_free(struct ath11
  	ath11k_dp_rxdma_pdev_buf_free(ar);
  }
  
@@ -486,7 +486,7 @@ Signed-off-by: Ramya Gnanasekar <rgnanase@codeaurora.org>
  int ath11k_dp_rx_pdev_alloc(struct ath11k_base *ab, int mac_id)
  {
  	struct ath11k *ar = ab->pdevs[mac_id].ar;
-@@ -5289,6 +5454,12 @@ config_refill_ring:
+@@ -5288,6 +5453,12 @@ config_refill_ring:
  		}
  	}
  

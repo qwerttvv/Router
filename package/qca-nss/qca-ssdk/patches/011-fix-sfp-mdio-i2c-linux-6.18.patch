@@ -40,7 +40,7 @@ error and teardown paths.
  		if (ret < 0)
  			return ret;
  
-@@ -810,6 +810,8 @@ sw_error_t sfp_phy_exit(a_uint32_t dev_i
+@@ -810,6 +810,8 @@ void sfp_phy_exit(a_uint32_t dev_id)
  			if (miibus &&
  				!strncmp(miibus->name, SFP_I2C_BUS, strlen(miibus->name))) {
  				mdiobus_unregister(miibus);
@@ -51,7 +51,7 @@ error and teardown paths.
  	}
 --- a/src/init/ssdk_dts.c
 +++ b/src/init/ssdk_dts.c
-@@ -41,6 +41,7 @@
+@@ -42,6 +42,7 @@
  #if IS_ENABLED(CONFIG_MDIO_I2C)
  #include <linux/mdio/mdio-i2c.h>
  #include <linux/i2c.h>
@@ -59,7 +59,7 @@ error and teardown paths.
  #endif
  #if defined(IN_SFP_PHY)
  #include "sfp_phy.h"
-@@ -720,6 +721,8 @@ static struct mii_bus *ssdk_mdio_i2c_bus
+@@ -721,6 +722,8 @@ static struct mii_bus *ssdk_mdio_i2c_bus
  	int ret;
  	struct i2c_adapter *i2c_adpt;
  	struct mii_bus *mdio_i2c;
@@ -68,7 +68,7 @@ error and teardown paths.
  	struct device_node *i2c_node;
  
  	i2c_node = of_parse_phandle(port_node, "i2c-bus", 0);
-@@ -729,21 +732,33 @@ static struct mii_bus *ssdk_mdio_i2c_bus
+@@ -730,21 +733,33 @@ static struct mii_bus *ssdk_mdio_i2c_bus
  	}
  
  	i2c_adpt = of_find_i2c_adapter_by_node(i2c_node);
@@ -107,7 +107,7 @@ error and teardown paths.
  		return NULL;
  	}
  
-@@ -817,7 +832,9 @@ static sw_error_t ssdk_dt_parse_phy_info
+@@ -818,7 +833,9 @@ static sw_error_t ssdk_dt_parse_phy_info
  		i2c_node = of_parse_phandle(port_node, "i2c-bus", 0);
  		if(i2c_node) {
  			mdio_i2c = ssdk_mdio_i2c_bus_register(dev_id, port_node);
