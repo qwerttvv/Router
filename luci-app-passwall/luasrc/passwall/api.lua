@@ -4,7 +4,6 @@ nixio = require "nixio"
 fs = require "nixio.fs"
 sys = require "luci.sys"
 uci = require "luci.model.uci".cursor()
-cbi = require "luci.cbi"
 util = require "luci.util"
 datatypes = require "luci.cbi.datatypes"
 jsonc = require "luci.jsonc"
@@ -1015,7 +1014,6 @@ local default_file_tree = {
 }
 
 local function get_api_json(url)
-	local jsonc = require "luci.jsonc"
 	local gh_proxy = uci_get_type("global_app", "github_proxy", "0")
 	local return_code, content
 	if gh_proxy == "1" then
@@ -1336,6 +1334,7 @@ function to_check_self()
 end
 
 function set_default_cbi()
+	local cbi = require "luci.cbi"
 	if true then
 		--TextValue
 		local TextValue = cbi.TextValue
@@ -1367,6 +1366,7 @@ function set_default_cbi()
 end
 
 function return_map(map)
+	local cbi = require "luci.cbi"
 	local api = require "luci.passwall.api"
 	if true then
 		-- header
@@ -1387,6 +1387,7 @@ function return_map(map)
 end
 
 function luci_types(id, m, s, type_name, option_prefix)
+	local cbi = require "luci.cbi"
 	local fv_type
 	local field_type = s.fields["type"]
 	if field_type then
