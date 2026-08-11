@@ -478,7 +478,6 @@ define Device/tplink_tl-er2260t
 	DEVICE_MODEL := TL-ER2260T
 	BLOCKSIZE := 128k
 	PAGESIZE := 2048
-	NAND_SIZE := 64m
 	DEVICE_DTS_CONFIG := config@hk07
 	SOC := ipq8070
 	DEVICE_PACKAGES := -kmod-ath -kmod-ath11k -kmod-ath11k-ahb \
@@ -694,8 +693,7 @@ define Device/arista_ap-c260
 	DEVICE_DTS := ipq8078-ap-c260
 	DEVICE_DTS_CONFIG := config@hk01
 	SUPPORTED_DEVICES := arista,c260
-	DEVICE_PACKAGES := kmod-phy-aquantia kmod-spi-gpio \
-		kmod-gpio-nxp-74hc164 ipq-wifi-arista_c260
+	DEVICE_PACKAGES := kmod-spi-gpio kmod-gpio-nxp-74hc164 ipq-wifi-arista_c260
 	IMAGES := sysupgrade.bin factory.bin
 	IMAGE/factory.bin := append-ubi
 	ARTIFACTS := kernel.itb
@@ -715,8 +713,7 @@ define Device/arista_ap-c360
 	DEVICE_DTS := ipq8076-ap-c360
 	DEVICE_DTS_CONFIG := config@hk09
 	SUPPORTED_DEVICES := arista,c360
-	DEVICE_PACKAGES := kmod-ath11k-pci \
-		kmod-phy-aquantia kmod-spi-gpio kmod-gpio-nxp-74hc164 \
+	DEVICE_PACKAGES := kmod-ath11k-pci kmod-spi-gpio kmod-gpio-nxp-74hc164 \
 		ipq-wifi-arista_c360 ap-c360-radio-mode
 	IMAGES := sysupgrade.bin factory.bin
 	IMAGE/factory.bin := append-ubi
