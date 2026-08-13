@@ -2055,6 +2055,7 @@ get_config() {
 			DNSMASQ_CONF_DIR="/tmp/dnsmasq.d"
 		fi
 	fi
+	[ -d "$DNSMASQ_CONF_DIR" ] || mkdir -p "$DNSMASQ_CONF_DIR"
 	set_cache_var GLOBAL_DNSMASQ_CONF ${DNSMASQ_CONF_DIR}/dnsmasq-${CONFIG}.conf
 	set_cache_var GLOBAL_DNSMASQ_CONF_PATH ${GLOBAL_ACL_PATH}/dnsmasq.d
 
