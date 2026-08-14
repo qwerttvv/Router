@@ -1331,6 +1331,23 @@ function set_default_cbi()
 	if true then
 		--Map
 		local Map = cbi.Map
+
+		if not Map._passwall_default_cbi then
+			Map._passwall_default_cbi = true
+			local original_parse = Map.parse
+			function Map.parse(self, ...)
+				if is_js_luci() then
+					apply_redirect(self)
+					local old = self.on_after_save
+					self.on_after_save = function(map)
+						if old then old(map) end
+						map:set("@global[0]", "timestamp", os.time())
+					end
+				end
+				return original_parse(self, ...)
+			end
+		end
+
 		local original_init = Map.__init__
 		function Map.__init__(self, config, ...)
 			if not config then config = c_config end
@@ -1353,26 +1370,6 @@ function set_default_cbi()
 			end
 			self:append(obj)
 			return obj
-		end
-
-		if is_js_luci() == true then
-			local hide_popup_box = nil
-			if hide_popup_box == true then
-				Map.apply_on_parse = false
-				Map.on_after_apply = function(self)
-					if self.redirect then
-						os.execute("sleep 1")
-						luci.http.redirect(self.redirect)
-					end
-				end
-			else
-				apply_redirect(Map)
-				local old = Map.on_after_save
-				Map.on_after_save = function(self)
-					if old then old(self) end
-					self:set("@global[0]", "timestamp", os.time())
-				end
-			end
 		end
 	end
 	if true then
@@ -1632,7 +1629,11 @@ function apply_redirect(m)
 		else
 			fs.writefile(tmp_uci_file, "config redirect\n")
 		end
+		local old = m.on_after_save
 		m.on_after_save = function(self)
+			if old then
+				old(self)
+			end
 			local redirect = self.redirect
 			if redirect and redirect ~= "" then
 				uci:set(c_config .. "_redirect", "@redirect[0]", "url", redirect)
