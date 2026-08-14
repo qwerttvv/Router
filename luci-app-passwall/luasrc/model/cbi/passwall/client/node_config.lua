@@ -2,7 +2,7 @@ api = require "luci.passwall.api"
 api.set_default_cbi()
 
 m = Map()
-m.redirect = api.url()
+m.redirect = api.url("node_list")
 
 if not arg[1] or not m:get(arg[1]) then
 	luci.http.redirect(m.redirect)
