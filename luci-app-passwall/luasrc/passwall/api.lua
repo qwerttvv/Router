@@ -1622,6 +1622,16 @@ function set_default_cbi()
 		end
 	end
 	if true then
+		--Table
+		local Table = cbi.Table
+		local default_init = Table.__init__
+		function Table.__init__(self, form, ...)
+			default_init(self, form, ...)
+			-- Table 的 map 是独立数据源，需要从所属表单传递 API
+			self.map.api = form.api
+		end
+	end
+	if true then
 		--TextValue
 		local TextValue = cbi.TextValue
 		local default_init = TextValue.__init__
