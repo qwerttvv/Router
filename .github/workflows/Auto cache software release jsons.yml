@@ -26,8 +26,8 @@ jobs:
         uses: actions/checkout@main
 
 
-      - name: Install GitHub CLI
-        run: sudo apt-get update && sudo apt-get install -y gh
+      - name: Install GitHub CLI and jq
+        run: sudo apt-get update && sudo apt-get install -y gh jq
 
       - name: Fetch GitHub release JSONs
         id: fetch
@@ -37,6 +37,17 @@ jobs:
           mkdir -p output old_json
 
           MUST_UPLOAD=false
+
+          # Compare only tag, asset count, and latest asset update time.
+          get_release_info() {
+            jq -ce '
+              (if type == "array" then .[0] else . end)
+              | select(type == "object")
+              | select((.tag_name | type) == "string" and (.tag_name | length) > 0)
+              | select((.assets | type) == "array")
+              | [.tag_name, (.assets | length), (.assets | map(.updated_at // "") | max // "")]
+            ' "$1"
+          }
 
           declare -A repos
           repos["passwall"]="Openwrt-Passwall/openwrt-passwall"
@@ -70,10 +81,8 @@ jobs:
             for t in release pre-release; do
               file="output/${name}-${t}-api.json"
 
-              TAG_NAME=$(grep -oP '"tag_name": "\K[^"]+' "$file" || true)
-
-              if [ -z "$TAG_NAME" ]; then
-                echo "❌ ${file} No tag_name, restore old files..."
+              if ! RELEASE_INFO=$(get_release_info "$file" 2>/dev/null); then
+                echo "❌ ${file} Invalid release JSON, restore old files..."
                 rm -f "$file"
 
                 if [ -f "${file}.bak" ]; then
@@ -81,12 +90,12 @@ jobs:
                 fi
               else
                 if [ -f "${file}.bak" ]; then
-                  OLD_TAG=$(grep -oP '"tag_name": "\K[^"]+' "${file}.bak" || true)
-                  if [ "$OLD_TAG" != "$TAG_NAME" ]; then
-                    echo "🔄 Version changed: $OLD_TAG → $TAG_NAME"
+                  OLD_RELEASE_INFO=$(get_release_info "${file}.bak" 2>/dev/null) || OLD_RELEASE_INFO=""
+                  if [ "$OLD_RELEASE_INFO" != "$RELEASE_INFO" ]; then
+                    echo "🔄 Release version or assets changed: $OLD_RELEASE_INFO → $RELEASE_INFO"
                     MUST_UPLOAD=true
                   else
-                    echo "✔ Version unchanged: $TAG_NAME"
+                    echo "✔ Version and assets unchanged: $RELEASE_INFO"
                   fi
                 fi
                 rm -f "${file}.bak"
