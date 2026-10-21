@@ -67,6 +67,8 @@ jobs:
           - shadow-tls
           - shadowsocks-rust
           - sing-box
+          - smartdns
+          - smartdns-webui
           - v2ray-plugin
           - xray-core
           - xray-plugin
@@ -167,6 +169,32 @@ jobs:
             prerelease_api_command: >
               curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/SagerNet/sing-box/releases" | jq -r 'first | .tag_name' | sed -e 's/.*v//'
             release_download_url: https://codeload.github.com/SagerNet/sing-box/tar.gz/v
+
+          # smartdns tracks the "ReleaseXX.X" tag; the Makefile pins the tag's commit SHA
+          - pakcages: smartdns
+            update_type: smartdns_release
+            folder: smartdns
+            version_head: PKG_VERSION:=
+            source_version_head: PKG_SOURCE_VERSION:=
+            hash_head: PKG_HASH:=
+            release_api_command: >
+              curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/pymumu/smartdns/releases?per_page=100" | jq -r 'map(select((.prerelease|not) and (.tag_name|startswith("Release")))) | first | .tag_name' | sed -e 's/^Release//'
+            prerelease_api_command: >
+              curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/pymumu/smartdns/releases?per_page=100" | jq -r 'map(select(.tag_name|startswith("Release"))) | first | .tag_name' | sed -e 's/^Release//'
+            tag_commit_api_url: https://api.github.com/repos/pymumu/smartdns/commits/Release
+            release_download_url: https://codeload.github.com/pymumu/smartdns/tar.gz/
+
+          # smartdns-webui has no regular releases, so it tracks the latest commit of the default branch
+          - pakcages: smartdns-webui
+            update_type: commit
+            folder: smartdns
+            version_head: SMARTDNS_WEBUI_SOURCE_VERSION:=
+            hash_head: SMARTDNS_WEBUI_HASH:=
+            release_api_command: >
+              curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/pymumu/smartdns-webui/commits?per_page=1" | jq -r 'first | .sha'
+            prerelease_api_command: >
+              curl -sL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/pymumu/smartdns-webui/commits?per_page=1" | jq -r 'first | .sha'
+            release_download_url: https://codeload.github.com/pymumu/smartdns-webui/tar.gz/
 
           - pakcages: v2ray-plugin
             update_type: single
@@ -275,7 +303,10 @@ jobs:
             ver1="$Old_PKG_VERSION"
             ver2="$New_PKG_VERSION"
 
-            if [[ "$(printf "%s\n%s" "$ver1" "$ver2" | sort -V | head -n 1)" == "$ver1" && "$ver1" != "$ver2" ]]; then
+            if [ "${{ matrix.update_type }}" == "commit" ]; then
+              # commit SHAs are not orderable, any difference means an update
+              if [[ "$ver1" == "$ver2" ]]; then result=0; else result=1; fi
+            elif [[ "$(printf "%s\n%s" "$ver1" "$ver2" | sort -V | head -n 1)" == "$ver1" && "$ver1" != "$ver2" ]]; then
               result=1
             elif [[ "$ver1" == "$ver2" ]]; then
               result=0
@@ -332,6 +363,61 @@ jobs:
             echo "❌ Download failed: $DOWNLOAD_URL"
             exit 1 
           fi
+
+      - name: Update SmartDNS (release tag + commit)
+        if: steps.check.outputs.status == 'success' && matrix.update_type == 'smartdns_release' && !cancelled()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd && cd $GITHUB_WORKSPACE/${{ matrix.folder }}
+          New_PKG_VERSION=${{ steps.check.outputs.New_PKG_VERSION }}
+
+          SHA=$(curl -sL -H "Authorization: Bearer $GH_TOKEN" "${{ matrix.tag_commit_api_url }}$New_PKG_VERSION" | jq -r '.sha')
+          if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "❌ Unable to resolve the commit of tag Release$New_PKG_VERSION: $SHA"
+            exit 1
+          fi
+
+          DOWNLOAD_URL="${{ matrix.release_download_url }}$SHA"
+          if curl -fsSL -o "/tmp/${{ matrix.pakcages }}.tar.gz" "$DOWNLOAD_URL"; then
+            echo "✅ Download successful: $DOWNLOAD_URL"
+            PKG_HASH=$(sha256sum "/tmp/${{ matrix.pakcages }}.tar.gz" | awk '{print $1}')
+            rm -f "/tmp/${{ matrix.pakcages }}.tar.gz"
+          else
+            echo "❌ Download failed: $DOWNLOAD_URL"
+            exit 1
+          fi
+
+          sed -i "s/^${{ matrix.version_head }}.*/${{ matrix.version_head }}$New_PKG_VERSION/" Makefile
+          sed -i "s/^PKG_RELEASE:=.*/PKG_RELEASE:=1/" Makefile
+          sed -i "s/^${{ matrix.source_version_head }}.*/${{ matrix.source_version_head }}$SHA/" Makefile
+          sed -i "s/^${{ matrix.hash_head }}.*/${{ matrix.hash_head }}$PKG_HASH/" Makefile
+          echo "Updated ${{ matrix.pakcages }} to version $New_PKG_VERSION (commit $SHA)"
+
+      - name: Update Commit Pinned Package
+        if: steps.check.outputs.status == 'success' && matrix.update_type == 'commit' && !cancelled()
+        run: |
+          cd && cd $GITHUB_WORKSPACE/${{ matrix.folder }}
+          New_PKG_VERSION=${{ steps.check.outputs.New_PKG_VERSION }}
+
+          if ! [[ "$New_PKG_VERSION" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "❌ Invalid commit SHA: $New_PKG_VERSION"
+            exit 1
+          fi
+
+          DOWNLOAD_URL="${{ matrix.release_download_url }}$New_PKG_VERSION"
+          if curl -fsSL -o "/tmp/${{ matrix.pakcages }}.tar.gz" "$DOWNLOAD_URL"; then
+            echo "✅ Download successful: $DOWNLOAD_URL"
+            PKG_HASH=$(sha256sum "/tmp/${{ matrix.pakcages }}.tar.gz" | awk '{print $1}')
+            rm -f "/tmp/${{ matrix.pakcages }}.tar.gz"
+          else
+            echo "❌ Download failed: $DOWNLOAD_URL"
+            exit 1
+          fi
+
+          sed -i "s/^${{ matrix.version_head }}.*/${{ matrix.version_head }}$New_PKG_VERSION/" Makefile
+          sed -i "s/^${{ matrix.hash_head }}.*/${{ matrix.hash_head }}$PKG_HASH/" Makefile
+          echo "Updated ${{ matrix.pakcages }} to commit: $New_PKG_VERSION"
 
       - name: Update Multi-Arch Package (PKG_ARCH)
         if: steps.check.outputs.status == 'success' && matrix.update_type == 'multi_arch_pkg' && !cancelled()
@@ -415,6 +501,9 @@ jobs:
         if: steps.check.outputs.status == 'success' && steps.check.outputs.New_PKG_VERSION != '' && !cancelled()
         run: |
           New_PKG_VERSION=${{ steps.check.outputs.New_PKG_VERSION }}
+          if [ "${{ matrix.update_type }}" == "commit" ]; then
+            New_PKG_VERSION=${New_PKG_VERSION:0:7}
+          fi
           cd && cd packages
           echo ":white_check_mark: ${{ matrix.pakcages }}: update to $New_PKG_VERSION" >> commit_messages.txt
           echo "version=$New_PKG_VERSION" >> $GITHUB_OUTPUT
